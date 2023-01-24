@@ -48,24 +48,24 @@
 28.EDrawMediumEnemyLoop  f184              (R )
 29.EDoneDrawingLargeEnemy f218              (R )
 29.EDrawLargeEnemyLoop   f1db              (R )
-3.RAllEmpty              f421              (R )
-3.RAllyIsTargeted        f394                  
-3.RAllySourceBattlerName f34e                  
-3.REnemyIsTargeted       f3b9              (R )
-3.REnemySourceBattlerName f373              (R )
-3.RGeneralMessageStructure f336              (R )
-3.RGoToAllEmpty          f327              (R )
-3.RGoToHPCount           f333              (R )
-3.RGoToSourceBattlerName f32a              (R )
-3.RGoToSpellName         f330              (R )
-3.RGoToTargetBattlerName f32d              (R )
-3.RHPCount               f3e9              (R )
-3.RNormalMessagePage     f343              (R )
-3.ROtherMessagePage      f341                  
-3.RSetTempVariables      f401              (R )
-3.RSourceBattlerName     f348              (R )
-3.RSpellName             f3d5              (R )
-3.RTargetBattlerName     f38e              (R )
+3.RAllEmpty              f42a              (R )
+3.RAllyIsTargeted        f39d                  
+3.RAllySourceBattlerName f357                  
+3.REnemyIsTargeted       f3c2              (R )
+3.REnemySourceBattlerName f37c              (R )
+3.RGeneralMessageStructure f33f              (R )
+3.RGoToAllEmpty          f330              (R )
+3.RGoToHPCount           f33c              (R )
+3.RGoToSourceBattlerName f333              (R )
+3.RGoToSpellName         f339              (R )
+3.RGoToTargetBattlerName f336              (R )
+3.RHPCount               f3f2              (R )
+3.RNormalMessagePage     f34c              (R )
+3.ROtherMessagePage      f34a                  
+3.RSetTempVariables      f40a              (R )
+3.RSourceBattlerName     f351              (R )
+3.RSpellName             f3de              (R )
+3.RTargetBattlerName     f397              (R )
 30.EContinue             f22b              (R )
 30.EEndEffect            f25a              (R )
 30.EHighlightEffect      f267              (R )
@@ -136,29 +136,29 @@
 37.SSouth                f2ed              (R )
 37.SWest                 f2f3              (R )
 38.SNoEOR                f300              (R )
-4.RBackline              f447              (R )
-4.RCurrentlyInMenu       f4b5              (R )
-4.RDrawAvatarAndName     f4d7              (R )
-4.RDrawClassAndLevel     f5b6              (R )
-4.RDrawHPAndMP           f53c              (R )
-4.RFrontline             f442                  
-4.RGoToShowingHPAndMP    f476              (R )
-4.RInBattle              f479              (R )
-4.RNoExtraLine           f4cf              (R )
-4.RNoHighlighting        f469              (R )
-4.RNotInBattle           f48a              (R )
-4.RPostClassColorSetting f470              (R )
-4.RSelectedMood          f4c0                  
-4.RSetupMood             f498              (R )
-4.RShowingClassAndLevel  f573              (R )
-4.RShowingHPAndMP        f50e              (R )
-4.RSkipExtraClassLevelLine f5af              (R )
-4.RSkipThisLine          f535              (R )
-4.RStoreIndicatorColor   f449              (R )
-7.RTextLoop              f64f              (R )
-8.RDone                  f693              (R )
-8.RIndexConversionLoop   f685              (R )
-8.RNoHit                 f68f              (R )
+4.RBackline              f451              (R )
+4.RCurrentlyInMenu       f4bf              (R )
+4.RDrawAvatarAndName     f4e2              (R )
+4.RDrawClassAndLevel     f5c4              (R )
+4.RDrawHPAndMP           f549              (R )
+4.RFrontline             f44c                  
+4.RGoToShowingHPAndMP    f480              (R )
+4.RInBattle              f483              (R )
+4.RNoExtraLine           f4da              (R )
+4.RNoHighlighting        f473              (R )
+4.RNotInBattle           f494              (R )
+4.RPostClassColorSetting f47a              (R )
+4.RSelectedMood          f4cb                  
+4.RSetupMood             f4a2              (R )
+4.RShowingClassAndLevel  f580              (R )
+4.RShowingHPAndMP        f519              (R )
+4.RSkipExtraClassLevelLine f5bd              (R )
+4.RSkipThisLine          f542              (R )
+4.RStoreIndicatorColor   f453              (R )
+7.RTextLoop              f65d              (R )
+8.RDone                  f6a1              (R )
+8.RIndexConversionLoop   f693              (R )
+8.RNoHit                 f69d              (R )
 9.L1                     f265              (R )
 9.LAfterChecking         f26f              (R )
 9.LBattlerIsUnconscious  f26b              (R )
@@ -196,7 +196,8 @@ char2                    0082              (R )
 char3                    0083              (R )
 char4                    0084              (R )
 CHARACTER_HEIGHT         0008              (R )
-charIndex                0080              (R )
+charIndex                0000 ????         (R )
+charIndexxxx             0080                  
 COLUBK                   0009              (R )
 COLUP0                   0006              (R )
 COLUP1                   0007              (R )
@@ -446,7 +447,7 @@ POISON_RESIST_MASK       0002
 previousInput            00a7              (R )
 Q                        0011                  
 R                        0012              (R )
-RAfterRendering          f275              (R )
+RAfterRendering          f27e              (R )
 rand8                    00b7              (R )
 RAsleepText              fa53              (R )
 RAttackText              fa47              (R )
@@ -463,11 +464,11 @@ RBacksText               f9bf              (R )
 RBackText                f900              (R )
 RBanishText              f960              (R )
 RBattleOptionsLookupTable fa88              (R )
-RBattleRendering         f0fd              (R )
+RBattleRendering         f102              (R )
 RBitesText               f989              (R )
 RBlightText              f94e              (R )
 RBlizrdText              f912              (R )
-RCalculateDigitIndices   f636              (R )
+RCalculateDigitIndices   f644              (R )
 RCannotText              fa24              (R )
 RCasterType              fa65                  
 RCastsText               f995              (R )
@@ -485,22 +486,22 @@ RCuredText               f9f4              (R )
 RDeadEnd1                ff27              (R )
 RDeadEnd2                ff4e              (R )
 RDonateText              f96c              (R )
-RDoNothingLoop           f15e              (R )
-RDontHighlightBattleOption f1ab              (R )
-RDontHighlightSpell      f18b              (R )
+RDoNothingLoop           f163              (R )
+RDontHighlightBattleOption f1b0              (R )
+RDontHighlightSpell      f190              (R )
 RDownText                f9dc              (R )
 RDragonText              f81c              (R )
 RDrainText               f918              (R )
-RDrawBattleMenu          f14a              (R )
-RDrawBattleMenuLine      f27d              (R )
-RDrawBattleMenuLoop      f14e              (R )
-RDrawBattleText          f211              (R )
-RDrawCharacterInfo       f434              (R )
+RDrawBattleMenu          f14f              (R )
+RDrawBattleMenuLine      f286              (R )
+RDrawBattleMenuLoop      f153              (R )
+RDrawBattleText          f216              (R )
+RDrawCharacterInfo       f43d              (R )
 RDrawCompass             f02e              (R )
 RDrawMaze                f041              (R )
-RDrawPartyInfoBattle     f250                  
-RDrawPartyInfoMaze       f0b7                  
-RDrawText                f649              (R )
+RDrawPartyInfoBattle     f255                  
+RDrawPartyInfoMaze       f0b8                  
+RDrawText                f657              (R )
 REffectText              fa1e              (R )
 REFP0                    000b                  
 REFP1                    000c                  
@@ -522,22 +523,22 @@ RFarDoor                 fe9c              (R )
 RFarDoorOnlyTwo          fe4e              (R )
 RFellText                fa59              (R )
 RFightText               fb5e              (R )
-RFinishBattlePicture     f270              (R )
-RFinishMazePicture       f0f5              (R )
+RFinishBattlePicture     f279              (R )
+RFinishMazePicture       f0fa              (R )
 RFireText                f906              (R )
 RFleesText               fa00              (R )
 RGiantText               f816              (R )
 RGoToEnemyDrawingBank    ffc6              (R )
 RGoToOverscan            ffe6              (R )
-RGoToPostDrawingBattleText f147              (R )
-RGoToRDrawBattleText     f144              (R )
+RGoToPostDrawingBattleText f14c              (R )
+RGoToRDrawBattleText     f149              (R )
 RGuardsText              fa4d              (R )
 RGuardText               fb76              (R )
 RHasAText                f9d0              (R )
 RHealsText               f99b              (R )
 RHealText                f936              (R )
 RIGHT_MASK               0080              (R )
-RIndexToEnemyPosition    f682                  
+RIndexToEnemyPosition    f690                  
 RIsText                  fa41              (R )
 RKnightText              fb3a              (R )
 RLearnsText              f9c5              (R )
@@ -571,7 +572,7 @@ RLevelsText              f9ad              (R )
 RLosesText               f9a1              (R )
 RMainPicture             f003              (R )
 RMazeColors              fa6b              (R )
-RMessageConstructors     f2a7              (R )
+RMessageConstructors     f2b0              (R )
 RMessagesLowLookup       fb00              (R )
 RMeteorText              f92a              (R )
 RMissesText              f9a7              (R )
@@ -579,9 +580,9 @@ RMoodLookupTable         fc9e              (R )
 RMovesText               f9b9              (R )
 RMoveText                fb6a              (R )
 RNearDoor                fe00              (R )
-RNoBlankLines            f166              (R )
+RNoBlankLines            f16b              (R )
 RNoCharacter             fd00              (R )
-RNoEffect                f2e6                  
+RNoEffect                f2ef                  
 RNoFarDoor               fec3              (R )
 RNoFarDoorOnlyTwo        fe75              (R )
 RNoNearDoor              fe27              (R )
@@ -602,15 +603,15 @@ ROutermost               ff00              (R )
 RPaladinSpellList        fb9a              (R )
 RPaladinText             fb58              (R )
 RParryText               fb7c              (R )
-RPartyDown               f2da                  
-RPartyFlees              f2dd                  
+RPartyDown               f2e3                  
+RPartyFlees              f2e6                  
 RPartyPositionMasks      fc9a              (R )
 RPartyText               f9d6              (R )
-RPartyWins               f2e0                  
-RPlaceBattleText         f107              (R )
+RPartyWins               f2e9                  
+RPlaceBattleText         f10c              (R )
 RPlaceCompass            f00e                  
 RPoisonText              f942              (R )
-RPostDrawingBattleText   f238              (R )
+RPostDrawingBattleText   f23d              (R )
 RPrepareToDrawMaze       f03a              (R )
 RRangerSpellList         fba3              (R )
 RRangerText              fb52              (R )
@@ -619,24 +620,24 @@ RReset                   f000              (R )
 RRogueText               fb40              (R )
 RRunText                 fb70              (R )
 RRushesText              f98f              (R )
-RSetBattleMessage        f304              (R )
-RSetTextPointers         f5ed              (R )
+RSetBattleMessage        f30d              (R )
+RSetTextPointers         f5fb              (R )
 RSharpText               f948              (R )
 RShieldMessageText       f9ca              (R )
 RShieldText              f924              (R )
 RShootsText              f978              (R )
-RShowAllyName            f1b9                  
-RShowBattleOptions       f195              (R )
-RShowBattlerName         f1b5              (R )
-RShowEnemyName           f1f1              (R )
-RShowSpellOptions        f174                  
+RShowAllyName            f1be                  
+RShowBattleOptions       f19a              (R )
+RShowBattlerName         f1ba              (R )
+RShowEnemyName           f1f6              (R )
+RShowSpellOptions        f179                  
 RSlamsText               f983              (R )
 RSleepText               f90c              (R )
 RSmiteText               f93c              (R )
 RSpellColors             fa6f              (R )
 RSpellListLookup         fb82                  
 RSpellTextLookupTable    fb27              (R )
-RSpinWheels              f27c              (R )
+RSpinWheels              f285              (R )
 RStabsText               f972              (R )
 RSYNC                    0003                  
 RThundrText              f91e              (R )
@@ -645,8 +646,8 @@ RTranceText              f966              (R )
 RTriageText              f954              (R )
 RTriesText               fa0c              (R )
 RUpText                  f9b3              (R )
-RWaitToDrawBattleBox     f0ff              (R )
-RWaitToDrawPlayerText    f24b              (R )
+RWaitToDrawBattleBox     f104              (R )
+RWaitToDrawPlayerText    f250              (R )
 RWakesText               f9e8              (R )
 RWastesText              f97e              (R )
 RWasText                 f9ee              (R )
@@ -654,33 +655,33 @@ RWinsText                fa06              (R )
 RWitherText              f95a              (R )
 RWizardSpellList         fb88              (R )
 RWizardText              fb4c              (R )
-RXAttackUp               f2f5                  
-RXBacksAway              f2ce                  
-RXBitesY                 f2b0                  
-RXCannotEscape           f2e9                  
-RXCastsY                 f2b6                  
-RXDown                   f2c2                  
-RXEvades                 f2fe                  
-RXExiled                 f2ec                  
-RXFellAsleep             f2f8                  
-RXGuardsY                f2f2                  
-RXHasAShield             f2d7                  
-RXHealsYHP               f2b9                  
-RXIsAsleep               f2fb                  
-RXLearnsY                f2c8                  
-RXLevelsUp               f2c5                  
-RXLosesYHP               f2bc                  
-RXMisses                 f2bf                  
-RXMovesUp                f2cb                  
-RXRushesY                f2b3                  
-RXShieldFades            f301                  
-RXShootsY                f2aa                  
-RXSlamsY                 f2ad                  
-RXStabsY                 f2a7                  
-RXTriesToRun             f2e3                  
-RXWakesUp                f2ef                  
-RXWasCured               f2d4                  
-RXWastesAway             f2d1                  
+RXAttackUp               f2fe                  
+RXBacksAway              f2d7                  
+RXBitesY                 f2b9                  
+RXCannotEscape           f2f2                  
+RXCastsY                 f2bf                  
+RXDown                   f2cb                  
+RXEvades                 f307                  
+RXExiled                 f2f5                  
+RXFellAsleep             f301                  
+RXGuardsY                f2fb                  
+RXHasAShield             f2e0                  
+RXHealsYHP               f2c2                  
+RXIsAsleep               f304                  
+RXLearnsY                f2d1                  
+RXLevelsUp               f2ce                  
+RXLosesYHP               f2c5                  
+RXMisses                 f2c8                  
+RXMovesUp                f2d4                  
+RXRushesY                f2bc                  
+RXShieldFades            f30a                  
+RXShootsY                f2b3                  
+RXSlamsY                 f2b6                  
+RXStabsY                 f2b0                  
+RXTriesToRun             f2ec                  
+RXWakesUp                f2f8                  
+RXWasCured               f2dd                  
+RXWastesAway             f2da                  
 RZombieText              f810              (R )
 S                        0013              (R )
 SClearMazeData           f107              (R )
