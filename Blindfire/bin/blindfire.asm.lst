@@ -1,0 +1,2052 @@
+------- FILE blindfire.asm LEVEL 1 PASS 2
+      1  10000					       processor	6502
+------- FILE vcs.h LEVEL 2 PASS 2
+      0  10000 ????				       include	"vcs.h"
+      1  10000 ????						; VCS.H
+      2  10000 ????						; Version 1.05, 13/November/2003
+      3  10000 ????
+      4  10000 ????		00 69	    VERSION_VCS =	105
+      5  10000 ????
+      6  10000 ????						; THIS IS A PRELIMINARY RELEASE OF *THE* "STANDARD" VCS.H
+      7  10000 ????						; THIS FILE IS EXPLICITLY SUPPORTED AS A DASM-PREFERRED COMPANION FILE
+      8  10000 ????						; PLEASE DO *NOT* REDISTRIBUTE THIS FILE!
+      9  10000 ????						;
+     10  10000 ????						; This file defines hardware registers and memory mapping for the
+     11  10000 ????						; Atari 2600. It is distributed as a companion machine-specific support package
+     12  10000 ????						; for the DASM compiler. Updates to this file, DASM, and associated tools are
+     13  10000 ????						; available at at http://www.atari2600.org/dasm
+     14  10000 ????						;
+     15  10000 ????						; Many thanks to the original author(s) of this file, and to everyone who has
+     16  10000 ????						; contributed to understanding the Atari 2600.  If you take issue with the
+     17  10000 ????						; contents, or naming of registers, please write to me (atari2600@taswegian.com)
+     18  10000 ????						; with your views.  Please contribute, if you think you can improve this
+     19  10000 ????						; file!
+     20  10000 ????						;
+     21  10000 ????						; Latest Revisions...
+     22  10000 ????						; 1.05  13/NOV/2003	  - Correction to 1.04 - now functions as requested by MR.
+     23  10000 ????						;			  - Added VERSION_VCS equate (which will reflect 100x version #)
+     24  10000 ????						;			    This will allow conditional code to verify VCS.H being
+     25  10000 ????						;			    used for code assembly.
+     26  10000 ????						; 1.04  12/NOV/2003	 Added TIA_BASE_WRITE_ADDRESS and TIA_BASE_READ_ADDRESS for
+     27  10000 ????						;			 convenient disassembly/reassembly compatibility for hardware
+     28  10000 ????						;			 mirrored reading/writing differences.	This is more a
+     29  10000 ????						;			 readability issue, and binary compatibility with disassembled
+     30  10000 ????						;			 and reassembled sources.  Per Manuel Rotschkar's suggestion.
+     31  10000 ????						; 1.03  12/MAY/2003	 Added SEG segment at end of file to fix old-code compatibility
+     32  10000 ????						;			 which was broken by the use of segments in this file, as
+     33  10000 ????						;			 reported by Manuel Polik on [stella] 11/MAY/2003
+     34  10000 ????						; 1.02  22/MAR/2003	 Added TIMINT($285)
+     35  10000 ????						; 1.01				Constant offset added to allow use for 3F-style bankswitching
+     36  10000 ????						;						 - define TIA_BASE_ADDRESS as $40 for Tigervision carts, otherwise
+     37  10000 ????						;						   it is safe to leave it undefined, and the base address will
+     38  10000 ????						;						   be set to 0.  Thanks to Eckhard Stolberg for the suggestion.
+     39  10000 ????						;			    Note, may use -DLABEL=EXPRESSION to define TIA_BASE_ADDRESS
+     40  10000 ????						;			  - register definitions are now generated through assignment
+     41  10000 ????						;			    in uninitialised segments.	This allows a changeable base
+     42  10000 ????						;			    address architecture.
+     43  10000 ????						; 1.0	22/MAR/2003		Initial release
+     44  10000 ????
+     45  10000 ????
+     46  10000 ????						;-------------------------------------------------------------------------------
+     47  10000 ????
+     48  10000 ????						; TIA_BASE_ADDRESS
+     49  10000 ????						; The TIA_BASE_ADDRESS defines the base address of access to TIA registers.
+     50  10000 ????						; Normally 0, the base address should (externally, before including this file)
+     51  10000 ????						; be set to $40 when creating 3F-bankswitched (and other?) cartridges.
+     52  10000 ????						; The reason is that this bankswitching scheme treats any access to locations
+     53  10000 ????						; < $40 as a bankswitch.
+     54  10000 ????
+     55  10000 ????			   -	       IFNCONST	TIA_BASE_ADDRESS
+     56  10000 ????			   -TIA_BASE_ADDRESS =	0
+     57  10000 ????				       ENDIF
+     58  10000 ????
+     59  10000 ????						; Note: The address may be defined on the command-line using the -D switch, eg:
+     60  10000 ????						; dasm.exe code.asm -DTIA_BASE_ADDRESS=$40 -f3 -v5 -ocode.bin
+     61  10000 ????						; *OR* by declaring the label before including this file, eg:
+     62  10000 ????						; TIA_BASE_ADDRESS = $40
+     63  10000 ????						;   include "vcs.h"
+     64  10000 ????
+     65  10000 ????						; Alternate read/write address capability - allows for some disassembly compatibility
+     66  10000 ????						; usage ; to allow reassembly to binary perfect copies).  This is essentially catering
+     67  10000 ????						; for the mirrored ROM hardware registers.
+     68  10000 ????
+     69  10000 ????						; Usage: As per above, define the TIA_BASE_READ_ADDRESS and/or TIA_BASE_WRITE_ADDRESS
+     70  10000 ????						; using the -D command-line switch, as required.  If the addresses are not defined,
+     71  10000 ????						; they defaut to the TIA_BASE_ADDRESS.
+     72  10000 ????
+     73  10000 ????			   -	       IFNCONST	TIA_BASE_READ_ADDRESS
+     74  10000 ????			   -TIA_BASE_READ_ADDRESS =	TIA_BASE_ADDRESS
+     75  10000 ????				       ENDIF
+     76  10000 ????
+     77  10000 ????			   -	       IFNCONST	TIA_BASE_WRITE_ADDRESS
+     78  10000 ????			   -TIA_BASE_WRITE_ADDRESS =	TIA_BASE_ADDRESS
+     79  10000 ????				       ENDIF
+     80  10000 ????
+     81  10000 ????						;-------------------------------------------------------------------------------
+     82  10000 ????
+     83 U002d ????				      SEG.U	TIA_REGISTERS_WRITE
+     84 U0000					      ORG	TIA_BASE_WRITE_ADDRESS
+     85 U0000
+     86 U0000							; DO NOT CHANGE THE RELATIVE ORDERING OF REGISTERS!
+     87 U0000
+     88 U0000		       00	   VSYNC      ds	1	; $00	 0000 00x0   Vertical Sync Set-Clear
+     89 U0001		       00	   VBLANK     ds	1	; $01	 xx00 00x0   Vertical Blank Set-Clear
+     90 U0002		       00	   WSYNC      ds	1	; $02	 ---- ----   Wait for Horizontal Blank
+     91 U0003		       00	   RSYNC      ds	1	; $03	 ---- ----   Reset Horizontal Sync Counter
+     92 U0004		       00	   NUSIZ0     ds	1	; $04	 00xx 0xxx   Number-Size player/missle 0
+     93 U0005		       00	   NUSIZ1     ds	1	; $05	 00xx 0xxx   Number-Size player/missle 1
+     94 U0006		       00	   COLUP0     ds	1	; $06	 xxxx xxx0   Color-Luminance Player 0
+     95 U0007		       00	   COLUP1     ds	1	; $07	 xxxx xxx0   Color-Luminance Player 1
+     96 U0008		       00	   COLUPF     ds	1	; $08	 xxxx xxx0   Color-Luminance Playfield
+     97 U0009		       00	   COLUBK     ds	1	; $09	 xxxx xxx0   Color-Luminance Background
+     98 U000a		       00	   CTRLPF     ds	1	; $0A	 00xx 0xxx   Control Playfield, Ball, Collisions
+     99 U000b		       00	   REFP0      ds	1	; $0B	 0000 x000   Reflection Player 0
+    100 U000c		       00	   REFP1      ds	1	; $0C	 0000 x000   Reflection Player 1
+    101 U000d		       00	   PF0	      ds	1	; $0D	 xxxx 0000   Playfield Register Byte 0
+    102 U000e		       00	   PF1	      ds	1	; $0E	 xxxx xxxx   Playfield Register Byte 1
+    103 U000f		       00	   PF2	      ds	1	; $0F	 xxxx xxxx   Playfield Register Byte 2
+    104 U0010		       00	   RESP0      ds	1	; $10	 ---- ----   Reset Player 0
+    105 U0011		       00	   RESP1      ds	1	; $11	 ---- ----   Reset Player 1
+    106 U0012		       00	   RESM0      ds	1	; $12	 ---- ----   Reset Missle 0
+    107 U0013		       00	   RESM1      ds	1	; $13	 ---- ----   Reset Missle 1
+    108 U0014		       00	   RESBL      ds	1	; $14	 ---- ----   Reset Ball
+    109 U0015		       00	   AUDC0      ds	1	; $15	 0000 xxxx   Audio Control 0
+    110 U0016		       00	   AUDC1      ds	1	; $16	 0000 xxxx   Audio Control 1
+    111 U0017		       00	   AUDF0      ds	1	; $17	 000x xxxx   Audio Frequency 0
+    112 U0018		       00	   AUDF1      ds	1	; $18	 000x xxxx   Audio Frequency 1
+    113 U0019		       00	   AUDV0      ds	1	; $19	 0000 xxxx   Audio Volume 0
+    114 U001a		       00	   AUDV1      ds	1	; $1A	 0000 xxxx   Audio Volume 1
+    115 U001b		       00	   GRP0       ds	1	; $1B	 xxxx xxxx   Graphics Register Player 0
+    116 U001c		       00	   GRP1       ds	1	; $1C	 xxxx xxxx   Graphics Register Player 1
+    117 U001d		       00	   ENAM0      ds	1	; $1D	 0000 00x0   Graphics Enable Missle 0
+    118 U001e		       00	   ENAM1      ds	1	; $1E	 0000 00x0   Graphics Enable Missle 1
+    119 U001f		       00	   ENABL      ds	1	; $1F	 0000 00x0   Graphics Enable Ball
+    120 U0020		       00	   HMP0       ds	1	; $20	 xxxx 0000   Horizontal Motion Player 0
+    121 U0021		       00	   HMP1       ds	1	; $21	 xxxx 0000   Horizontal Motion Player 1
+    122 U0022		       00	   HMM0       ds	1	; $22	 xxxx 0000   Horizontal Motion Missle 0
+    123 U0023		       00	   HMM1       ds	1	; $23	 xxxx 0000   Horizontal Motion Missle 1
+    124 U0024		       00	   HMBL       ds	1	; $24	 xxxx 0000   Horizontal Motion Ball
+    125 U0025		       00	   VDELP0     ds	1	; $25	 0000 000x   Vertical Delay Player 0
+    126 U0026		       00	   VDELP1     ds	1	; $26	 0000 000x   Vertical Delay Player 1
+    127 U0027		       00	   VDELBL     ds	1	; $27	 0000 000x   Vertical Delay Ball
+    128 U0028		       00	   RESMP0     ds	1	; $28	 0000 00x0   Reset Missle 0 to Player 0
+    129 U0029		       00	   RESMP1     ds	1	; $29	 0000 00x0   Reset Missle 1 to Player 1
+    130 U002a		       00	   HMOVE      ds	1	; $2A	 ---- ----   Apply Horizontal Motion
+    131 U002b		       00	   HMCLR      ds	1	; $2B	 ---- ----   Clear Horizontal Move Registers
+    132 U002c		       00	   CXCLR      ds	1	; $2C	 ---- ----   Clear Collision Latches
+    133 U002d
+    134 U002d							;-------------------------------------------------------------------------------
+    135 U002d
+    136 U000e ????				      SEG.U	TIA_REGISTERS_READ
+    137 U0000					      ORG	TIA_BASE_READ_ADDRESS
+    138 U0000
+    139 U0000							;											bit 7	 bit 6
+    140 U0000		       00	   CXM0P      ds	1	; $00	     xx00 0000	     Read Collision  M0-P1   M0-P0
+    141 U0001		       00	   CXM1P      ds	1	; $01	     xx00 0000			     M1-P0   M1-P1
+    142 U0002		       00	   CXP0FB     ds	1	; $02	     xx00 0000			     P0-PF   P0-BL
+    143 U0003		       00	   CXP1FB     ds	1	; $03	     xx00 0000			     P1-PF   P1-BL
+    144 U0004		       00	   CXM0FB     ds	1	; $04	     xx00 0000			     M0-PF   M0-BL
+    145 U0005		       00	   CXM1FB     ds	1	; $05	     xx00 0000			     M1-PF   M1-BL
+    146 U0006		       00	   CXBLPF     ds	1	; $06	     x000 0000			     BL-PF   -----
+    147 U0007		       00	   CXPPMM     ds	1	; $07	     xx00 0000			     P0-P1   M0-M1
+    148 U0008		       00	   INPT0      ds	1	; $08	     x000 0000	     Read Pot Port 0
+    149 U0009		       00	   INPT1      ds	1	; $09	     x000 0000	     Read Pot Port 1
+    150 U000a		       00	   INPT2      ds	1	; $0A	     x000 0000	     Read Pot Port 2
+    151 U000b		       00	   INPT3      ds	1	; $0B	     x000 0000	     Read Pot Port 3
+    152 U000c		       00	   INPT4      ds	1	; $0C		x000 0000	 Read Input (Trigger) 0
+    153 U000d		       00	   INPT5      ds	1	; $0D		x000 0000	 Read Input (Trigger) 1
+    154 U000e
+    155 U000e							;-------------------------------------------------------------------------------
+    156 U000e
+    157 U0298 ????				      SEG.U	RIOT
+    158 U0280					      ORG	$280
+    159 U0280
+    160 U0280							; RIOT MEMORY MAP
+    161 U0280
+    162 U0280		       00	   SWCHA      ds	1	; $280      Port A data register for joysticks:
+    163 U0281							;			Bits 4-7 for player 1.  Bits 0-3 for player 2.
+    164 U0281
+    165 U0281		       00	   SWACNT     ds	1	; $281      Port A data direction register (DDR)
+    166 U0282		       00	   SWCHB      ds	1	; $282		Port B data (console switches)
+    167 U0283		       00	   SWBCNT     ds	1	; $283      Port B DDR
+    168 U0284		       00	   INTIM      ds	1	; $284		Timer output
+    169 U0285
+    170 U0285		       00	   TIMINT     ds	1	; $285
+    171 U0286
+    172 U0286							; Unused/undefined registers ($285-$294)
+    173 U0286
+    174 U0286		       00		      ds	1	; $286
+    175 U0287		       00		      ds	1	; $287
+    176 U0288		       00		      ds	1	; $288
+    177 U0289		       00		      ds	1	; $289
+    178 U028a		       00		      ds	1	; $28A
+    179 U028b		       00		      ds	1	; $28B
+    180 U028c		       00		      ds	1	; $28C
+    181 U028d		       00		      ds	1	; $28D
+    182 U028e		       00		      ds	1	; $28E
+    183 U028f		       00		      ds	1	; $28F
+    184 U0290		       00		      ds	1	; $290
+    185 U0291		       00		      ds	1	; $291
+    186 U0292		       00		      ds	1	; $292
+    187 U0293		       00		      ds	1	; $293
+    188 U0294
+    189 U0294		       00	   TIM1T      ds	1	; $294		set 1 clock interval
+    190 U0295		       00	   TIM8T      ds	1	; $295      set 8 clock interval
+    191 U0296		       00	   TIM64T     ds	1	; $296      set 64 clock interval
+    192 U0297		       00	   T1024T     ds	1	; $297      set 1024 clock interval
+    193 U0298
+    194 U0298							;-------------------------------------------------------------------------------
+    195 U0298							; The following required for back-compatibility with code which does not use
+    196 U0298							; segments.
+    197 U0298
+    198  0000 ????				      SEG
+    199  0000 ????
+    200  0000 ????						; EOF
+------- FILE blindfire.asm
+------- FILE macro.h LEVEL 2 PASS 2
+      0  0000 ????				      include	"macro.h"
+      1  0000 ????						; MACRO.H
+      2  0000 ????						; Version 1.07, 19/January/2020
+      3  0000 ????
+      4  0000 ????	       00 6b	   VERSION_MACRO =	107
+      5  0000 ????
+      6  0000 ????						;
+      7  0000 ????						; THIS FILE IS EXPLICITLY SUPPORTED AS A DASM-PREFERRED COMPANION FILE
+      8  0000 ????						; PLEASE DO *NOT* REDISTRIBUTE MODIFIED VERSIONS OF THIS FILE!
+      9  0000 ????						;
+     10  0000 ????						; This file defines DASM macros useful for development for the Atari 2600.
+     11  0000 ????						; It is distributed as a companion machine-specific support package
+     12  0000 ????						; for the DASM compiler. Updates to this file, DASM, and associated tools are
+     13  0000 ????						; available at at http://www.atari2600.org/dasm
+     14  0000 ????						;
+     15  0000 ????						; Many thanks to the people who have contributed.  If you take issue with the
+     16  0000 ????						; contents, or would like to add something, please write to me
+     17  0000 ????						; (atari2600@taswegian.com) with your contribution.
+     18  0000 ????						;
+     19  0000 ????						; Latest Revisions...
+     20  0000 ????						; 1.07  19/JAN/2020	 - correction to comment VERTICAL_SYNC
+     21  0000 ????						; 1.06  03/SEP/2004	 - nice revision of VERTICAL_SYNC (Edwin Blink)
+     22  0000 ????						; 1.05  14/NOV/2003	 - Added VERSION_MACRO equate (which will reflect 100x version #)
+     23  0000 ????						;			   This will allow conditional code to verify MACRO.H being
+     24  0000 ????						;			   used for code assembly.
+     25  0000 ????						; 1.04  13/NOV/2003	 - SET_POINTER macro added (16-bit address load)
+     26  0000 ????						;
+     27  0000 ????						; 1.03  23/JUN/2003	 - CLEAN_START macro added - clears TIA, RAM, registers
+     28  0000 ????						;
+     29  0000 ????						; 1.02  14/JUN/2003	 - VERTICAL_SYNC macro added
+     30  0000 ????						;			   (standardised macro for vertical synch code)
+     31  0000 ????						; 1.01  22/MAR/2003	 - SLEEP macro added.
+     32  0000 ????						;			 - NO_ILLEGAL_OPCODES switch implemented
+     33  0000 ????						; 1.0	22/MAR/2003		Initial release
+     34  0000 ????
+     35  0000 ????						; Note: These macros use illegal opcodes.  To disable illegal opcode usage,
+     36  0000 ????						;   define the symbol NO_ILLEGAL_OPCODES (-DNO_ILLEGAL_OPCODES=1 on command-line).
+     37  0000 ????						;   If you do not allow illegal opcode usage, you must include this file
+     38  0000 ????						;   *after* including VCS.H (as the non-illegal opcodes access hardware
+     39  0000 ????						;   registers and require them to be defined first).
+     40  0000 ????
+     41  0000 ????						; Available macros...
+     42  0000 ????						;   SLEEP n		 - sleep for n cycles
+     43  0000 ????						;   VERTICAL_SYNC	 - correct 3 scanline vertical synch code
+     44  0000 ????						;   CLEAN_START	 - set machine to known state on startup
+     45  0000 ????						;   SET_POINTER	 - load a 16-bit absolute to a 16-bit variable
+     46  0000 ????
+     47  0000 ????						;-------------------------------------------------------------------------------
+     48  0000 ????						; SLEEP duration
+     49  0000 ????						; Original author: Thomas Jentzsch
+     50  0000 ????						; Inserts code which takes the specified number of cycles to execute.	This is
+     51  0000 ????						; useful for code where precise timing is required.
+     52  0000 ????						; ILLEGAL-OPCODE VERSION DOES NOT AFFECT FLAGS OR REGISTERS.
+     53  0000 ????						; LEGAL OPCODE VERSION MAY AFFECT FLAGS
+     54  0000 ????						; Uses illegal opcode (DASM 2.20.01 onwards).
+     55  0000 ????
+     56  0000 ????				      MAC	sleep
+     57  0000 ????			   .CYCLES    SET	{1}
+     58  0000 ????
+     59  0000 ????				      IF	.CYCLES < 2
+     60  0000 ????				      ECHO	"MACRO ERROR: 'SLEEP': Duration must be > 1"
+     61  0000 ????				      ERR
+     62  0000 ????				      ENDIF
+     63  0000 ????
+     64  0000 ????				      IF	.CYCLES & 1
+     65  0000 ????				      IFNCONST	NO_ILLEGAL_OPCODES
+     66  0000 ????				      nop	0
+     67  0000 ????				      ELSE
+     68  0000 ????				      bit	VSYNC
+     69  0000 ????				      ENDIF
+     70  0000 ????			   .CYCLES    SET	.CYCLES - 3
+     71  0000 ????				      ENDIF
+     72  0000 ????
+     73  0000 ????				      REPEAT	.CYCLES / 2
+     74  0000 ????				      nop
+     75  0000 ????				      REPEND
+     76  0000 ????				      ENDM		;usage: SLEEP n (n>1)
+     77  0000 ????
+     78  0000 ????						;-------------------------------------------------------------------------------
+     79  0000 ????						; VERTICAL_SYNC
+     80  0000 ????						; revised version by Edwin Blink -- saves bytes!
+     81  0000 ????						; Inserts the code required for a proper 3 scanline vertical sync sequence
+     82  0000 ????						; Note: Alters the accumulator
+     83  0000 ????
+     84  0000 ????						; OUT: A = 0
+     85  0000 ????
+     86  0000 ????				      MAC	vertical_sync
+     87  0000 ????				      lda	#%1110	; each '1' bits generate a VSYNC ON line (bits 1..3)
+     88  0000 ????			   .VSLP1     sta	WSYNC	; 1st '0' bit resets Vsync, 2nd '0' bit exit loop
+     89  0000 ????				      sta	VSYNC
+     90  0000 ????				      lsr
+     91  0000 ????				      bne	.VSLP1	; branch until VYSNC has been reset
+     92  0000 ????				      ENDM
+     93  0000 ????
+     94  0000 ????						;-------------------------------------------------------------------------------
+     95  0000 ????						; CLEAN_START
+     96  0000 ????						; Original author: Andrew Davie
+     97  0000 ????						; Standardised start-up code, clears stack, all TIA registers and RAM to 0
+     98  0000 ????						; Sets stack pointer to $FF, and all registers to 0
+     99  0000 ????						; Sets decimal mode off, sets interrupt flag (kind of un-necessary)
+    100  0000 ????						; Use as very first section of code on boot (ie: at reset)
+    101  0000 ????						; Code written to minimise total ROM usage - uses weird 6502 knowledge :)
+    102  0000 ????
+    103  0000 ????				      MAC	clean_start
+    104  0000 ????				      sei
+    105  0000 ????				      cld
+    106  0000 ????
+    107  0000 ????				      ldx	#0
+    108  0000 ????				      txa
+    109  0000 ????				      tay
+    110  0000 ????			   .CLEAR_STACK dex
+    111  0000 ????				      txs
+    112  0000 ????				      pha
+    113  0000 ????				      bne	.CLEAR_STACK	; SP=$FF, X = A = Y = 0
+    114  0000 ????
+    115  0000 ????				      ENDM
+    116  0000 ????
+    117  0000 ????						;-------------------------------------------------------
+    118  0000 ????						; SET_POINTER
+    119  0000 ????						; Original author: Manuel Rotschkar
+    120  0000 ????						;
+    121  0000 ????						; Sets a 2 byte RAM pointer to an absolute address.
+    122  0000 ????						;
+    123  0000 ????						; Usage: SET_POINTER pointer, address
+    124  0000 ????						; Example: SET_POINTER SpritePTR, SpriteData
+    125  0000 ????						;
+    126  0000 ????						; Note: Alters the accumulator, NZ flags
+    127  0000 ????						; IN 1: 2 byte RAM location reserved for pointer
+    128  0000 ????						; IN 2: absolute address
+    129  0000 ????
+    130  0000 ????				      MAC	set_pointer
+    131  0000 ????			   .POINTER   SET	{1}
+    132  0000 ????			   .ADDRESS   SET	{2}
+    133  0000 ????
+    134  0000 ????				      LDA	#<.ADDRESS	; Get Lowbyte of Address
+    135  0000 ????				      STA	.POINTER	; Store in pointer
+    136  0000 ????				      LDA	#>.ADDRESS	; Get Hibyte of Address
+    137  0000 ????				      STA	.POINTER+1	; Store in pointer+1
+    138  0000 ????
+    139  0000 ????				      ENDM
+    140  0000 ????
+    141  0000 ????						;-------------------------------------------------------
+    142  0000 ????						; BOUNDARY byte#
+    143  0000 ????						; Original author: Denis Debro (borrowed from Bob Smith / Thomas)
+    144  0000 ????						;
+    145  0000 ????						; Push data to a certain position inside a page and keep count of how
+    146  0000 ????						; many free bytes the programmer will have.
+    147  0000 ????						;
+    148  0000 ????						; eg: BOUNDARY 5    ; position at byte #5 in page
+    149  0000 ????
+    150  0000 ????			   .FREE_BYTES SET	0
+    151  0000 ????				      MAC	boundary
+    152  0000 ????				      REPEAT	256
+    153  0000 ????				      IF	<. % {1} = 0
+    154  0000 ????				      MEXIT
+    155  0000 ????				      ELSE
+    156  0000 ????			   .FREE_BYTES SET	.FREE_BYTES + 1
+    157  0000 ????				      .byte	$00
+    158  0000 ????				      ENDIF
+    159  0000 ????				      REPEND
+    160  0000 ????				      ENDM
+    161  0000 ????
+    162  0000 ????
+    163  0000 ????						; EOF
+------- FILE blindfire.asm
+      4  0000 ????
+      5  0000 ????						; -- Constants --
+      6  0000 ????	       00 c0	   PICTURE_HEIGHT =	192
+      7  0000 ????	       00 b1	   PICTURE_CUTOFF =	177
+      8  0000 ????	       00 01	   SCORE_DELAY =	1
+      9  0000 ????	       00 09	   SCORE_HEIGHT =	9
+     10  0000 ????	       00 80	   INITIAL_CITY_DELAY =	128
+     11  0000 ????	       00 98	   PLAYER_DELAY =	152	;One higher than the actual amount to account for the early decrement in the new kernel
+     12  0000 ????	       00 09	   PLAYER_HEIGHT =	9	;Needs to be one less than actual. This is to facilitate graphics pointers
+     13  0000 ????	       00 09	   ENEMY_HEIGHT =	9
+     14  0000 ????	       00 0b	   CITY_HEIGHT =	11
+     15  0000 ????	       00 a4	   LOWER_UI_DELAY =	164
+     16  0000 ????	       00 09	   LOWER_UI_HEIGHT =	9
+     17  0000 ????	       00 a0	   MAX_PADDLE_VALUE =	160
+     18  0000 ????	       00 1b	   MIN_PADDLE_VALUE =	27
+     19  0000 ????	       00 76	   PLAYER_COLOR =	$76	;Formerly $76
+     20  0000 ????	       00 76	   CITYSCAPE_COLOR =	$76
+     21  0000 ????	       00 fe	   SOUND_PAGE =	$FE
+     22  0000 ????	       00 ff	   GRAPHICS_PAGE =	$FF
+     23  0000 ????	       00 f9	   MISSILE_TRAVEL_SPEED =	$F9
+     24  0000 ????	       00 93	   MISSILE_DEPLOY_TOP_HEIGHT =	147
+     25  0000 ????	       00 99	   MISSILE_DEPLOY_BOTTOM_HEIGHT =	153
+     26  0000 ????	       00 c8	   MISSILE_OFFSCREEN_CONSTANT =	200
+     27  0000 ????	       00 27	   VBLANK_TIMER_VALUE =	39	;This number has been the result of fudging, so scanline count issues might very well be resolved here.
+     28  0000 ????	       00 24	   OVERSCAN_TIMER_VALUE =	36	; ^
+     29  0000 ????	       00 06	   MAX_ENEMY_COUNT =	6
+     30  0000 ????	       00 0e	   MAX_WAVE_INDEX =	14
+     31  0000 ????	       00 04	   MAX_WAVE_INDEX_NOVICE =	4
+     32  0000 ????	       00 05	   BASE_ENEMIES_PER_WAVE =	5
+     33  0000 ????	       00 03	   UI_BACKGROUND_COLOR =	$03	;Deprecated
+     34  0000 ????	       00 37	   DEFAULT_ENEMY_COLOR =	$37
+     35  0000 ????	       00 03	   SOUND_EFFECT_VOLUME =	3
+     36  0000 ????	       00 03	   RANGEFINDER_VOLUME =	3
+     37  0000 ????	       00 78	   ENEMY_SPAWN_INTERVAL =	120
+     38  0000 ????
+     39  0000 ????	       00 80	   BRIGHTNESS_COUNTER_TRANSITION =	128	;These numbers are arbitrary. However, they will be needed to compute indices into color lookup tables.
+     40  0000 ????	       00 08	   BRIGHTNESS_COUNTER_SHOOT =	8
+     41  0000 ????
+     42 U00d7 ????				      SEG.U	Variables
+     43 U0080					      ORG	$80
+     44 U0080
+     45 U0080		       00	   rawPaddle  ds	1
+     46 U0081		       00	   tgtPlayerXPos ds	1
+     47 U0082		       00	   playerXPos ds	1
+     48 U0083		       00	   playerFineCoarse ds	1
+     49 U0084		       00	   rand8      ds	1
+     50 U0085		       00	   inGame     ds	1	;High bit is 1 when game is able to be played, 0 when game is over.
+     51 U0086		       00	   inWave     ds	1	;High bit is 0 when waiting to start next wave, 1 otherwise.
+     52 U0087		       00	   inTransition ds	1	;0 for no transition, 1 for transitioning to wave, 2 for transitioning from wave
+     53 U0088		       00	   waveIndex  ds	1
+     54 U0089		       00	   maxWaveIndex ds	1
+     55 U008a		       00	   everyOtherFrame ds	1
+     56 U008b		       00	   enemySpeed ds	1
+     57 U008c		       00	   enemiesLeftInWave ds	1
+     58 U008d		       00	   enemySpawnTimer ds	1
+     59 U008e		       00	   enemyColor ds	1
+     60 U008f		       00	   backgroundColor ds	1
+     61 U0090		       00	   brightnessCounter ds	1
+     62 U0091		       00	   cityLevel  ds	1
+     63 U0092		       00	   cityDelayMinusFour ds	1
+     64 U0093		       00	   cityDelay  ds	1
+     65 U0094		       00	   rangefinderVolume ds	1
+     66 U0095		       00	   rangefinderTimer ds	1
+     67 U0096		       00	   currentSound ds	1
+     68 U0097		       00 00	   currentSoundPointer ds	2
+     69 U0099		       00	   soundOffset ds	1
+     70 U009a		       00	   soundEffectTimer ds	1
+     71 U009b		       00	   scoreModifierLo ds	1
+     72 U009c		       00	   scoreModifierHi ds	1
+     73 U009d		       00	   scoreLo    ds	1
+     74 U009e		       00	   scoreMd    ds	1
+     75 U009f		       00	   scoreHi    ds	1
+     76 U00a0		       00	   extraLifeThreshold ds	1
+     77 U00a1		       00	   missileCount ds	1
+     78 U00a2		       00 00	   genericPointer ds	2
+     79 U00a4		       00 00	   scorePointer6 ds	2	;Highest digit
+     80 U00a6		       00 00	   scorePointer5 ds	2
+     81 U00a8		       00 00	   scorePointer4 ds	2
+     82 U00aa		       00 00	   scorePointer3 ds	2
+     83 U00ac		       00 00	   scorePointer2 ds	2
+     84 U00ae		       00 00	   scorePointer1 ds	2	;Lowest digit
+     85 U00b0		       00 00	   missileCountPointer2 ds	2
+     86 U00b2		       00 00	   missileCountPointer1 ds	2
+     87 U00b4		       00 00	   cityscape0Pointer ds	2
+     88 U00b6		       00 00	   cityscape1Pointer ds	2
+     89 U00b8		       00 00	   cityscape2Pointer ds	2
+     90 U00ba		       00	   cityscapeGraphicsIndex ds	1
+     91 U00bb		       00	   enemyGraphicsIndex ds	1
+     92 U00bc		       00	   missileFineCoarse ds	1
+     93 U00bd		       00	   missileStartY ds	1
+     94 U00be		       00	   missileEndY ds	1
+     95 U00bf		       00	   nextEnemyY ds	1
+     96 U00c0		       00	   tempDigit  ds	1	;Used for the 6-digit score routine
+     97 U00c1		       00	   loopCount  ds	1	; ^
+     98 U00c2		       00	   enemyCount ds	1
+     99 U00c3		       00	   enemyIndex ds	1
+    100 U00c4
+    101 U00c4							;Only 6 enemies can be on screen at a time.
+    102 U00c4		       00 00 00 00*enemyFineCoarsePositions ds	6	;FFFFCCCC
+    103 U00ca		       00 00 00 00*enemyXPositions ds	6
+    104 U00d0		       00 00 00 00*enemyYPositions ds	6
+    105 U00d6		       00	   enemyYPositionsTerminator ds	1
+    106 U00d7
+    107 U00d7							;Each enemy/explosion requires 4 bytes of memory.
+    108 U00d7							;0: Describes the type of entity it is. 00000TTT
+    109 U00d7							;1: Describes the fine and coarse positioning of the enemy, used for placing it on the screen FFFFCCCC
+    110 U00d7							;2: The screen x position of the enemy, where a greater number is further right, used to calculate the fine/coarse pos.
+    111 U00d7							;3: The screen y position of the enemy, where a greater number is higher on the screen
+    112 U00d7
+    113 U00d7					      MAC	read_paddle
+    114 U00d7					      lda	INPT0
+    115 U00d7					      bmi	.NoUpdatePaddle
+    116 U00d7					      stx	rawPaddle
+    117 U00d7				   .NoUpdatePaddle
+    118 U00d7					      ENDM
+    119 U00d7
+    120  10000 ????				       SEG	CODE
+    121  f800					      ORG	$F800
+    122  f800
+    123  f800							;Sets all registers and RAM to 0.
+    124  f800				   Reset
+    125  f800		       a2 00		      ldx	#0
+    126  f802		       8a		      txa
+    127  f803		       a8		      tay
+    128  f804				   Clear
+    129  f804		       ca		      dex
+    130  f805		       9a		      txs
+    131  f806		       48		      pha
+    132  f807		       d0 fb		      bne	Clear
+    133  f809		       d8		      cld
+    134  f80a
+    135  f80a				   InitalizeValues
+    136  f80a		       a9 ff		      lda	#GRAPHICS_PAGE	;The (indirect),y addressing mode requires 2 byte pointers. The high bytes are configured here.
+    137  f80c
+    138  f80c		       a0 14		      ldy	#20
+    139  f80e				   PointerHighByteLoop
+    140  f80e		       99 a5 00 	      sta	#(scorePointer6+1),y
+    141  f811		       88		      dey
+    142  f812		       88		      dey
+    143  f813		       10 f9		      bpl	PointerHighByteLoop
+    144  f815
+    145  f815		       85 bd		      sta	missileStartY
+    146  f817		       85 be		      sta	missileEndY
+    147  f819		       85 d6		      sta	enemyYPositionsTerminator
+    148  f81b
+    149  f81b		       a9 fe		      lda	#SOUND_PAGE
+    150  f81d		       85 98		      sta	currentSoundPointer+1
+    151  f81f
+    152  f81f		       a9 76		      lda	#CITYSCAPE_COLOR
+    153  f821		       85 08		      sta	COLUPF
+    154  f823
+    155  f823		       a9 8c		      lda	#$8C
+    156  f825		       85 8f		      sta	backgroundColor
+    157  f827		       85 85		      sta	inGame
+    158  f829
+    159  f829		       ad 84 02 	      lda	INTIM	;Seed the random number generator
+    160  f82c		       d0 02		      bne	SkipSeeding
+    161  f82e		       a9 6b		      lda	#$6B	;Extremely random random number generator here
+    162  f830				   SkipSeeding
+    163  f830		       85 84		      sta	rand8
+    164  f832
+    165  f832		       a9 04		      lda	#4
+    166  f834		       85 91		      sta	cityLevel
+    167  f836		       85 9a		      sta	soundEffectTimer
+    168  f838		       85 bc		      sta	missileFineCoarse	;Must prevent underflow when coarse positioning
+    169  f83a
+    170  f83a		       a9 01		      lda	#$01
+    171  f83c		       85 a0		      sta	extraLifeThreshold
+    172  f83e
+    173  f83e							;Determine what the current difficulty is.
+    174  f83e							;$80 indicates expert mode, $00 indicates novice mode.
+    175  f83e		       ad 82 02 	      lda	SWCHB
+    176  f841		       29 40		      and	#%01000000
+    177  f843		       0a		      asl
+    178  f844		       10 05		      bpl	NoviceMode
+    179  f846				   ExpertMode
+    180  f846		       a9 0e		      lda	#MAX_WAVE_INDEX
+    181  f848		       4c 4d f8 	      jmp	AssignMaxWaveIndex
+    182  f84b				   NoviceMode
+    183  f84b		       a9 04		      lda	#MAX_WAVE_INDEX_NOVICE
+    184  f84d				   AssignMaxWaveIndex
+    185  f84d		       85 89		      sta	maxWaveIndex
+    186  f84f
+    187  f84f				   StartOfFrame
+    188  f84f							;Check if reset switch is currently held
+    189  f84f		       a9 01		      lda	#%00000001
+    190  f851		       2c 82 02 	      bit	SWCHB
+    191  f854		       f0 aa		      beq	Reset
+    192  f856
+    193  f856							;Start of VBLANK processing
+    194  f856		       a9 82		      lda	#%10000010	;D7 is for dumping the paddle capacitor
+    195  f858		       85 01		      sta	VBLANK
+    196  f85a		       a9 02		      lda	#2
+    197  f85c		       85 00		      sta	VSYNC
+    198  f85e
+    199  f85e							;3 Scanlines of VSYNC
+    200  f85e		       85 02		      sta	WSYNC
+    201  f860		       20 38 fe 	      jsr	Random	;Tick the random number generator
+    202  f863		       85 02		      sta	WSYNC
+    203  f865		       85 02		      sta	WSYNC
+    204  f867
+    205  f867							;37 Scanlines of VBLANK
+    206  f867		       a9 00		      lda	#0
+    207  f869		       85 00		      sta	VSYNC
+    208  f86b		       a9 27		      lda	#VBLANK_TIMER_VALUE
+    209  f86d		       8d 96 02 	      sta	TIM64T	;Set timer to reach 0 six scanlines before the end of VBLANK.
+    210  f870
+    211  f870		       a9 37		      lda	#DEFAULT_ENEMY_COLOR
+    212  f872		       85 8e		      sta	enemyColor
+    213  f874
+    214  f874							;Update sound effects if on correct frame
+    215  f874		       c6 9a		      dec	soundEffectTimer
+    216  f876		       d0 1f		      bne	WaitForVblankTimer
+    217  f878		       a9 04		      lda	#4
+    218  f87a		       85 9a		      sta	soundEffectTimer
+    219  f87c
+    220  f87c				   UpdateSoundEffects
+    221  f87c		       a5 96		      lda	currentSound
+    222  f87e		       f0 11		      beq	SoundEffectFinished	;If no sound effect is currently playing, set the volume of that channel to 0.
+    223  f880		       c6 99		      dec	soundOffset	;Otherwise if the sound effect is still playing, decrease this offset to find the next tone.
+    224  f882		       f0 0d		      beq	SoundEffectFinished	;This probably covers a strange edge case where an invalid tone is loaded.
+    225  f884		       a9 03		      lda	#SOUND_EFFECT_VOLUME
+    226  f886		       85 19		      sta	AUDV0	;Turn on the sound channel.
+    227  f888		       a4 99		      ldy	soundOffset
+    228  f88a		       b1 97		      lda	(currentSoundPointer),y	;Load the tone associated with this sound effect and offset.
+    229  f88c		       85 17		      sta	AUDF0
+    230  f88e		       4c 97 f8 	      jmp	WaitForVblankTimer
+    231  f891				   SoundEffectFinished
+    232  f891		       a0 00		      ldy	#0
+    233  f893		       84 96		      sty	currentSound
+    234  f895		       84 19		      sty	AUDV0
+    235  f897
+    236  f897				   WaitForVblankTimer
+    237  f897		       ad 84 02 	      lda	INTIM
+    238  f89a		       d0 fb		      bne	WaitForVblankTimer
+    239  f89c		       85 02		      sta	WSYNC
+    240  f89e		       a4 91		      ldy	cityLevel
+    241  f8a0		       b9 c0 fe 	      lda	CityDelayLookupTable,y
+    242  f8a3		       85 93		      sta	cityDelay	;Update the variables responsible for making the enemies contact the city at decreasing height as it is destroyed.
+    243  f8a5		       38		      sec
+    244  f8a6		       e9 04		      sbc	#4
+    245  f8a8		       85 92		      sta	cityDelayMinusFour	; Update the variables responsible for...
+    246  f8aa		       85 02		      sta	WSYNC
+    247  f8ac
+    248  f8ac							;Position missile --- This level of delay places the missile one pixel to the left of the player's center
+    249  f8ac
+    250  f8ac							;Is this all really necessary? Why doesn't the missile placement code use the RESMP0 register? Wouldn't that be far simpler and partially bypass the problem
+    251  f8ac							;of the missile being one pixel off of the player?
+    252  f8ac		       a5 bc		      lda	missileFineCoarse	;3 cycles
+    253  f8ae		       85 22		      sta	HMM0	;3 cycles
+    254  f8b0		       29 0f		      and	#$0f	;2 cycles
+    255  f8b2		       a8		      tay		;y now contains the coarse position of the missile. 2 cycles
+    256  f8b3		       ea		      nop
+    257  f8b4		       ea		      nop
+    258  f8b5		       ea		      nop
+    259  f8b6		       ea		      nop
+    260  f8b7		       e4 88		      cpx	waveIndex
+    261  f8b9				   CoarsePositionMissile
+    262  f8b9		       88		      dey
+    263  f8ba		       d0 fd		      bne	CoarsePositionMissile
+    264  f8bc		       85 12		      sta	RESM0	;Set the missile's coarse x position to right here.
+    265  f8be		       85 02		      sta	WSYNC
+    266  f8c0		       85 2a		      sta	HMOVE	;Now the missile is one pixel to the left of the player's center.
+    267  f8c2
+    268  f8c2		       84 c3		      sty	enemyIndex	;Y is conveniently 0 at this point of the code, so it is a fine time to clear the progress into the list of enemies.
+    269  f8c4
+    270  f8c4							;Code that will probably move elsewhere.
+    271  f8c4		       a5 d0		      lda	enemyYPositions
+    272  f8c6		       85 bf		      sta	nextEnemyY	;Set the first enemy to be drawn as the first one in the list.
+    273  f8c8		       85 02		      sta	WSYNC
+    274  f8ca
+    275  f8ca		       85 2b		      sta	HMCLR	;Clear all fine positioning movement data.
+    276  f8cc		       85 2c		      sta	CXCLR	;Clear all collision data from the previous frame.
+    277  f8ce		       85 02		      sta	WSYNC
+    278  f8d0		       a9 40		      lda	#%01000000
+    279  f8d2		       85 01		      sta	VBLANK	;Turn the electron beam on, and allow the paddle capacitor to start charging.
+    280  f8d4		       a2 01		      ldx	#SCORE_DELAY
+    281  f8d6		       98		      tya
+    282  f8d7		       85 80		      sta	rawPaddle	;Clear the current raw paddle value, to be calculated again.
+    283  f8d9
+    284  f8d9
+    285  f8d9
+    286  f8d9
+    287  f8d9
+    288  f8d9
+    289  f8d9							;Draw the actual picture to the screen, and continuously poll to find the paddle value.
+    290  f8d9				   WaitForScore
+    291  f8d9		       ca		      dex
+    292  f8da		       85 02		      sta	WSYNC
+    293  f8dc		       d0 fb		      bne	WaitForScore
+    294  f8de				   ScorePrep
+    295  f8de		       a2 10		      ldx	#$10	;Moves one color clock to the left.
+    296  f8e0		       86 21		      stx	HMP1
+    297  f8e2		       a2 03		      ldx	#$03	;Triplicate
+    298  f8e4		       86 04		      stx	NUSIZ0	;Set both duplication registers to triplicate the sprites.
+    299  f8e6		       86 05		      stx	NUSIZ1
+    300  f8e8		       86 25		      stx	VDELP0
+    301  f8ea		       86 26		      stx	VDELP1
+    302  f8ec		       a9 76		      lda	#PLAYER_COLOR
+    303  f8ee		       85 06		      sta	COLUP0	;Set the color of both sprites to the designated score color.
+    304  f8f0		       85 07		      sta	COLUP1
+    305  f8f2		       ea		      nop		;Timing for centering-ish the score. This process is also required for the later timing as well.
+    306  f8f3		       ea		      nop
+    307  f8f4		       ea		      nop
+    308  f8f5		       85 10		      sta	RESP0	;Set the first sprite here
+    309  f8f7		       85 11		      sta	RESP1	;And the second here
+    310  f8f9		       85 02		      sta	WSYNC
+    311  f8fb		       85 2a		      sta	HMOVE	;Move the second sprite to be only one color clock behind the first.
+    312  f8fd		       a0 09		      ldy	#SCORE_HEIGHT
+    313  f8ff				   ScoreLoop		;Stolen from KABOOM!
+    314  f8ff		       84 c1		      sty	loopCount
+    315  f901		       b1 ae		      lda	(scorePointer1),y
+    316  f903		       85 c0		      sta	tempDigit
+    317  f905		       85 02		      sta	WSYNC
+    318  f907		       b1 a4		      lda	(scorePointer6),y
+    319  f909		       85 1b		      sta	GRP0
+    320  f90b		       b1 a6		      lda	(scorePointer5),y
+    321  f90d		       85 1c		      sta	GRP1
+    322  f90f		       b1 a8		      lda	(scorePointer4),y
+    323  f911		       85 1b		      sta	GRP0
+    324  f913		       b1 ac		      lda	(scorePointer2),y
+    325  f915		       aa		      tax
+    326  f916		       b1 aa		      lda	(scorePointer3),y
+    327  f918		       a4 c0		      ldy	tempDigit
+    328  f91a		       85 1c		      sta	GRP1
+    329  f91c		       86 1b		      stx	GRP0
+    330  f91e		       84 1c		      sty	GRP1
+    331  f920		       85 1b		      sta	GRP0
+    332  f922		       a4 c1		      ldy	loopCount
+    333  f924		       88		      dey
+    334  f925		       d0 d8		      bne	ScoreLoop
+    335  f927		       84 05		      sty	NUSIZ1
+    336  f929		       84 1b		      sty	GRP0	;Clear the graphics registers.
+    337  f92b		       84 1c		      sty	GRP1
+    338  f92d		       85 02		      sta	WSYNC
+    339  f92f		       85 2b		      sta	HMCLR	;Clear the horizontal motion.
+    340  f931		       84 25		      sty	VDELP0	;Clear the vertical delay registers.
+    341  f933		       84 26		      sty	VDELP1
+    342  f935		       a0 10		      ldy	#$10
+    343  f937		       84 04		      sty	NUSIZ0
+    344  f939		       a2 00		      ldx	#0
+    345  f93b		       85 02		      sta	WSYNC
+    346  f93d
+    347  f93d		       a5 8f		      lda	backgroundColor
+    348  f93f		       85 09		      sta	COLUBK
+    349  f941
+    350  f941		       a5 90		      lda	brightnessCounter
+    351  f943		       d0 02		      bne	MainLoop
+    352  f945		       85 8e		      sta	enemyColor
+    353  f947
+    354  f947
+    355  f947
+    356  f947				   MainLoop
+    357  f947		       85 02		      sta	WSYNC
+      0  f949					      READ_PADDLE
+      1  f949		       a5 08		      lda	INPT0
+      2  f94b		       30 02		      bmi	.NoUpdatePaddle
+      3  f94d		       86 80		      stx	rawPaddle
+      4  f94f				   .NoUpdatePaddle
+    359  f94f		       e8		      inx		;Increase the current y-value being drawn.
+    360  f950		       e4 be		      cpx	missileEndY
+    361  f952		       b0 0b		      bcs	MissileOff
+    362  f954		       e4 bd		      cpx	missileStartY
+    363  f956		       90 07		      bcc	MissileOff
+    364  f958				   MissileOn
+    365  f958		       a0 02		      ldy	#2
+    366  f95a		       84 1d		      sty	ENAM0
+    367  f95c		       4c 63 f9 	      jmp	PostMissile
+    368  f95f				   MissileOff
+    369  f95f		       a0 00		      ldy	#0
+    370  f961		       84 1d		      sty	ENAM0
+    371  f963				   PostMissile
+    372  f963		       e4 bf		      cpx	nextEnemyY	;Check to see if we are at the y-value of the next enemy to be drawn.
+    373  f965		       f0 07		      beq	PlaceEnemyPrep
+    374  f967		       e4 92		      cpx	cityDelayMinusFour	;Check to see if we have reached the bottom of the enemy-area
+    375  f969		       90 dc		      bcc	MainLoop	;Not reached the bottom yet, loop again.
+    376  f96b		       4c c9 f9 	      jmp	PrepareToDrawCity	;Reached the city! Prepare to draw the cityscape to the screen.
+    377  f96e				   PlaceEnemyPrep
+    378  f96e		       a5 8e		      lda	enemyColor
+    379  f970		       85 07		      sta	COLUP1
+    380  f972		       85 02		      sta	WSYNC
+    381  f974		       a4 c3		      ldy	enemyIndex
+    382  f976		       b9 c4 00 	      lda	enemyFineCoarsePositions,y	;Load the fine and coarse positioning of this enemy.
+    383  f979		       85 21		      sta	HMP1
+    384  f97b		       29 0f		      and	#$0F	;Get just the coarse position of the current enemy.
+    385  f97d		       a8		      tay
+    386  f97e		       ea		      nop		;Delay 7 more cycles
+    387  f97f		       ea		      nop
+    388  f980		       e4 88		      cpx	waveIndex
+    389  f982				   PlaceEnemy
+    390  f982		       88		      dey
+    391  f983		       d0 fd		      bne	PlaceEnemy
+    392  f985		       85 11		      sta	RESP1	;Coarsely place the enemy at this location.
+    393  f987		       85 02		      sta	WSYNC
+    394  f989		       85 2a		      sta	HMOVE	;Finely place the enemy just placed.
+    395  f98b				   DrawEnemyPrep
+    396  f98b		       e8		      inx
+    397  f98c		       e8		      inx
+    398  f98d		       a0 09		      ldy	#ENEMY_HEIGHT
+    399  f98f				   DrawEnemy
+      0  f98f					      READ_PADDLE
+      1  f98f		       a5 08		      lda	INPT0
+      2  f991		       30 02		      bmi	.NoUpdatePaddle
+      3  f993		       86 80		      stx	rawPaddle
+      4  f995				   .NoUpdatePaddle
+    401  f995		       b9 00 ff 	      lda	EnemyGraphics,y	;Load the current row of graphics data for the currently rendering enemy.
+    402  f998		       85 1c		      sta	GRP1
+    403  f99a		       e8		      inx
+    404  f99b		       e4 be		      cpx	missileEndY
+    405  f99d		       b0 0b		      bcs	MissileOff2
+    406  f99f		       e4 bd		      cpx	missileStartY
+    407  f9a1		       90 07		      bcc	MissileOff2
+    408  f9a3				   MissileOn2
+    409  f9a3		       a9 02		      lda	#2
+    410  f9a5		       85 1d		      sta	ENAM0
+    411  f9a7		       4c ae f9 	      jmp	PostMissile2
+    412  f9aa				   MissileOff2
+    413  f9aa		       a9 00		      lda	#0
+    414  f9ac		       85 1d		      sta	ENAM0
+    415  f9ae				   PostMissile2
+    416  f9ae		       85 02		      sta	WSYNC
+    417  f9b0		       e4 92		      cpx	cityDelayMinusFour	;Check to see if we have reached the bottom of the enemy-area
+    418  f9b2		       b0 15		      bcs	PrepareToDrawCity	;Reached the city! Prepare to draw the cityscape to the screen.
+    419  f9b4		       88		      dey
+    420  f9b5		       d0 d8		      bne	DrawEnemy
+    421  f9b7		       84 1c		      sty	GRP1
+    422  f9b9		       a5 c3		      lda	enemyIndex
+    423  f9bb		       18		      clc
+    424  f9bc		       69 01		      adc	#1	;Increase the index of the enemy to draw, now that this one has finished rendering.
+    425  f9be		       85 c3		      sta	enemyIndex
+    426  f9c0		       a8		      tay
+    427  f9c1		       b9 d0 00 	      lda	enemyYPositions,y	;Load the y value of the next enemy in the array.
+    428  f9c4		       85 bf		      sta	nextEnemyY
+    429  f9c6		       4c 47 f9 	      jmp	MainLoop	;Not reached the bottom yet, loop again.
+    430  f9c9
+    431  f9c9
+    432  f9c9
+    433  f9c9
+    434  f9c9
+    435  f9c9				   PrepareToDrawCity
+    436  f9c9		       a0 00		      ldy	#0
+    437  f9cb		       84 1c		      sty	GRP1
+    438  f9cd		       a4 91		      ldy	cityLevel
+    439  f9cf		       b9 bb fe 	      lda	CityscapeHeightLookupTable,y
+    440  f9d2		       a8		      tay
+    441  f9d3				   WaitForCity
+      0  f9d3					      READ_PADDLE
+      1  f9d3		       a5 08		      lda	INPT0
+      2  f9d5		       30 02		      bmi	.NoUpdatePaddle
+      3  f9d7		       86 80		      stx	rawPaddle
+      4  f9d9				   .NoUpdatePaddle
+    443  f9d9		       85 02		      sta	WSYNC
+    444  f9db		       e8		      inx
+    445  f9dc		       e4 93		      cpx	cityDelay
+    446  f9de		       90 f3		      bcc	WaitForCity
+    447  f9e0				   DrawCity
+    448  f9e0		       b1 b4		      lda	(cityscape0Pointer),y
+    449  f9e2		       85 0d		      sta	PF0
+    450  f9e4		       b1 b6		      lda	(cityscape1Pointer),y
+    451  f9e6		       85 0e		      sta	PF1
+    452  f9e8		       b1 b8		      lda	(cityscape2Pointer),y
+    453  f9ea		       85 0f		      sta	PF2
+    454  f9ec		       e8		      inx
+    455  f9ed		       e4 be		      cpx	missileEndY
+    456  f9ef		       b0 0b		      bcs	DisablePlayerMissileCity
+    457  f9f1		       e4 bd		      cpx	missileStartY
+    458  f9f3		       90 07		      bcc	DisablePlayerMissileCity
+    459  f9f5				   EnablePlayerMissileCity
+    460  f9f5		       a9 02		      lda	#2
+    461  f9f7		       85 1d		      sta	ENAM0
+    462  f9f9		       4c 00 fa 	      jmp	CheckIfDoneCity
+    463  f9fc				   DisablePlayerMissileCity
+    464  f9fc		       a9 00		      lda	#0
+    465  f9fe		       85 1d		      sta	ENAM0
+    466  fa00				   CheckIfDoneCity
+      0  fa00					      READ_PADDLE
+      1  fa00		       a5 08		      lda	INPT0
+      2  fa02		       30 02		      bmi	.NoUpdatePaddle
+      3  fa04		       86 80		      stx	rawPaddle
+      4  fa06				   .NoUpdatePaddle
+    468  fa06		       85 02		      sta	WSYNC
+    469  fa08		       e0 98		      cpx	#PLAYER_DELAY
+    470  fa0a		       90 0b		      bcc	DrawCity2
+    471  fa0c		       a9 00		      lda	#0
+    472  fa0e		       85 0d		      sta	PF0
+    473  fa10		       85 0e		      sta	PF1
+    474  fa12		       85 0f		      sta	PF2
+    475  fa14		       4c 4c fa 	      jmp	PlacePlayerPrep
+    476  fa17				   DrawCity2
+    477  fa17		       b1 b4		      lda	(cityscape0Pointer),y
+    478  fa19		       85 0d		      sta	PF0
+    479  fa1b		       b1 b6		      lda	(cityscape1Pointer),y
+    480  fa1d		       85 0e		      sta	PF1
+    481  fa1f		       b1 b8		      lda	(cityscape2Pointer),y
+    482  fa21		       85 0f		      sta	PF2
+    483  fa23		       88		      dey
+    484  fa24		       e8		      inx
+    485  fa25		       e4 be		      cpx	missileEndY
+    486  fa27		       b0 0b		      bcs	DisablePlayerMissileCity2
+    487  fa29		       e4 bd		      cpx	missileStartY
+    488  fa2b		       90 07		      bcc	DisablePlayerMissileCity2
+    489  fa2d				   EnablePlayerMissileCity2
+    490  fa2d		       a9 02		      lda	#2
+    491  fa2f		       85 1d		      sta	ENAM0
+    492  fa31		       4c 38 fa 	      jmp	CheckIfDoneCity2
+    493  fa34				   DisablePlayerMissileCity2
+    494  fa34		       a9 00		      lda	#0
+    495  fa36		       85 1d		      sta	ENAM0
+    496  fa38				   CheckIfDoneCity2
+      0  fa38					      READ_PADDLE
+      1  fa38		       a5 08		      lda	INPT0
+      2  fa3a		       30 02		      bmi	.NoUpdatePaddle
+      3  fa3c		       86 80		      stx	rawPaddle
+      4  fa3e				   .NoUpdatePaddle
+    498  fa3e		       85 02		      sta	WSYNC
+    499  fa40		       e0 98		      cpx	#PLAYER_DELAY
+    500  fa42		       90 9c		      bcc	DrawCity
+    501  fa44		       a9 00		      lda	#0
+    502  fa46		       85 0d		      sta	PF0
+    503  fa48		       85 0e		      sta	PF1
+    504  fa4a		       85 0f		      sta	PF2
+    505  fa4c
+    506  fa4c
+    507  fa4c
+    508  fa4c
+    509  fa4c				   PlacePlayerPrep
+    510  fa4c		       a5 85		      lda	inGame
+    511  fa4e		       10 35		      bpl	SkipPlayer
+    512  fa50		       a9 76		      lda	#PLAYER_COLOR
+    513  fa52		       85 06		      sta	COLUP0
+    514  fa54		       a5 83		      lda	playerFineCoarse
+    515  fa56		       85 20		      sta	HMP0
+    516  fa58		       29 0f		      and	#$0f
+    517  fa5a		       a8		      tay
+    518  fa5b		       85 02		      sta	WSYNC
+    519  fa5d		       a9 00		      lda	#0
+    520  fa5f		       85 09		      sta	COLUBK
+    521  fa61		       ea		      nop
+    522  fa62		       ea		      nop
+    523  fa63		       20 37 fe 	      jsr	SpinWheels	;Delays 12 cycles
+    524  fa66				   PlacePlayer
+    525  fa66		       88		      dey
+    526  fa67		       d0 fd		      bne	PlacePlayer
+    527  fa69		       85 10		      sta	RESP0	;Place player coarsely.
+    528  fa6b		       85 02		      sta	WSYNC
+    529  fa6d		       85 2a		      sta	HMOVE	;Update the player's fine position.
+    530  fa6f		       a0 09		      ldy	#PLAYER_HEIGHT
+    531  fa71				   DrawPlayerLoop
+    532  fa71		       b9 e0 ff 	      lda	PlayerGraphics,y	;Load the current row of the player's graphics data.
+    533  fa74		       85 1b		      sta	GRP0
+      0  fa76					      READ_PADDLE
+      1  fa76		       a5 08		      lda	INPT0
+      2  fa78		       30 02		      bmi	.NoUpdatePaddle
+      3  fa7a		       86 80		      stx	rawPaddle
+      4  fa7c				   .NoUpdatePaddle
+    535  fa7c		       85 02		      sta	WSYNC
+    536  fa7e		       e8		      inx
+    537  fa7f		       88		      dey
+    538  fa80		       d0 ef		      bne	DrawPlayerLoop
+    539  fa82		       4c 93 fa 	      jmp	PrepLowerUI
+    540  fa85
+    541  fa85				   SkipPlayer
+    542  fa85		       a9 00		      lda	#0
+    543  fa87		       85 02		      sta	WSYNC
+    544  fa89		       85 09		      sta	COLUBK
+    545  fa8b		       a9 76		      lda	#PLAYER_COLOR
+    546  fa8d		       85 06		      sta	COLUP0
+    547  fa8f		       85 07		      sta	COLUP1
+    548  fa91		       85 02		      sta	WSYNC
+    549  fa93				   PrepLowerUI
+    550  fa93		       a9 00		      lda	#0
+    551  fa95		       85 1b		      sta	GRP0	;Clear the sprite's graphics data.
+    552  fa97		       85 20		      sta	HMP0
+    553  fa99		       85 1d		      sta	ENAM0	;Make sure the missile is not on
+    554  fa9b		       a9 76		      lda	#PLAYER_COLOR
+    555  fa9d		       85 07		      sta	COLUP1
+    556  fa9f				   WaitForLowerUI
+    557  fa9f		       85 02		      sta	WSYNC
+    558  faa1		       e8		      inx
+    559  faa2		       e0 a4		      cpx	#LOWER_UI_DELAY
+    560  faa4		       d0 f9		      bne	WaitForLowerUI
+    561  faa6				   PositionLowerUI
+    562  faa6		       a9 10		      lda	#$10
+    563  faa8		       85 21		      sta	HMP1
+    564  faaa		       20 37 fe 	      jsr	SpinWheels	;Waste time until the electronbeam hits where the missile count indicator should be.
+    565  faad		       20 37 fe 	      jsr	SpinWheels
+    566  fab0		       ea		      nop
+    567  fab1		       e4 88		      cpx	waveIndex
+    568  fab3		       85 10		      sta	RESP0	;Place the missile count indicator here.
+    569  fab5		       85 11		      sta	RESP1
+    570  fab7				   DrawLowerUI
+    571  fab7		       a0 09		      ldy	#LOWER_UI_HEIGHT
+    572  fab9		       85 02		      sta	WSYNC
+    573  fabb		       85 2a		      sta	HMOVE
+    574  fabd				   DrawLowerUILoop
+    575  fabd		       b1 b0		      lda	(missileCountPointer2),y	;Load the graphics data for the first digit of the missile count.
+    576  fabf		       85 1b		      sta	GRP0
+    577  fac1		       b1 b2		      lda	(missileCountPointer1),y	;Load the graphics data for the second digit of the missile count.
+    578  fac3		       85 1c		      sta	GRP1
+    579  fac5		       85 02		      sta	WSYNC
+    580  fac7		       e8		      inx
+    581  fac8		       88		      dey
+    582  fac9		       d0 f2		      bne	DrawLowerUILoop
+    583  facb		       e8		      inx
+    584  facc		       84 1b		      sty	GRP0
+    585  face		       84 1c		      sty	GRP1
+    586  fad0
+    587  fad0
+    588  fad0
+    589  fad0
+    590  fad0				   FinishDrawing
+    591  fad0		       85 02		      sta	WSYNC
+    592  fad2		       e8		      inx
+    593  fad3		       e0 b1		      cpx	#PICTURE_CUTOFF
+    594  fad5		       d0 f9		      bne	FinishDrawing
+    595  fad7		       84 1b		      sty	GRP0	;Clears VDEL as well
+    596  fad9		       84 1c		      sty	GRP1
+    597  fadb							;End of drawing-- Enter VBLANK
+    598  fadb		       a9 42		      lda	#%01000010
+    599  fadd		       85 01		      sta	VBLANK
+    600  fadf		       85 2b		      sta	HMCLR
+    601  fae1		       a9 24		      lda	#OVERSCAN_TIMER_VALUE
+    602  fae3		       8d 96 02 	      sta	TIM64T	;Set timer to reach 0 at the end of overscan.s
+    603  fae6
+    604  fae6		       a5 87		      lda	inTransition
+    605  fae8		       c9 01		      cmp	#1
+    606  faea		       f0 07		      beq	UpdateTransitionToWave
+    607  faec		       c9 02		      cmp	#2
+    608  faee		       f0 25		      beq	UpdateTransitionFromWave
+    609  faf0		       4c 5c fb 	      jmp	DecodePlayerPosition
+    610  faf3				   UpdateTransitionToWave		;Determines if the screen is finished darkening after initiating transition.
+    611  faf3		       a5 90		      lda	brightnessCounter
+    612  faf5		       f0 50		      beq	EndTransitionToWave
+    613  faf7		       c6 90		      dec	brightnessCounter	;Background counter is not yet at 0, so decrement it again.
+    614  faf9		       a5 90		      lda	brightnessCounter
+    615  fafb		       20 33 fe 	      jsr	FourLsr
+    616  fafe		       a8		      tay
+    617  faff		       b9 e3 fe 	      lda	ColorLookupTransition,y
+    618  fb02		       85 8f		      sta	backgroundColor
+    619  fb04
+    620  fb04							;Update alarm sound effect
+    621  fb04		       98		      tya		;1
+    622  fb05		       4a		      lsr		;1
+    623  fb06		       29 01		      and	#$01	;2
+    624  fb08		       85 18		      sta	AUDF1	;2
+    625  fb0a		       a9 0e		      lda	#$0e	;2
+    626  fb0c		       85 16		      sta	AUDC1	;2
+    627  fb0e		       a9 03		      lda	#SOUND_EFFECT_VOLUME	;2
+    628  fb10		       85 1a		      sta	AUDV1	;2
+    629  fb12
+    630  fb12		       4c 5c fb 	      jmp	DecodePlayerPosition
+    631  fb15				   UpdateTransitionFromWave		;Determines if the screen is finished brightening after wave completion.
+    632  fb15		       a5 90		      lda	brightnessCounter
+    633  fb17		       c9 7f		      cmp	#BRIGHTNESS_COUNTER_TRANSITION-1
+    634  fb19		       b0 32		      bcs	EndTransition
+    635  fb1b		       e6 90		      inc	brightnessCounter	;Background counter is not high enough yet, so increment it again.
+    636  fb1d		       a5 90		      lda	brightnessCounter
+    637  fb1f		       20 33 fe 	      jsr	FourLsr
+    638  fb22		       a8		      tay
+    639  fb23		       b9 e3 fe 	      lda	ColorLookupTransition,y
+    640  fb26		       85 8f		      sta	backgroundColor
+    641  fb28		       a5 a1		      lda	missileCount
+    642  fb2a		       f0 30		      beq	DecodePlayerPosition
+    643  fb2c		       38		      sec
+    644  fb2d		       f8		      sed
+    645  fb2e		       e9 01		      sbc	#1
+    646  fb30		       85 a1		      sta	missileCount
+    647  fb32		       a9 25		      lda	#$25
+    648  fb34		       85 9b		      sta	scoreModifierLo
+    649  fb36		       a9 00		      lda	#0
+    650  fb38		       85 1a		      sta	AUDV1	;Cancel rangefinder sound
+    651  fb3a		       85 9c		      sta	scoreModifierHi
+    652  fb3c		       20 c6 fd 	      jsr	AddToScore
+    653  fb3f
+    654  fb3f							;Queue up sound effect for scoring...
+    655  fb3f		       a2 01		      ldx	#1
+    656  fb41		       20 b0 fd 	      jsr	InitSoundEffect
+    657  fb44
+    658  fb44		       4c 5c fb 	      jmp	DecodePlayerPosition
+    659  fb47				   EndTransitionToWave
+    660  fb47		       a9 8c		      lda	#$8C
+    661  fb49		       85 86		      sta	inWave
+    662  fb4b		       85 16		      sta	AUDC1
+    663  fb4d				   EndTransition
+    664  fb4d		       a9 00		      lda	#0
+    665  fb4f		       85 87		      sta	inTransition
+    666  fb51
+    667  fb51		       a5 91		      lda	cityLevel
+    668  fb53		       d0 07		      bne	SkipGameOver
+    669  fb55		       85 85		      sta	inGame
+    670  fb57		       a2 04		      ldx	#4
+    671  fb59		       20 b0 fd 	      jsr	InitSoundEffect
+    672  fb5c				   SkipGameOver
+    673  fb5c
+    674  fb5c
+    675  fb5c				   DecodePlayerPosition 		;Convert the rawPaddle value into the player's fine coarse position.
+    676  fb5c		       a5 80		      lda	rawPaddle
+    677  fb5e		       c9 1b		      cmp	#MIN_PADDLE_VALUE
+    678  fb60		       90 11		      bcc	AtMax
+    679  fb62		       c9 a0		      cmp	#MAX_PADDLE_VALUE
+    680  fb64		       b0 08		      bcs	AtMin
+    681  fb66		       38		      sec
+    682  fb67		       a9 a0		      lda	#MAX_PADDLE_VALUE
+    683  fb69		       e5 80		      sbc	rawPaddle
+    684  fb6b		       4c 75 fb 	      jmp	NoChange
+    685  fb6e				   AtMin
+    686  fb6e		       a9 05		      lda	#$05	;Formerly $00
+    687  fb70		       4c 75 fb 	      jmp	NoChange
+    688  fb73				   AtMax
+    689  fb73		       a9 80		      lda	#$80	;Formerly $85
+    690  fb75				   NoChange
+    691  fb75		       85 81		      sta	tgtPlayerXPos
+    692  fb77				   CalculatePlayerAcceleration
+    693  fb77		       18		      clc
+    694  fb78		       65 82		      adc	playerXPos
+    695  fb7a		       b0 04		      bcs	HandleOverflow
+    696  fb7c		       4a		      lsr		;Calculate the average of the tgt position, and the player's current position
+    697  fb7d		       4c 82 fb 	      jmp	SkipOverflowHandling
+    698  fb80				   HandleOverflow
+    699  fb80		       a9 80		      lda	#$80	;Formerly $85
+    700  fb82				   SkipOverflowHandling
+    701  fb82		       85 82		      sta	playerXPos
+    702  fb84		       20 04 fe 	      jsr	CalculateFineCoarse
+    703  fb87		       85 83		      sta	playerFineCoarse
+    704  fb89
+    705  fb89				   ParseTrigger
+    706  fb89							;Determine if the trigger button was pressed, and perform the correct actions if so.
+    707  fb89		       a5 85		      lda	inGame
+    708  fb8b		       10 70		      bpl	GoToSkipWaveLogic
+    709  fb8d		       ad 80 02 	      lda	SWCHA
+    710  fb90		       30 6e		      bmi	ButtonNotPressed
+    711  fb92		       a5 86		      lda	inWave
+    712  fb94		       30 2a		      bmi	AttemptToFireMissile
+    713  fb96				   InitWave
+    714  fb96							;Button was pressed, so it is time to initialize the wave!
+    715  fb96		       a5 87		      lda	inTransition
+    716  fb98		       d0 66		      bne	ButtonNotPressed	;Prevents the fire button from being held down, and remaining locked in an endless transition
+    717  fb9a		       a9 01		      lda	#1
+    718  fb9c		       85 87		      sta	inTransition
+    719  fb9e		       a9 80		      lda	#BRIGHTNESS_COUNTER_TRANSITION
+    720  fba0		       85 90		      sta	brightnessCounter
+    721  fba2
+    722  fba2		       a4 88		      ldy	waveIndex
+    723  fba4		       98		      tya
+    724  fba5		       18		      clc
+    725  fba6		       69 05		      adc	#BASE_ENEMIES_PER_WAVE
+    726  fba8		       85 8c		      sta	enemiesLeftInWave
+    727  fbaa		       b9 c5 fe 	      lda	EnemySpeedPerWave,y
+    728  fbad		       85 8b		      sta	enemySpeed
+    729  fbaf		       b9 d4 fe 	      lda	AmmunitionPerWave,y
+    730  fbb2		       85 a1		      sta	missileCount
+    731  fbb4
+    732  fbb4		       c8		      iny
+    733  fbb5		       c4 89		      cpy	maxWaveIndex
+    734  fbb7		       90 02		      bcc	SkipWaveClamping
+    735  fbb9		       a4 89		      ldy	maxWaveIndex
+    736  fbbb				   SkipWaveClamping
+    737  fbbb		       84 88		      sty	waveIndex
+    738  fbbd
+    739  fbbd		       4c 00 fc 	      jmp	ButtonNotPressed
+    740  fbc0				   AttemptToFireMissile
+    741  fbc0		       a5 87		      lda	inTransition
+    742  fbc2		       d0 39		      bne	GoToSkipWaveLogic
+    743  fbc4		       a5 86		      lda	inWave
+    744  fbc6		       f0 35		      beq	GoToSkipWaveLogic
+    745  fbc8		       a5 bd		      lda	missileStartY
+    746  fbca		       c9 ff		      cmp	#$FF
+    747  fbcc		       d0 32		      bne	ButtonNotPressed
+    748  fbce		       a5 a1		      lda	missileCount
+    749  fbd0		       f0 2e		      beq	ButtonNotPressed
+    750  fbd2							;Need to fire a missile!
+    751  fbd2		       f8		      sed
+    752  fbd3		       38		      sec
+    753  fbd4		       e9 01		      sbc	#1	;Subtract one from the current missile count
+    754  fbd6		       d8		      cld
+    755  fbd7		       85 a1		      sta	missileCount
+    756  fbd9		       a9 08		      lda	#BRIGHTNESS_COUNTER_SHOOT
+    757  fbdb		       85 90		      sta	brightnessCounter
+    758  fbdd		       a8		      tay
+    759  fbde		       b9 eb fe 	      lda	ColorLookupExplosion,y
+    760  fbe1		       85 8f		      sta	backgroundColor
+    761  fbe3		       a5 82		      lda	playerXPos
+    762  fbe5		       18		      clc
+    763  fbe6		       69 04		      adc	#4
+    764  fbe8		       20 04 fe 	      jsr	CalculateFineCoarse
+    765  fbeb		       85 bc		      sta	missileFineCoarse
+    766  fbed		       a9 93		      lda	#MISSILE_DEPLOY_TOP_HEIGHT
+    767  fbef		       85 bd		      sta	missileStartY
+    768  fbf1		       a9 99		      lda	#MISSILE_DEPLOY_BOTTOM_HEIGHT
+    769  fbf3		       85 be		      sta	missileEndY
+    770  fbf5
+    771  fbf5		       a2 02		      ldx	#2
+    772  fbf7		       20 b0 fd 	      jsr	InitSoundEffect
+    773  fbfa
+    774  fbfa		       4c 43 fc 	      jmp	DecreaseExplosionMissileBrightness
+    775  fbfd
+    776  fbfd				   GoToSkipWaveLogic
+    777  fbfd		       4c 3f fd 	      jmp	SkipWaveLogic
+    778  fc00
+    779  fc00				   ButtonNotPressed
+    780  fc00		       a5 86		      lda	inWave
+    781  fc02		       10 f9		      bpl	GoToSkipWaveLogic
+    782  fc04
+    783  fc04							;Check collisions here
+    784  fc04				   CheckCollision
+    785  fc04		       a5 00		      lda	CXM0P
+    786  fc06		       10 3b		      bpl	NoCollision
+    787  fc08							;Missile hit an enemy!
+    788  fc08		       a2 00		      ldx	#0
+    789  fc0a				   FindCollidedEnemy
+    790  fc0a		       b5 d0		      lda	enemyYPositions,x
+    791  fc0c		       18		      clc
+    792  fc0d		       69 0a		      adc	#10
+    793  fc0f		       c5 bd		      cmp	missileStartY
+    794  fc11		       b0 04		      bcs	FoundEnemy
+    795  fc13		       e8		      inx
+    796  fc14		       4c 0a fc 	      jmp	FindCollidedEnemy
+    797  fc17				   FoundEnemy
+    798  fc17		       86 c0		      stx	tempDigit
+    799  fc19		       a9 ca		      lda	#enemyXPositions
+    800  fc1b		       85 a2		      sta	genericPointer
+    801  fc1d		       a4 c0		      ldy	tempDigit
+    802  fc1f		       20 58 fe 	      jsr	RemoveAtY
+    803  fc22
+    804  fc22		       a9 d0		      lda	#enemyYPositions
+    805  fc24		       85 a2		      sta	genericPointer
+    806  fc26		       a4 c0		      ldy	tempDigit
+    807  fc28		       20 58 fe 	      jsr	RemoveAtY
+    808  fc2b
+    809  fc2b		       c6 c2		      dec	enemyCount
+    810  fc2d
+    811  fc2d		       a9 ff		      lda	#$ff
+    812  fc2f		       85 bd		      sta	missileStartY
+    813  fc31		       85 be		      sta	missileEndY
+    814  fc33
+    815  fc33		       a9 00		      lda	#$00
+    816  fc35		       85 9b		      sta	scoreModifierLo
+    817  fc37		       a9 01		      lda	#$01
+    818  fc39		       85 9c		      sta	scoreModifierHi
+    819  fc3b		       20 c6 fd 	      jsr	AddToScore
+    820  fc3e
+    821  fc3e							;Play hit sound effect
+    822  fc3e		       a2 03		      ldx	#3
+    823  fc40		       20 b0 fd 	      jsr	InitSoundEffect
+    824  fc43
+    825  fc43				   NoCollision
+    826  fc43
+    827  fc43				   DecreaseExplosionMissileBrightness
+    828  fc43		       a5 87		      lda	inTransition
+    829  fc45		       d0 b6		      bne	GoToSkipWaveLogic
+    830  fc47		       a5 86		      lda	inWave
+    831  fc49		       10 b2		      bpl	GoToSkipWaveLogic
+    832  fc4b		       a5 90		      lda	brightnessCounter
+    833  fc4d		       f0 0a		      beq	CheckIfWaveEnded
+    834  fc4f		       a4 90		      ldy	brightnessCounter
+    835  fc51		       88		      dey
+    836  fc52		       84 90		      sty	brightnessCounter
+    837  fc54		       b9 eb fe 	      lda	ColorLookupExplosion,y
+    838  fc57		       85 8f		      sta	backgroundColor
+    839  fc59
+    840  fc59				   CheckIfWaveEnded
+    841  fc59		       a5 c2		      lda	enemyCount
+    842  fc5b		       05 8c		      ora	enemiesLeftInWave
+    843  fc5d		       f0 38		      beq	EndWave	;There are no enemies left in this wave, and no enemies currently on screen, so the wave is over.
+    844  fc5f				   WaveManagement
+    845  fc5f		       c6 8d		      dec	enemySpawnTimer
+    846  fc61				   EnemySpawnCheck
+    847  fc61		       a5 8c		      lda	enemiesLeftInWave
+    848  fc63		       f0 40		      beq	UpdateEnemyPositions
+    849  fc65		       a5 8d		      lda	enemySpawnTimer
+    850  fc67		       f0 08		      beq	AttemptEnemySpawn
+    851  fc69		       a5 90		      lda	brightnessCounter
+    852  fc6b		       d0 38		      bne	UpdateEnemyPositions
+    853  fc6d		       a5 c2		      lda	enemyCount
+    854  fc6f		       d0 34		      bne	UpdateEnemyPositions
+    855  fc71				   AttemptEnemySpawn
+    856  fc71		       c9 06		      cmp	#MAX_ENEMY_COUNT
+    857  fc73		       b0 88		      bcs	GoToSkipWaveLogic
+    858  fc75				   SpawnEnemy
+    859  fc75		       e6 c2		      inc	enemyCount
+    860  fc77
+    861  fc77							;Calculate x position
+    862  fc77		       a5 84		      lda	rand8
+    863  fc79		       29 7f		      and	#$7f
+    864  fc7b		       18		      clc
+    865  fc7c		       69 03		      adc	#3
+    866  fc7e		       a2 ca		      ldx	#enemyXPositions
+    867  fc80		       86 a2		      stx	genericPointer
+    868  fc82		       20 42 fe 	      jsr	InsertAtFront
+    869  fc85
+    870  fc85							;Insert y position
+    871  fc85		       a9 01		      lda	#1
+    872  fc87		       a2 d0		      ldx	#enemyYPositions
+    873  fc89		       86 a2		      stx	genericPointer
+    874  fc8b		       20 42 fe 	      jsr	InsertAtFront
+    875  fc8e
+    876  fc8e		       a9 78		      lda	#ENEMY_SPAWN_INTERVAL
+    877  fc90		       85 8d		      sta	enemySpawnTimer
+    878  fc92		       c6 8c		      dec	enemiesLeftInWave
+    879  fc94		       4c a5 fc 	      jmp	UpdateEnemyPositions
+    880  fc97				   EndWave
+    881  fc97		       85 86		      sta	inWave
+    882  fc99		       85 90		      sta	brightnessCounter
+    883  fc9b		       a9 02		      lda	#2
+    884  fc9d		       85 87		      sta	inTransition
+    885  fc9f		       4c a5 fc 	      jmp	UpdateEnemyPositions
+    886  fca2
+    887  fca2				   GoToSkipWaveLogic2
+    888  fca2		       4c 3f fd 	      jmp	SkipWaveLogic
+    889  fca5
+    890  fca5				   UpdateEnemyPositions
+    891  fca5							;Load each enemy's y position, and increase it by the appropriate value.
+    892  fca5		       a5 c2		      lda	enemyCount
+    893  fca7		       f0 f9		      beq	GoToSkipWaveLogic2
+    894  fca9		       a2 00		      ldx	#0
+    895  fcab		       a5 8b		      lda	enemySpeed
+    896  fcad		       a8		      tay
+    897  fcae		       10 0d		      bpl	UpdateEnemyPosition
+    898  fcb0		       a5 8a		      lda	everyOtherFrame
+    899  fcb2		       49 80		      eor	#$80
+    900  fcb4		       85 8a		      sta	everyOtherFrame
+    901  fcb6		       10 32		      bpl	CalculateEnemyFineCoarsePositions
+    902  fcb8		       a5 8b		      lda	enemySpeed
+    903  fcba		       29 0f		      and	#$0f
+    904  fcbc		       a8		      tay
+    905  fcbd				   UpdateEnemyPosition
+    906  fcbd		       86 c3		      stx	enemyIndex
+    907  fcbf		       98		      tya
+    908  fcc0		       18		      clc
+    909  fcc1		       75 d0		      adc	enemyYPositions,x
+    910  fcc3		       c5 93		      cmp	cityDelay
+    911  fcc5		       90 19		      bcc	SkipDeletion
+    912  fcc7		       a5 c2		      lda	enemyCount
+    913  fcc9		       e9 01		      sbc	#1
+    914  fccb		       85 c2		      sta	enemyCount
+    915  fccd		       a9 ff		      lda	#$FF
+    916  fccf		       95 d0		      sta	enemyYPositions,x
+    917  fcd1
+    918  fcd1							;Queue up city breaking sound effect?
+    919  fcd1		       a2 04		      ldx	#4
+    920  fcd3		       20 b0 fd 	      jsr	InitSoundEffect
+    921  fcd6
+    922  fcd6		       a6 91		      ldx	cityLevel
+    923  fcd8		       f0 10		      beq	CalculateEnemyFineCoarsePositions
+    924  fcda		       ca		      dex
+    925  fcdb		       86 91		      stx	cityLevel
+    926  fcdd
+    927  fcdd		       4c ea fc 	      jmp	CalculateEnemyFineCoarsePositions
+    928  fce0				   SkipDeletion
+    929  fce0		       95 d0		      sta	enemyYPositions,x
+    930  fce2		       e4 c2		      cpx	enemyCount
+    931  fce4		       b0 04		      bcs	CalculateEnemyFineCoarsePositions
+    932  fce6		       e8		      inx
+    933  fce7		       4c bd fc 	      jmp	UpdateEnemyPosition
+    934  fcea				   CalculateEnemyFineCoarsePositions
+    935  fcea							;Load each enemies x position, and calculate the corresponding FineCoarse value
+    936  fcea		       a5 c2		      lda	enemyCount
+    937  fcec		       f0 51		      beq	SkipWaveLogic
+    938  fcee		       a2 00		      ldx	#0
+    939  fcf0				   CalculateFineCoarsePosition
+    940  fcf0		       e4 c2		      cpx	enemyCount
+    941  fcf2		       b0 0f		      bcs	UpdateRangefinder
+    942  fcf4		       86 c3		      stx	enemyIndex
+    943  fcf6		       b5 ca		      lda	enemyXPositions,x
+    944  fcf8		       20 04 fe 	      jsr	CalculateFineCoarse
+    945  fcfb		       a6 c3		      ldx	enemyIndex
+    946  fcfd		       95 c4		      sta	enemyFineCoarsePositions,x
+    947  fcff		       e8		      inx
+    948  fd00		       4c f0 fc 	      jmp	CalculateFineCoarsePosition
+    949  fd03
+    950  fd03				   UpdateRangefinder
+    951  fd03		       ca		      dex
+    952  fd04		       b5 ca		      lda	enemyXPositions,x
+    953  fd06		       38		      sec
+    954  fd07		       e5 82		      sbc	playerXPos
+    955  fd09		       10 05		      bpl	SkipNegation
+    956  fd0b		       49 ff		      eor	#$FF
+    957  fd0d		       18		      clc
+    958  fd0e		       69 01		      adc	#1
+    959  fd10				   SkipNegation
+    960  fd10		       c9 40		      cmp	#$40
+    961  fd12		       90 02		      bcc	DontClamp
+    962  fd14		       a9 3f		      lda	#$3F
+    963  fd16				   DontClamp
+    964  fd16		       29 3f		      and	#$3F
+    965  fd18		       4a		      lsr
+    966  fd19		       4a		      lsr
+    967  fd1a		       a8		      tay
+    968  fd1b		       b9 8c fe 	      lda	RangefinderFrequency,y
+    969  fd1e		       85 18		      sta	AUDF1
+    970  fd20
+    971  fd20		       b5 d0		      lda	enemyYPositions,x
+    972  fd22		       29 60		      and	#$60
+    973  fd24		       20 32 fe 	      jsr	FiveLsr
+    974  fd27		       a8		      tay
+    975  fd28		       b9 ea ff 	      lda	RangefinderIntervals,y
+    976  fd2b		       e6 95		      inc	rangefinderTimer
+    977  fd2d		       c5 95		      cmp	rangefinderTimer
+    978  fd2f		       b0 0a		      bcs	SkipToggleRangefinder
+    979  fd31		       a9 00		      lda	#0
+    980  fd33		       85 95		      sta	rangefinderTimer
+    981  fd35		       a5 94		      lda	rangefinderVolume
+    982  fd37		       49 03		      eor	#RANGEFINDER_VOLUME
+    983  fd39		       85 94		      sta	rangefinderVolume
+    984  fd3b				   SkipToggleRangefinder
+    985  fd3b		       a5 94		      lda	rangefinderVolume
+    986  fd3d		       85 1a		      sta	AUDV1
+    987  fd3f							;Set volume accordingly
+    988  fd3f				   SkipWaveLogic
+    989  fd3f				   UpdateMissilePosition
+    990  fd3f		       a5 bd		      lda	missileStartY
+    991  fd41		       c9 ff		      cmp	#$FF
+    992  fd43		       f0 19		      beq	CalculateScorePointers
+    993  fd45		       18		      clc
+    994  fd46		       69 f9		      adc	#MISSILE_TRAVEL_SPEED
+    995  fd48		       c9 c8		      cmp	#MISSILE_OFFSCREEN_CONSTANT
+    996  fd4a		       b0 0c		      bcs	DestroyMissile
+    997  fd4c		       85 bd		      sta	missileStartY
+    998  fd4e		       a5 be		      lda	missileEndY
+    999  fd50		       18		      clc
+   1000  fd51		       69 f9		      adc	#MISSILE_TRAVEL_SPEED
+   1001  fd53		       85 be		      sta	missileEndY
+   1002  fd55		       4c 5e fd 	      jmp	CalculateScorePointers
+   1003  fd58				   DestroyMissile
+   1004  fd58		       a9 ff		      lda	#$FF
+   1005  fd5a		       85 bd		      sta	missileStartY
+   1006  fd5c		       85 be		      sta	missileEndY
+   1007  fd5e
+   1008  fd5e				   CalculateScorePointers
+   1009  fd5e		       a6 9d		      ldx	scoreLo	;Load the low two digits of the player score.
+   1010  fd60		       a9 ae		      lda	#scorePointer1
+   1011  fd62		       85 a2		      sta	genericPointer
+   1012  fd64		       20 15 fe 	      jsr	CalculateDigitGraphicsPointer
+   1013  fd67		       a6 9e		      ldx	scoreMd	;Load the middle two digits of the player's score.
+   1014  fd69		       a9 aa		      lda	#scorePointer3
+   1015  fd6b		       85 a2		      sta	genericPointer
+   1016  fd6d		       20 15 fe 	      jsr	CalculateDigitGraphicsPointer
+   1017  fd70		       a6 9f		      ldx	scoreHi	;Load the two highest digits of the player's score.
+   1018  fd72		       a9 a6		      lda	#scorePointer5
+   1019  fd74		       85 a2		      sta	genericPointer
+   1020  fd76		       20 15 fe 	      jsr	CalculateDigitGraphicsPointer
+   1021  fd79				   CalculateRocketCountPointers
+   1022  fd79		       a6 a1		      ldx	missileCount
+   1023  fd7b		       a9 b2		      lda	#missileCountPointer1
+   1024  fd7d		       85 a2		      sta	genericPointer
+   1025  fd7f		       20 15 fe 	      jsr	CalculateDigitGraphicsPointer
+   1026  fd82				   CalculateCityscapePointers
+   1027  fd82		       a6 91		      ldx	cityLevel
+   1028  fd84		       bd b6 fe 	      lda	CityscapeGraphicsLookupTable,x
+   1029  fd87		       85 b4		      sta	cityscape0Pointer
+   1030  fd89		       38		      sec
+   1031  fd8a		       7d bb fe 	      adc	CityscapeHeightLookupTable,x
+   1032  fd8d		       85 b6		      sta	cityscape1Pointer
+   1033  fd8f		       38		      sec
+   1034  fd90		       7d bb fe 	      adc	CityscapeHeightLookupTable,x
+   1035  fd93		       85 b8		      sta	cityscape2Pointer
+   1036  fd95
+   1037  fd95				   CleanupEnemyArrays
+   1038  fd95							;Fill all unused spots in enemyArrays with $ff
+   1039  fd95		       a6 c2		      ldx	enemyCount
+   1040  fd97		       e0 06		      cpx	#MAX_ENEMY_COUNT
+   1041  fd99		       b0 0b		      bcs	WaitForOverscanTimer
+   1042  fd9b		       a9 ff		      lda	#$ff
+   1043  fd9d				   CleanupLoop
+   1044  fd9d		       95 ca		      sta	enemyXPositions,x
+   1045  fd9f		       95 d0		      sta	enemyYPositions,x
+   1046  fda1		       e8		      inx
+   1047  fda2		       e0 06		      cpx	#MAX_ENEMY_COUNT
+   1048  fda4		       90 f7		      bcc	CleanupLoop
+   1049  fda6
+   1050  fda6				   WaitForOverscanTimer
+   1051  fda6		       ad 84 02 	      lda	INTIM
+   1052  fda9		       d0 fb		      bne	WaitForOverscanTimer
+   1053  fdab
+   1054  fdab		       85 02		      sta	WSYNC
+   1055  fdad		       4c 4f f8 	      jmp	StartOfFrame
+   1056  fdb0
+   1057  fdb0				   InitSoundEffect		;Must only be called when X contains the id of the sound to play (0 indicates no sound).
+   1058  fdb0		       e4 96		      cpx	currentSound
+   1059  fdb2		       90 11		      bcc	ReturnFromInitSoundEffect	;Just return, the incoming sound is not higher priority than the currently playing one.
+   1060  fdb4							;Need to initialize new sound effect!
+   1061  fdb4		       86 96		      stx	currentSound
+   1062  fdb6		       bd ed ff 	      lda	SoundPointers,x
+   1063  fdb9		       85 97		      sta	currentSoundPointer
+   1064  fdbb		       bd f3 ff 	      lda	SoundLengths,x
+   1065  fdbe		       85 99		      sta	soundOffset
+   1066  fdc0		       bd 6f fe 	      lda	SoundEffectWaveforms,x
+   1067  fdc3		       85 15		      sta	AUDC0
+   1068  fdc5				   ReturnFromInitSoundEffect
+   1069  fdc5		       60		      rts
+   1070  fdc6
+   1071  fdc6				   AddToScore
+   1072  fdc6		       f8		      sed
+   1073  fdc7		       a5 9d		      lda	scoreLo
+   1074  fdc9		       18		      clc
+   1075  fdca		       65 9b		      adc	scoreModifierLo
+   1076  fdcc		       85 9d		      sta	scoreLo
+   1077  fdce		       a5 9e		      lda	scoreMd
+   1078  fdd0		       65 9c		      adc	scoreModifierHi
+   1079  fdd2		       85 9e		      sta	scoreMd
+   1080  fdd4		       a9 00		      lda	#0
+   1081  fdd6		       65 9f		      adc	scoreHi
+   1082  fdd8		       b0 1d		      bcs	MaxOut
+   1083  fdda		       85 9f		      sta	scoreHi
+   1084  fddc							;Check to reward extra life
+   1085  fddc		       c5 a0		      cmp	extraLifeThreshold
+   1086  fdde		       90 15		      bcc	NoExtraLife
+   1087  fde0		       a5 a0		      lda	extraLifeThreshold
+   1088  fde2		       18		      clc
+   1089  fde3		       69 01		      adc	#$01
+   1090  fde5		       85 a0		      sta	extraLifeThreshold
+   1091  fde7		       a6 91		      ldx	cityLevel
+   1092  fde9		       e0 04		      cpx	#4
+   1093  fdeb		       b0 08		      bcs	NoExtraLife	;Don't increase the cityLevel beyond fully repaired!
+   1094  fded		       e8		      inx
+   1095  fdee		       86 91		      stx	cityLevel
+   1096  fdf0		       a2 05		      ldx	#5
+   1097  fdf2		       20 b0 fd 	      jsr	InitSoundEffect	;Play city repaired sound
+   1098  fdf5				   NoExtraLife
+   1099  fdf5		       d8		      cld
+   1100  fdf6		       60		      rts
+   1101  fdf7				   MaxOut
+   1102  fdf7		       a9 00		      lda	#0
+   1103  fdf9		       85 85		      sta	inGame
+   1104  fdfb		       a9 99		      lda	#$99
+   1105  fdfd		       85 9d		      sta	scoreLo
+   1106  fdff		       85 9e		      sta	scoreMd
+   1107  fe01		       85 9f		      sta	scoreHi
+   1108  fe03		       60		      rts
+   1109  fe04
+   1110  fe04				   CalculateFineCoarse		;Must be called when A contains the x value to convert to FineCoarse, with X and Y containing nonimportant values
+   1111  fe04		       a8		      tay
+   1112  fe05		       29 0f		      and	#$0F
+   1113  fe07		       aa		      tax		;X now contains the low byte of the x value, which will become the offset into the FinePosLookupTable
+   1114  fe08		       98		      tya
+   1115  fe09		       20 33 fe 	      jsr	FourLsr	;Extract the coarse position from the high byte of the x value
+   1116  fe0c		       29 0f		      and	#$0f
+   1117  fe0e		       18		      clc
+   1118  fe0f		       69 01		      adc	#1	;Now A contains the coarse position
+   1119  fe11		       1d 9c fe 	      ora	FinePosLookupTable,x	;Now A contains the final FineCoarse value for the given x value
+   1120  fe14		       60		      rts
+   1121  fe15
+   1122  fe15				   CalculateDigitGraphicsPointer		;Must only be called when X contains the byte (in decimal mode) to be encoded, and genericPointer has been set.
+   1123  fe15		       8a		      txa
+   1124  fe16		       29 0f		      and	#$0F	;Get just the low digit of the number of available missiles.
+   1125  fe18		       a8		      tay
+   1126  fe19		       b9 ac fe 	      lda	DigitLookupTable,y
+   1127  fe1c		       a0 00		      ldy	#0
+   1128  fe1e		       91 a2		      sta	(genericPointer),y
+   1129  fe20		       8a		      txa
+   1130  fe21		       29 f0		      and	#$F0	;Get just the high digit of the number of available missiles.
+   1131  fe23		       20 33 fe 	      jsr	FourLsr
+   1132  fe26		       a8		      tay
+   1133  fe27		       b9 ac fe 	      lda	DigitLookupTable,y
+   1134  fe2a		       c6 a2		      dec	genericPointer
+   1135  fe2c		       c6 a2		      dec	genericPointer
+   1136  fe2e		       a0 00		      ldy	#0
+   1137  fe30		       91 a2		      sta	(genericPointer),y	;This saves one byte since CalculateDigitGraphicsPointer no longer needs an rts.
+   1138  fe32				   FiveLsr
+   1139  fe32		       4a		      lsr
+   1140  fe33				   FourLsr
+   1141  fe33		       4a		      lsr
+   1142  fe34		       4a		      lsr
+   1143  fe35		       4a		      lsr
+   1144  fe36		       4a		      lsr
+   1145  fe37				   SpinWheels		;This function exists solely to waste 12 cycles-- takes up less code than 6 nops over and over again.
+   1146  fe37		       60		      rts
+   1147  fe38
+   1148  fe38				   Random
+   1149  fe38		       a5 84		      lda	rand8
+   1150  fe3a		       4a		      lsr
+   1151  fe3b		       90 02		      bcc	NoEOR
+   1152  fe3d		       49 b4		      eor	#$B4
+   1153  fe3f				   NoEOR
+   1154  fe3f		       85 84		      sta	rand8
+   1155  fe41		       60		      rts
+   1156  fe42
+   1157  fe42				   InsertAtFront		;Uses the genericPointer variable to place the value in A at the front of the designated array, moving other values up
+   1158  fe42		       a0 00		      ldy	#0
+   1159  fe44		       a6 c2		      ldx	enemyCount
+   1160  fe46		       e0 06		      cpx	#MAX_ENEMY_COUNT
+   1161  fe48		       b0 0d		      bcs	ReturnFromInsert
+   1162  fe4a				   MoveUp
+   1163  fe4a		       48		      pha		;This is the value that will be placed at this position
+   1164  fe4b		       b1 a2		      lda	(genericPointer),y	;Save the previous value in A
+   1165  fe4d		       aa		      tax
+   1166  fe4e		       68		      pla		;Recover the new value
+   1167  fe4f		       91 a2		      sta	(genericPointer),y	;Store the new value at this postion
+   1168  fe51		       8a		      txa
+   1169  fe52		       c8		      iny
+   1170  fe53		       c4 c2		      cpy	enemyCount
+   1171  fe55		       90 f3		      bcc	MoveUp
+   1172  fe57				   ReturnFromInsert
+   1173  fe57		       60		      rts
+   1174  fe58
+   1175  fe58				   RemoveAtY		;Uses the genericPointer variable to destroy the value at the Yth position in the designated array, moving the appropriate values down
+   1176  fe58		       a5 c2		      lda	enemyCount
+   1177  fe5a		       f0 fb		      beq	ReturnFromInsert	;Just return
+   1178  fe5c		       c4 c2		      cpy	enemyCount
+   1179  fe5e		       b0 f7		      bcs	ReturnFromInsert
+   1180  fe60				   RemovalLoop
+   1181  fe60							;Need to copy the space above this, and put it into this space
+   1182  fe60		       c8		      iny
+   1183  fe61		       c4 c2		      cpy	enemyCount
+   1184  fe63		       b0 f2		      bcs	ReturnFromInsert
+   1185  fe65		       b1 a2		      lda	(genericPointer),y
+   1186  fe67		       aa		      tax
+   1187  fe68		       88		      dey
+   1188  fe69		       91 a2		      sta	(genericPointer),y
+   1189  fe6b		       c8		      iny
+   1190  fe6c		       4c 60 fe 	      jmp	RemovalLoop
+   1191  fe6f
+   1192  fe6f				   SoundEffectWaveforms
+   1193  fe6f		       00		      .byte.b	$00
+   1194  fe70		       0c		      .byte.b	$0c	;Scoring
+   1195  fe71		       03		      .byte.b	$03	;Fire
+   1196  fe72		       08		      .byte.b	$08	;Hit
+   1197  fe73		       0f		      .byte.b	$0f	;City Damaged
+   1198  fe74		       0c		      .byte.b	$0c	;City Repaired
+   1199  fe75
+   1200  fe75				   ScoringSound
+   1201  fe75		       00		      .byte.b	$00
+   1202  fe76		       1f		      .byte.b	$1f
+   1203  fe77				   HitSound
+   1204  fe77		       00		      .byte.b	$00
+   1205  fe78		       0f		      .byte.b	$0f
+   1206  fe79		       0f		      .byte.b	$0f
+   1207  fe7a				   FireSound
+   1208  fe7a		       00		      .byte.b	$00
+   1209  fe7b		       02		      .byte.b	$02
+   1210  fe7c		       04		      .byte.b	$04
+   1211  fe7d		       05		      .byte.b	$05
+   1212  fe7e				   CityDamagedSound
+   1213  fe7e		       00		      .byte.b	$00
+   1214  fe7f		       09		      .byte.b	$09
+   1215  fe80		       09		      .byte.b	$09
+   1216  fe81		       09		      .byte.b	$09
+   1217  fe82				   CityRepairedSound
+   1218  fe82		       00		      .byte.b	0
+   1219  fe83		       0d		      .byte.b	13
+   1220  fe84		       0f		      .byte.b	15
+   1221  fe85		       12		      .byte.b	18
+   1222  fe86		       0f		      .byte.b	15
+   1223  fe87		       12		      .byte.b	18
+   1224  fe88		       14		      .byte.b	20
+   1225  fe89		       12		      .byte.b	18
+   1226  fe8a		       14		      .byte.b	20
+   1227  fe8b		       1a		      .byte.b	26
+   1228  fe8c
+   1229  fe8c				   RangefinderFrequency
+   1230  fe8c		       09		      .byte.b	$09	;Formerly $10
+   1231  fe8d		       11		      .byte.b	$11
+   1232  fe8e		       12		      .byte.b	$12
+   1233  fe8f		       13		      .byte.b	$13
+   1234  fe90		       14		      .byte.b	$14
+   1235  fe91		       15		      .byte.b	$15
+   1236  fe92		       16		      .byte.b	$16
+   1237  fe93		       17		      .byte.b	$17
+   1238  fe94		       18		      .byte.b	$18
+   1239  fe95		       19		      .byte.b	$19
+   1240  fe96		       1a		      .byte.b	$1A
+   1241  fe97		       1b		      .byte.b	$1B
+   1242  fe98		       1c		      .byte.b	$1C
+   1243  fe99		       1d		      .byte.b	$1D
+   1244  fe9a		       1e		      .byte.b	$1E
+   1245  fe9b		       1f		      .byte.b	$1F
+   1246  fe9c
+   1247  fe9c				   FinePosLookupTable
+   1248  fe9c		       70		      .byte.b	$70
+   1249  fe9d		       60		      .byte.b	$60
+   1250  fe9e		       50		      .byte.b	$50
+   1251  fe9f		       40		      .byte.b	$40
+   1252  fea0		       30		      .byte.b	$30
+   1253  fea1		       20		      .byte.b	$20
+   1254  fea2		       10		      .byte.b	$10
+   1255  fea3		       00		      .byte.b	$00
+   1256  fea4		       f0		      .byte.b	$F0
+   1257  fea5		       e0		      .byte.b	$E0
+   1258  fea6		       d0		      .byte.b	$D0
+   1259  fea7		       c0		      .byte.b	$C0
+   1260  fea8		       b0		      .byte.b	$B0
+   1261  fea9		       a0		      .byte.b	$A0
+   1262  feaa		       90		      .byte.b	$90
+   1263  feab		       80		      .byte.b	$80
+   1264  feac
+   1265  feac				   DigitLookupTable
+   1266  feac		       85		      .byte.b	(Digit0Graphics & $FF)
+   1267  fead		       8e		      .byte.b	(Digit1Graphics & $FF)
+   1268  feae		       97		      .byte.b	(Digit2Graphics & $FF)
+   1269  feaf		       a0		      .byte.b	(Digit3Graphics & $FF)
+   1270  feb0		       a9		      .byte.b	(Digit4Graphics & $FF)
+   1271  feb1		       b2		      .byte.b	(Digit5Graphics & $FF)
+   1272  feb2		       bb		      .byte.b	(Digit6Graphics & $FF)
+   1273  feb3		       c4		      .byte.b	(Digit7Graphics & $FF)
+   1274  feb4		       cd		      .byte.b	(Digit8Graphics & $FF)
+   1275  feb5		       d6		      .byte.b	(Digit9Graphics & $FF)
+   1276  feb6
+   1277  feb6				   CityscapeGraphicsLookupTable
+   1278  feb6		       79		      .byte.b	(Destruction4 & $FF)
+   1279  feb7		       67		      .byte.b	(Destruction3 & $FF)
+   1280  feb8		       4f		      .byte.b	(Destruction2 & $FF)
+   1281  feb9		       2e		      .byte.b	(Destruction1 & $FF)
+   1282  feba		       0a		      .byte.b	(Destruction0 & $FF)
+   1283  febb
+   1284  febb				   CityscapeHeightLookupTable
+   1285  febb		       03		      .byte.b	3
+   1286  febc		       05		      .byte.b	5
+   1287  febd		       07		      .byte.b	7
+   1288  febe		       0a		      .byte.b	10
+   1289  febf		       0b		      .byte.b	11
+   1290  fec0
+   1291  fec0				   CityDelayLookupTable
+   1292  fec0		       90		      .byte.b	144
+   1293  fec1		       8c		      .byte.b	140
+   1294  fec2		       88		      .byte.b	136
+   1295  fec3		       82		      .byte.b	130
+   1296  fec4		       80		      .byte.b	128
+   1297  fec5
+   1298  fec5				   EnemySpeedPerWave
+   1299  fec5		       81		      .byte.b	$81	;5 enemies High byte of 8 indicates that this speed is added every other frame
+   1300  fec6		       81		      .byte.b	$81	;6
+   1301  fec7		       81		      .byte.b	$81	;7
+   1302  fec8		       01		      .byte.b	$01	;8
+   1303  fec9		       01		      .byte.b	$01	;9
+   1304  feca		       01		      .byte.b	$01	;10
+   1305  fecb		       83		      .byte.b	$83	;11
+   1306  fecc		       83		      .byte.b	$83	;12
+   1307  fecd		       83		      .byte.b	$83	;13
+   1308  fece		       02		      .byte.b	$02	;14
+   1309  fecf		       02		      .byte.b	$02	;15
+   1310  fed0		       02		      .byte.b	$02	;16
+   1311  fed1		       03		      .byte.b	$03	;17
+   1312  fed2		       03		      .byte.b	$03	;18
+   1313  fed3		       04		      .byte.b	$04	;19
+   1314  fed4
+   1315  fed4				   AmmunitionPerWave		;This will need to be updated later, these values will actually be interpreted as how they appear in decimal
+   1316  fed4		       20		      .byte.b	#$20
+   1317  fed5		       20		      .byte.b	#$20
+   1318  fed6		       20		      .byte.b	#$20
+   1319  fed7		       30		      .byte.b	#$30
+   1320  fed8		       30		      .byte.b	#$30
+   1321  fed9		       30		      .byte.b	#$30
+   1322  feda		       40		      .byte.b	#$40
+   1323  fedb		       40		      .byte.b	#$40
+   1324  fedc		       40		      .byte.b	#$40
+   1325  fedd		       50		      .byte.b	#$50
+   1326  fede		       50		      .byte.b	#$50
+   1327  fedf		       50		      .byte.b	#$50
+   1328  fee0		       60		      .byte.b	#$60
+   1329  fee1		       60		      .byte.b	#$60
+   1330  fee2		       60		      .byte.b	#$60
+   1331  fee3
+   1332  fee3				   ColorLookupTransition
+   1333  fee3		       00		      .byte.b	$00
+   1334  fee4		       80		      .byte.b	$80
+   1335  fee5		       82		      .byte.b	$82
+   1336  fee6		       84		      .byte.b	$84
+   1337  fee7		       86		      .byte.b	$86
+   1338  fee8		       88		      .byte.b	$88
+   1339  fee9		       8a		      .byte.b	$8A
+   1340  feea		       8c		      .byte.b	$8C
+   1341  feeb
+   1342  feeb				   ColorLookupExplosion
+   1343  feeb		       00		      .byte.b	$00
+   1344  feec		       20		      .byte.b	$20
+   1345  feed		       22		      .byte.b	$22
+   1346  feee		       24		      .byte.b	$24
+   1347  feef		       26		      .byte.b	$26
+   1348  fef0		       28		      .byte.b	$28
+   1349  fef1		       2a		      .byte.b	$2A
+   1350  fef2		       2a		      .byte.b	$2A
+   1351  fef3		       2a		      .byte.b	$2A
+   1352  fef4
+   1353  ff00					      ORG	$FF00	;Contains all graphics data
+   1354  ff00
+   1355  ff00				   EnemyGraphics
+   1356  ff00		       ff		      .byte.b	$FF
+   1357  ff01		       ff		      .byte.b	$FF
+   1358  ff02		       ff		      .byte.b	$FF
+   1359  ff03		       81		      .byte.b	$81
+   1360  ff04		       81		      .byte.b	$81
+   1361  ff05		       81		      .byte.b	$81
+   1362  ff06		       81		      .byte.b	$81
+   1363  ff07		       ff		      .byte.b	$FF
+   1364  ff08		       ff		      .byte.b	$FF
+   1365  ff09		       ff		      .byte.b	$FF
+   1366  ff0a
+   1367  ff0a							;Cityscape graphics data
+   1368  ff0a				   Destruction0
+   1369  ff0a		       f0		      .byte.b	$F0
+   1370  ff0b		       f0		      .byte.b	$F0
+   1371  ff0c		       f0		      .byte.b	$F0
+   1372  ff0d		       f0		      .byte.b	$F0
+   1373  ff0e		       f0		      .byte.b	$F0
+   1374  ff0f		       f0		      .byte.b	$F0
+   1375  ff10		       f0		      .byte.b	$F0
+   1376  ff11		       f0		      .byte.b	$F0
+   1377  ff12		       30		      .byte.b	$30
+   1378  ff13		       30		      .byte.b	$30
+   1379  ff14		       30		      .byte.b	$30
+   1380  ff15		       30		      .byte.b	$30
+   1381  ff16
+   1382  ff16		       6e		      .byte.b	$6E
+   1383  ff17		       6e		      .byte.b	$6E
+   1384  ff18		       6e		      .byte.b	$6E
+   1385  ff19		       6e		      .byte.b	$6E
+   1386  ff1a		       6e		      .byte.b	$6E
+   1387  ff1b		       66		      .byte.b	$66
+   1388  ff1c		       66		      .byte.b	$66
+   1389  ff1d		       66		      .byte.b	$66
+   1390  ff1e		       64		      .byte.b	$64
+   1391  ff1f		       64		      .byte.b	$64
+   1392  ff20		       04		      .byte.b	$04
+   1393  ff21		       00		      .byte.b	$00
+   1394  ff22
+   1395  ff22		       77		      .byte.b	$77
+   1396  ff23		       77		      .byte.b	$77
+   1397  ff24		       77		      .byte.b	$77
+   1398  ff25		       77		      .byte.b	$77
+   1399  ff26		       77		      .byte.b	$77
+   1400  ff27		       77		      .byte.b	$77
+   1401  ff28		       77		      .byte.b	$77
+   1402  ff29		       77		      .byte.b	$77
+   1403  ff2a		       77		      .byte.b	$77
+   1404  ff2b		       27		      .byte.b	$27
+   1405  ff2c		       27		      .byte.b	$27
+   1406  ff2d		       20		      .byte.b	$20
+   1407  ff2e
+   1408  ff2e				   Destruction1
+   1409  ff2e		       f0		      .byte.b	$F0
+   1410  ff2f		       f0		      .byte.b	$F0
+   1411  ff30		       f0		      .byte.b	$F0
+   1412  ff31		       f0		      .byte.b	$F0
+   1413  ff32		       f0		      .byte.b	$F0
+   1414  ff33		       f0		      .byte.b	$F0
+   1415  ff34		       b0		      .byte.b	$B0
+   1416  ff35		       10		      .byte.b	$10
+   1417  ff36		       10		      .byte.b	$10
+   1418  ff37		       10		      .byte.b	$10
+   1419  ff38		       10		      .byte.b	$10
+   1420  ff39
+   1421  ff39		       6e		      .byte.b	$6E
+   1422  ff3a		       6e		      .byte.b	$6E
+   1423  ff3b		       6e		      .byte.b	$6E
+   1424  ff3c		       6e		      .byte.b	$6E
+   1425  ff3d		       6e		      .byte.b	$6E
+   1426  ff3e		       66		      .byte.b	$66
+   1427  ff3f		       66		      .byte.b	$66
+   1428  ff40		       46		      .byte.b	$46
+   1429  ff41		       44		      .byte.b	$44
+   1430  ff42		       04		      .byte.b	$04
+   1431  ff43		       00		      .byte.b	$00
+   1432  ff44
+   1433  ff44		       77		      .byte.b	$77
+   1434  ff45		       77		      .byte.b	$77
+   1435  ff46		       77		      .byte.b	$77
+   1436  ff47		       77		      .byte.b	$77
+   1437  ff48		       77		      .byte.b	$77
+   1438  ff49		       77		      .byte.b	$77
+   1439  ff4a		       77		      .byte.b	$77
+   1440  ff4b		       37		      .byte.b	$37
+   1441  ff4c		       17		      .byte.b	$17
+   1442  ff4d		       06		      .byte.b	$06
+   1443  ff4e		       04		      .byte.b	$04
+   1444  ff4f
+   1445  ff4f				   Destruction2
+   1446  ff4f		       f0		      .byte.b	$F0
+   1447  ff50		       f0		      .byte.b	$F0
+   1448  ff51		       f0		      .byte.b	$F0
+   1449  ff52		       f0		      .byte.b	$F0
+   1450  ff53		       f0		      .byte.b	$F0
+   1451  ff54		       f0		      .byte.b	$F0
+   1452  ff55		       30		      .byte.b	$30
+   1453  ff56		       10		      .byte.b	$10
+   1454  ff57
+   1455  ff57		       6e		      .byte.b	$6E
+   1456  ff58		       6e		      .byte.b	$6E
+   1457  ff59		       6e		      .byte.b	$6E
+   1458  ff5a		       6e		      .byte.b	$6E
+   1459  ff5b		       6e		      .byte.b	$6E
+   1460  ff5c		       42		      .byte.b	$42
+   1461  ff5d		       00		      .byte.b	$00
+   1462  ff5e		       00		      .byte.b	$00
+   1463  ff5f
+   1464  ff5f		       77		      .byte.b	$77
+   1465  ff60		       77		      .byte.b	$77
+   1466  ff61		       77		      .byte.b	$77
+   1467  ff62		       77		      .byte.b	$77
+   1468  ff63		       77		      .byte.b	$77
+   1469  ff64		       37		      .byte.b	$37
+   1470  ff65		       03		      .byte.b	$03
+   1471  ff66		       03		      .byte.b	$03
+   1472  ff67
+   1473  ff67				   Destruction3
+   1474  ff67		       f0		      .byte.b	$F0
+   1475  ff68		       f0		      .byte.b	$F0
+   1476  ff69		       f0		      .byte.b	$F0
+   1477  ff6a		       f0		      .byte.b	$F0
+   1478  ff6b		       20		      .byte.b	$20
+   1479  ff6c		       00		      .byte.b	$00
+   1480  ff6d
+   1481  ff6d		       6e		      .byte.b	$6E
+   1482  ff6e		       6e		      .byte.b	$6E
+   1483  ff6f		       6e		      .byte.b	$6E
+   1484  ff70		       4c		      .byte.b	$4C
+   1485  ff71		       04		      .byte.b	$04
+   1486  ff72		       00		      .byte.b	$00
+   1487  ff73
+   1488  ff73		       77		      .byte.b	$77
+   1489  ff74		       77		      .byte.b	$77
+   1490  ff75		       77		      .byte.b	$77
+   1491  ff76		       67		      .byte.b	$67
+   1492  ff77		       01		      .byte.b	$01
+   1493  ff78		       01		      .byte.b	$01
+   1494  ff79
+   1495  ff79				   Destruction4
+   1496  ff79		       f0		      .byte.b	$F0
+   1497  ff7a		       70		      .byte.b	$70
+   1498  ff7b		       20		      .byte.b	$20
+   1499  ff7c		       00		      .byte.b	$00
+   1500  ff7d
+   1501  ff7d		       6e		      .byte.b	$6E
+   1502  ff7e		       6c		      .byte.b	$6C
+   1503  ff7f		       40		      .byte.b	$40
+   1504  ff80		       00		      .byte.b	$00
+   1505  ff81
+   1506  ff81		       77		      .byte.b	$77
+   1507  ff82		       65		      .byte.b	$65
+   1508  ff83		       41		      .byte.b	$41
+   1509  ff84		       01		      .byte.b	$01
+   1510  ff85
+   1511  ff85				   Digit0Graphics
+   1512  ff85		       00		      .byte.b	$00
+   1513  ff86		       1c		      .byte.b	$1C
+   1514  ff87		       22		      .byte.b	$22
+   1515  ff88		       22		      .byte.b	$22
+   1516  ff89		       32		      .byte.b	$32
+   1517  ff8a		       2a		      .byte.b	$2A
+   1518  ff8b		       26		      .byte.b	$26
+   1519  ff8c		       22		      .byte.b	$22
+   1520  ff8d		       22		      .byte.b	$22
+   1521  ff8e
+   1522  ff8e				   Digit1Graphics
+   1523  ff8e		       1c		      .byte.b	$1C	;Highest byte of Digit0
+   1524  ff8f		       08		      .byte.b	$08
+   1525  ff90		       08		      .byte.b	$08
+   1526  ff91		       08		      .byte.b	$08
+   1527  ff92		       08		      .byte.b	$08
+   1528  ff93		       08		      .byte.b	$08
+   1529  ff94		       08		      .byte.b	$08
+   1530  ff95		       08		      .byte.b	$08
+   1531  ff96		       18		      .byte.b	$18
+   1532  ff97
+   1533  ff97				   Digit2Graphics
+   1534  ff97		       08		      .byte.b	$08
+   1535  ff98		       3e		      .byte.b	$3E
+   1536  ff99		       20		      .byte.b	$20
+   1537  ff9a		       30		      .byte.b	$30
+   1538  ff9b		       18		      .byte.b	$18
+   1539  ff9c		       0c		      .byte.b	$0C
+   1540  ff9d		       06		      .byte.b	$06
+   1541  ff9e		       02		      .byte.b	$02
+   1542  ff9f		       32		      .byte.b	$32
+   1543  ffa0
+   1544  ffa0				   Digit3Graphics
+   1545  ffa0		       1c		      .byte.b	$1C
+   1546  ffa1		       1c		      .byte.b	$1C
+   1547  ffa2		       32		      .byte.b	$32
+   1548  ffa3		       02		      .byte.b	$02
+   1549  ffa4		       02		      .byte.b	$02
+   1550  ffa5		       0c		      .byte.b	$0C
+   1551  ffa6		       02		      .byte.b	$02
+   1552  ffa7		       02		      .byte.b	$02
+   1553  ffa8		       32		      .byte.b	$32
+   1554  ffa9
+   1555  ffa9				   Digit4Graphics
+   1556  ffa9		       1c		      .byte.b	$1C
+   1557  ffaa		       04		      .byte.b	$04
+   1558  ffab		       04		      .byte.b	$04
+   1559  ffac		       04		      .byte.b	$04
+   1560  ffad		       04		      .byte.b	$04
+   1561  ffae		       3e		      .byte.b	$3E
+   1562  ffaf		       24		      .byte.b	$24
+   1563  ffb0		       24		      .byte.b	$24
+   1564  ffb1		       24		      .byte.b	$24
+   1565  ffb2
+   1566  ffb2				   Digit5Graphics
+   1567  ffb2		       24		      .byte.b	$24
+   1568  ffb3		       1c		      .byte.b	$1C
+   1569  ffb4		       32		      .byte.b	$32
+   1570  ffb5		       02		      .byte.b	$02
+   1571  ffb6		       02		      .byte.b	$02
+   1572  ffb7		       1c		      .byte.b	$1C
+   1573  ffb8		       20		      .byte.b	$20
+   1574  ffb9		       20		      .byte.b	$20
+   1575  ffba		       20		      .byte.b	$20
+   1576  ffbb
+   1577  ffbb				   Digit6Graphics
+   1578  ffbb		       3e		      .byte.b	$3E
+   1579  ffbc		       1c		      .byte.b	$1C
+   1580  ffbd		       22		      .byte.b	$22
+   1581  ffbe		       22		      .byte.b	$22
+   1582  ffbf		       22		      .byte.b	$22
+   1583  ffc0		       3c		      .byte.b	$3C
+   1584  ffc1		       20		      .byte.b	$20
+   1585  ffc2		       20		      .byte.b	$20
+   1586  ffc3		       22		      .byte.b	$22
+   1587  ffc4
+   1588  ffc4				   Digit7Graphics
+   1589  ffc4		       1c		      .byte.b	$1C
+   1590  ffc5		       08		      .byte.b	$08
+   1591  ffc6		       08		      .byte.b	$08
+   1592  ffc7		       08		      .byte.b	$08
+   1593  ffc8		       08		      .byte.b	$08
+   1594  ffc9		       04		      .byte.b	$04
+   1595  ffca		       04		      .byte.b	$04
+   1596  ffcb		       04		      .byte.b	$04
+   1597  ffcc		       02		      .byte.b	$02
+   1598  ffcd
+   1599  ffcd				   Digit8Graphics
+   1600  ffcd		       3e		      .byte.b	$3E
+   1601  ffce		       1c		      .byte.b	$1C
+   1602  ffcf		       22		      .byte.b	$22
+   1603  ffd0		       22		      .byte.b	$22
+   1604  ffd1		       22		      .byte.b	$22
+   1605  ffd2		       1c		      .byte.b	$1C
+   1606  ffd3		       22		      .byte.b	$22
+   1607  ffd4		       22		      .byte.b	$22
+   1608  ffd5		       22		      .byte.b	$22
+   1609  ffd6
+   1610  ffd6				   Digit9Graphics
+   1611  ffd6		       1c		      .byte.b	$1C
+   1612  ffd7		       1c		      .byte.b	$1C
+   1613  ffd8		       22		      .byte.b	$22
+   1614  ffd9		       02		      .byte.b	$02
+   1615  ffda		       02		      .byte.b	$02
+   1616  ffdb		       1e		      .byte.b	$1E
+   1617  ffdc		       22		      .byte.b	$22
+   1618  ffdd		       22		      .byte.b	$22
+   1619  ffde		       22		      .byte.b	$22
+   1620  ffdf
+   1621  ffdf		       1c		      .byte.b	$1C
+   1622  ffe0
+   1623  ffe0				   PlayerGraphics
+   1624  ffe0		       fe		      .byte.b	$FE
+   1625  ffe1		       fe		      .byte.b	$FE
+   1626  ffe2		       fe		      .byte.b	$FE
+   1627  ffe3		       7c		      .byte.b	$7C
+   1628  ffe4		       7c		      .byte.b	$7C
+   1629  ffe5		       7c		      .byte.b	$7C
+   1630  ffe6		       6c		      .byte.b	$6C
+   1631  ffe7		       28		      .byte.b	$28
+   1632  ffe8		       28		      .byte.b	$28
+   1633  ffe9		       28		      .byte.b	$28
+   1634  ffea
+   1635  ffea				   RangefinderIntervals
+   1636  ffea		       08		      .byte.b	8
+   1637  ffeb		       03		      .byte.b	3
+   1638  ffec		       02		      .byte.b	2
+   1639  ffed				   SoundPointers
+   1640  ffed		       00		      .byte.b	$0
+   1641  ffee		       75		      .byte.b	(ScoringSound & $FF)
+   1642  ffef		       7a		      .byte.b	(FireSound & $FF)
+   1643  fff0		       77		      .byte.b	(HitSound & $FF)
+   1644  fff1		       7e		      .byte.b	(CityDamagedSound & $FF)
+   1645  fff2		       82		      .byte.b	(CityRepairedSound & $FF)
+   1646  fff3				   SoundLengths
+   1647  fff3		       00		      .byte.b	0
+   1648  fff4		       02		      .byte.b	2
+   1649  fff5		       04		      .byte.b	4
+   1650  fff6		       03		      .byte.b	3
+   1651  fff7		       04		      .byte.b	4
+   1652  fff8		       0a		      .byte.b	10
+   1653  fff9
+   1654  fffa					      ORG	$FFFA
+   1655  fffa
+   1656  fffa		       00 f8		      .word.w	Reset
+   1657  fffc		       00 f8		      .word.w	Reset
+   1658  fffe		       00 f8		      .word.w	Reset
+   1659  10000
+   1660  10000				    END

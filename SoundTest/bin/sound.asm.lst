@@ -1,0 +1,858 @@
+------- FILE sound.asm LEVEL 1 PASS 2
+      1  10000					       processor	6502
+------- FILE vcs.h LEVEL 2 PASS 2
+      0  10000 ????				       include	"vcs.h"
+      1  10000 ????						; VCS.H
+      2  10000 ????						; Version 1.05, 13/November/2003
+      3  10000 ????
+      4  10000 ????		00 69	    VERSION_VCS =	105
+      5  10000 ????
+      6  10000 ????						; THIS IS A PRELIMINARY RELEASE OF *THE* "STANDARD" VCS.H
+      7  10000 ????						; THIS FILE IS EXPLICITLY SUPPORTED AS A DASM-PREFERRED COMPANION FILE
+      8  10000 ????						; PLEASE DO *NOT* REDISTRIBUTE THIS FILE!
+      9  10000 ????						;
+     10  10000 ????						; This file defines hardware registers and memory mapping for the
+     11  10000 ????						; Atari 2600. It is distributed as a companion machine-specific support package
+     12  10000 ????						; for the DASM compiler. Updates to this file, DASM, and associated tools are
+     13  10000 ????						; available at at http://www.atari2600.org/dasm
+     14  10000 ????						;
+     15  10000 ????						; Many thanks to the original author(s) of this file, and to everyone who has
+     16  10000 ????						; contributed to understanding the Atari 2600.  If you take issue with the
+     17  10000 ????						; contents, or naming of registers, please write to me (atari2600@taswegian.com)
+     18  10000 ????						; with your views.  Please contribute, if you think you can improve this
+     19  10000 ????						; file!
+     20  10000 ????						;
+     21  10000 ????						; Latest Revisions...
+     22  10000 ????						; 1.05  13/NOV/2003	  - Correction to 1.04 - now functions as requested by MR.
+     23  10000 ????						;			  - Added VERSION_VCS equate (which will reflect 100x version #)
+     24  10000 ????						;			    This will allow conditional code to verify VCS.H being
+     25  10000 ????						;			    used for code assembly.
+     26  10000 ????						; 1.04  12/NOV/2003	 Added TIA_BASE_WRITE_ADDRESS and TIA_BASE_READ_ADDRESS for
+     27  10000 ????						;			 convenient disassembly/reassembly compatibility for hardware
+     28  10000 ????						;			 mirrored reading/writing differences.	This is more a 
+     29  10000 ????						;			 readability issue, and binary compatibility with disassembled
+     30  10000 ????						;			 and reassembled sources.  Per Manuel Rotschkar's suggestion.
+     31  10000 ????						; 1.03  12/MAY/2003	 Added SEG segment at end of file to fix old-code compatibility
+     32  10000 ????						;			 which was broken by the use of segments in this file, as
+     33  10000 ????						;			 reported by Manuel Polik on [stella] 11/MAY/2003
+     34  10000 ????						; 1.02  22/MAR/2003	 Added TIMINT($285)
+     35  10000 ????						; 1.01				Constant offset added to allow use for 3F-style bankswitching
+     36  10000 ????						;						 - define TIA_BASE_ADDRESS as $40 for Tigervision carts, otherwise
+     37  10000 ????						;						   it is safe to leave it undefined, and the base address will
+     38  10000 ????						;						   be set to 0.  Thanks to Eckhard Stolberg for the suggestion.
+     39  10000 ????						;			    Note, may use -DLABEL=EXPRESSION to define TIA_BASE_ADDRESS
+     40  10000 ????						;			  - register definitions are now generated through assignment
+     41  10000 ????						;			    in uninitialised segments.	This allows a changeable base
+     42  10000 ????						;			    address architecture.
+     43  10000 ????						; 1.0	22/MAR/2003		Initial release
+     44  10000 ????
+     45  10000 ????
+     46  10000 ????						;-------------------------------------------------------------------------------
+     47  10000 ????
+     48  10000 ????						; TIA_BASE_ADDRESS
+     49  10000 ????						; The TIA_BASE_ADDRESS defines the base address of access to TIA registers.
+     50  10000 ????						; Normally 0, the base address should (externally, before including this file)
+     51  10000 ????						; be set to $40 when creating 3F-bankswitched (and other?) cartridges.
+     52  10000 ????						; The reason is that this bankswitching scheme treats any access to locations
+     53  10000 ????						; < $40 as a bankswitch.
+     54  10000 ????
+     55  10000 ????			   -	       IFNCONST	TIA_BASE_ADDRESS
+     56  10000 ????			   -TIA_BASE_ADDRESS =	0
+     57  10000 ????				       ENDIF
+     58  10000 ????
+     59  10000 ????						; Note: The address may be defined on the command-line using the -D switch, eg:
+     60  10000 ????						; dasm.exe code.asm -DTIA_BASE_ADDRESS=$40 -f3 -v5 -ocode.bin
+     61  10000 ????						; *OR* by declaring the label before including this file, eg:
+     62  10000 ????						; TIA_BASE_ADDRESS = $40
+     63  10000 ????						;   include "vcs.h"
+     64  10000 ????
+     65  10000 ????						; Alternate read/write address capability - allows for some disassembly compatibility
+     66  10000 ????						; usage ; to allow reassembly to binary perfect copies).  This is essentially catering
+     67  10000 ????						; for the mirrored ROM hardware registers.
+     68  10000 ????
+     69  10000 ????						; Usage: As per above, define the TIA_BASE_READ_ADDRESS and/or TIA_BASE_WRITE_ADDRESS
+     70  10000 ????						; using the -D command-line switch, as required.  If the addresses are not defined, 
+     71  10000 ????						; they defaut to the TIA_BASE_ADDRESS.
+     72  10000 ????
+     73  10000 ????			   -	       IFNCONST	TIA_BASE_READ_ADDRESS
+     74  10000 ????			   -TIA_BASE_READ_ADDRESS =	TIA_BASE_ADDRESS
+     75  10000 ????				       ENDIF
+     76  10000 ????
+     77  10000 ????			   -	       IFNCONST	TIA_BASE_WRITE_ADDRESS
+     78  10000 ????			   -TIA_BASE_WRITE_ADDRESS =	TIA_BASE_ADDRESS
+     79  10000 ????				       ENDIF
+     80  10000 ????
+     81  10000 ????						;-------------------------------------------------------------------------------
+     82  10000 ????
+     83 U002d ????				      SEG.U	TIA_REGISTERS_WRITE
+     84 U0000					      ORG	TIA_BASE_WRITE_ADDRESS
+     85 U0000
+     86 U0000							; DO NOT CHANGE THE RELATIVE ORDERING OF REGISTERS!
+     87 U0000
+     88 U0000		       00	   VSYNC      ds	1	; $00	 0000 00x0   Vertical Sync Set-Clear
+     89 U0001		       00	   VBLANK     ds	1	; $01	 xx00 00x0   Vertical Blank Set-Clear
+     90 U0002		       00	   WSYNC      ds	1	; $02	 ---- ----   Wait for Horizontal Blank
+     91 U0003		       00	   RSYNC      ds	1	; $03	 ---- ----   Reset Horizontal Sync Counter
+     92 U0004		       00	   NUSIZ0     ds	1	; $04	 00xx 0xxx   Number-Size player/missle 0
+     93 U0005		       00	   NUSIZ1     ds	1	; $05	 00xx 0xxx   Number-Size player/missle 1
+     94 U0006		       00	   COLUP0     ds	1	; $06	 xxxx xxx0   Color-Luminance Player 0
+     95 U0007		       00	   COLUP1     ds	1	; $07	 xxxx xxx0   Color-Luminance Player 1
+     96 U0008		       00	   COLUPF     ds	1	; $08	 xxxx xxx0   Color-Luminance Playfield
+     97 U0009		       00	   COLUBK     ds	1	; $09	 xxxx xxx0   Color-Luminance Background
+     98 U000a		       00	   CTRLPF     ds	1	; $0A	 00xx 0xxx   Control Playfield, Ball, Collisions
+     99 U000b		       00	   REFP0      ds	1	; $0B	 0000 x000   Reflection Player 0
+    100 U000c		       00	   REFP1      ds	1	; $0C	 0000 x000   Reflection Player 1
+    101 U000d		       00	   PF0	      ds	1	; $0D	 xxxx 0000   Playfield Register Byte 0
+    102 U000e		       00	   PF1	      ds	1	; $0E	 xxxx xxxx   Playfield Register Byte 1
+    103 U000f		       00	   PF2	      ds	1	; $0F	 xxxx xxxx   Playfield Register Byte 2
+    104 U0010		       00	   RESP0      ds	1	; $10	 ---- ----   Reset Player 0
+    105 U0011		       00	   RESP1      ds	1	; $11	 ---- ----   Reset Player 1
+    106 U0012		       00	   RESM0      ds	1	; $12	 ---- ----   Reset Missle 0
+    107 U0013		       00	   RESM1      ds	1	; $13	 ---- ----   Reset Missle 1
+    108 U0014		       00	   RESBL      ds	1	; $14	 ---- ----   Reset Ball
+    109 U0015		       00	   AUDC0      ds	1	; $15	 0000 xxxx   Audio Control 0
+    110 U0016		       00	   AUDC1      ds	1	; $16	 0000 xxxx   Audio Control 1
+    111 U0017		       00	   AUDF0      ds	1	; $17	 000x xxxx   Audio Frequency 0
+    112 U0018		       00	   AUDF1      ds	1	; $18	 000x xxxx   Audio Frequency 1
+    113 U0019		       00	   AUDV0      ds	1	; $19	 0000 xxxx   Audio Volume 0
+    114 U001a		       00	   AUDV1      ds	1	; $1A	 0000 xxxx   Audio Volume 1
+    115 U001b		       00	   GRP0       ds	1	; $1B	 xxxx xxxx   Graphics Register Player 0
+    116 U001c		       00	   GRP1       ds	1	; $1C	 xxxx xxxx   Graphics Register Player 1
+    117 U001d		       00	   ENAM0      ds	1	; $1D	 0000 00x0   Graphics Enable Missle 0
+    118 U001e		       00	   ENAM1      ds	1	; $1E	 0000 00x0   Graphics Enable Missle 1
+    119 U001f		       00	   ENABL      ds	1	; $1F	 0000 00x0   Graphics Enable Ball
+    120 U0020		       00	   HMP0       ds	1	; $20	 xxxx 0000   Horizontal Motion Player 0
+    121 U0021		       00	   HMP1       ds	1	; $21	 xxxx 0000   Horizontal Motion Player 1
+    122 U0022		       00	   HMM0       ds	1	; $22	 xxxx 0000   Horizontal Motion Missle 0
+    123 U0023		       00	   HMM1       ds	1	; $23	 xxxx 0000   Horizontal Motion Missle 1
+    124 U0024		       00	   HMBL       ds	1	; $24	 xxxx 0000   Horizontal Motion Ball
+    125 U0025		       00	   VDELP0     ds	1	; $25	 0000 000x   Vertical Delay Player 0
+    126 U0026		       00	   VDELP1     ds	1	; $26	 0000 000x   Vertical Delay Player 1
+    127 U0027		       00	   VDELBL     ds	1	; $27	 0000 000x   Vertical Delay Ball
+    128 U0028		       00	   RESMP0     ds	1	; $28	 0000 00x0   Reset Missle 0 to Player 0
+    129 U0029		       00	   RESMP1     ds	1	; $29	 0000 00x0   Reset Missle 1 to Player 1
+    130 U002a		       00	   HMOVE      ds	1	; $2A	 ---- ----   Apply Horizontal Motion
+    131 U002b		       00	   HMCLR      ds	1	; $2B	 ---- ----   Clear Horizontal Move Registers
+    132 U002c		       00	   CXCLR      ds	1	; $2C	 ---- ----   Clear Collision Latches
+    133 U002d
+    134 U002d							;-------------------------------------------------------------------------------
+    135 U002d
+    136 U000e ????				      SEG.U	TIA_REGISTERS_READ
+    137 U0000					      ORG	TIA_BASE_READ_ADDRESS
+    138 U0000
+    139 U0000							;											bit 7	 bit 6
+    140 U0000		       00	   CXM0P      ds	1	; $00	     xx00 0000	     Read Collision  M0-P1   M0-P0
+    141 U0001		       00	   CXM1P      ds	1	; $01	     xx00 0000			     M1-P0   M1-P1
+    142 U0002		       00	   CXP0FB     ds	1	; $02	     xx00 0000			     P0-PF   P0-BL
+    143 U0003		       00	   CXP1FB     ds	1	; $03	     xx00 0000			     P1-PF   P1-BL
+    144 U0004		       00	   CXM0FB     ds	1	; $04	     xx00 0000			     M0-PF   M0-BL
+    145 U0005		       00	   CXM1FB     ds	1	; $05	     xx00 0000			     M1-PF   M1-BL
+    146 U0006		       00	   CXBLPF     ds	1	; $06	     x000 0000			     BL-PF   -----
+    147 U0007		       00	   CXPPMM     ds	1	; $07	     xx00 0000			     P0-P1   M0-M1
+    148 U0008		       00	   INPT0      ds	1	; $08	     x000 0000	     Read Pot Port 0
+    149 U0009		       00	   INPT1      ds	1	; $09	     x000 0000	     Read Pot Port 1
+    150 U000a		       00	   INPT2      ds	1	; $0A	     x000 0000	     Read Pot Port 2
+    151 U000b		       00	   INPT3      ds	1	; $0B	     x000 0000	     Read Pot Port 3
+    152 U000c		       00	   INPT4      ds	1	; $0C		x000 0000	 Read Input (Trigger) 0
+    153 U000d		       00	   INPT5      ds	1	; $0D		x000 0000	 Read Input (Trigger) 1
+    154 U000e
+    155 U000e							;-------------------------------------------------------------------------------
+    156 U000e
+    157 U0298 ????				      SEG.U	RIOT
+    158 U0280					      ORG	$280
+    159 U0280
+    160 U0280							; RIOT MEMORY MAP
+    161 U0280
+    162 U0280		       00	   SWCHA      ds	1	; $280      Port A data register for joysticks:
+    163 U0281							;			Bits 4-7 for player 1.  Bits 0-3 for player 2.
+    164 U0281
+    165 U0281		       00	   SWACNT     ds	1	; $281      Port A data direction register (DDR)
+    166 U0282		       00	   SWCHB      ds	1	; $282		Port B data (console switches)
+    167 U0283		       00	   SWBCNT     ds	1	; $283      Port B DDR
+    168 U0284		       00	   INTIM      ds	1	; $284		Timer output
+    169 U0285
+    170 U0285		       00	   TIMINT     ds	1	; $285
+    171 U0286
+    172 U0286							; Unused/undefined registers ($285-$294)
+    173 U0286
+    174 U0286		       00		      ds	1	; $286
+    175 U0287		       00		      ds	1	; $287
+    176 U0288		       00		      ds	1	; $288
+    177 U0289		       00		      ds	1	; $289
+    178 U028a		       00		      ds	1	; $28A
+    179 U028b		       00		      ds	1	; $28B
+    180 U028c		       00		      ds	1	; $28C
+    181 U028d		       00		      ds	1	; $28D
+    182 U028e		       00		      ds	1	; $28E
+    183 U028f		       00		      ds	1	; $28F
+    184 U0290		       00		      ds	1	; $290
+    185 U0291		       00		      ds	1	; $291
+    186 U0292		       00		      ds	1	; $292
+    187 U0293		       00		      ds	1	; $293
+    188 U0294
+    189 U0294		       00	   TIM1T      ds	1	; $294		set 1 clock interval
+    190 U0295		       00	   TIM8T      ds	1	; $295      set 8 clock interval
+    191 U0296		       00	   TIM64T     ds	1	; $296      set 64 clock interval
+    192 U0297		       00	   T1024T     ds	1	; $297      set 1024 clock interval
+    193 U0298
+    194 U0298							;-------------------------------------------------------------------------------
+    195 U0298							; The following required for back-compatibility with code which does not use
+    196 U0298							; segments.
+    197 U0298
+    198  0000 ????				      SEG
+    199  0000 ????
+    200  0000 ????						; EOF
+------- FILE sound.asm
+      3  0000 ????
+      4 U0085 ????				      SEG.U	variables
+      5 U0080					      org	$80
+      6 U0080
+      7 U0080		       00	   currentAttribute ds	1
+      8 U0081		       00	   soundType  ds	1
+      9 U0082		       00	   frequency  ds	1
+     10 U0083		       00	   volume     ds	1
+     11 U0084		       00	   previousInputs ds	1
+     12 U0085
+     13  10000 ????				       SEG	CODE
+     14  f000					      ORG	$F000
+     15  f000
+     16  f000
+     17  f000							;Clear all registers and RAM
+     18  f000				   Reset
+     19  f000		       a2 00		      ldx	#0
+     20  f002		       8a		      txa
+     21  f003		       a8		      tay
+     22  f004				   Clear
+     23  f004		       ca		      dex
+     24  f005		       9a		      txs
+     25  f006		       48		      pha
+     26  f007		       d0 fb		      bne	Clear
+     27  f009		       d8		      cld
+     28  f00a
+     29  f00a				   StartOfFrame
+     30  f00a							;Start of VBLANK
+     31  f00a		       a9 00		      lda	#$0
+     32  f00c		       85 01		      sta	VBLANK
+     33  f00e		       a9 02		      lda	#$2
+     34  f010		       85 00		      sta	VSYNC
+     35  f012
+     36  f012							;3 lines of VSYNC
+     37  f012		       85 02		      sta	WSYNC
+     38  f014		       85 02		      sta	WSYNC
+     39  f016		       85 02		      sta	WSYNC
+     40  f018		       a9 00		      lda	#0
+     41  f01a		       85 00		      sta	VSYNC
+     42  f01c
+     43  f01c							;37 more lines of VBLANK
+     44  f01c					      REPEAT	33
+     45  f01c		       85 02		      sta	WSYNC
+     44  f01c					      REPEND
+     45  f01e		       85 02		      sta	WSYNC
+     44  f01e					      REPEND
+     45  f020		       85 02		      sta	WSYNC
+     44  f020					      REPEND
+     45  f022		       85 02		      sta	WSYNC
+     44  f022					      REPEND
+     45  f024		       85 02		      sta	WSYNC
+     44  f024					      REPEND
+     45  f026		       85 02		      sta	WSYNC
+     44  f026					      REPEND
+     45  f028		       85 02		      sta	WSYNC
+     44  f028					      REPEND
+     45  f02a		       85 02		      sta	WSYNC
+     44  f02a					      REPEND
+     45  f02c		       85 02		      sta	WSYNC
+     44  f02c					      REPEND
+     45  f02e		       85 02		      sta	WSYNC
+     44  f02e					      REPEND
+     45  f030		       85 02		      sta	WSYNC
+     44  f030					      REPEND
+     45  f032		       85 02		      sta	WSYNC
+     44  f032					      REPEND
+     45  f034		       85 02		      sta	WSYNC
+     44  f034					      REPEND
+     45  f036		       85 02		      sta	WSYNC
+     44  f036					      REPEND
+     45  f038		       85 02		      sta	WSYNC
+     44  f038					      REPEND
+     45  f03a		       85 02		      sta	WSYNC
+     44  f03a					      REPEND
+     45  f03c		       85 02		      sta	WSYNC
+     44  f03c					      REPEND
+     45  f03e		       85 02		      sta	WSYNC
+     44  f03e					      REPEND
+     45  f040		       85 02		      sta	WSYNC
+     44  f040					      REPEND
+     45  f042		       85 02		      sta	WSYNC
+     44  f042					      REPEND
+     45  f044		       85 02		      sta	WSYNC
+     44  f044					      REPEND
+     45  f046		       85 02		      sta	WSYNC
+     44  f046					      REPEND
+     45  f048		       85 02		      sta	WSYNC
+     44  f048					      REPEND
+     45  f04a		       85 02		      sta	WSYNC
+     44  f04a					      REPEND
+     45  f04c		       85 02		      sta	WSYNC
+     44  f04c					      REPEND
+     45  f04e		       85 02		      sta	WSYNC
+     44  f04e					      REPEND
+     45  f050		       85 02		      sta	WSYNC
+     44  f050					      REPEND
+     45  f052		       85 02		      sta	WSYNC
+     44  f052					      REPEND
+     45  f054		       85 02		      sta	WSYNC
+     44  f054					      REPEND
+     45  f056		       85 02		      sta	WSYNC
+     44  f056					      REPEND
+     45  f058		       85 02		      sta	WSYNC
+     44  f058					      REPEND
+     45  f05a		       85 02		      sta	WSYNC
+     44  f05a					      REPEND
+     45  f05c		       85 02		      sta	WSYNC
+     46  f05e					      REPEND
+     47  f05e
+     48  f05e							;Interpret controller inputs
+     49  f05e		       ad 80 02 	      lda	SWCHA
+     50  f061		       49 ff		      eor	#$FF
+     51  f063		       c5 84		      cmp	previousInputs
+     52  f065		       85 84		      sta	previousInputs
+     53  f067		       f0 6c		      beq	Skip
+     54  f069		       a8		      tay
+     55  f06a		       29 80		      and	#$80
+     56  f06c		       d0 26		      bne	InputRight
+     57  f06e		       98		      tya
+     58  f06f		       29 40		      and	#$40
+     59  f071		       d0 2f		      bne	InputLeft
+     60  f073		       98		      tya
+     61  f074		       29 20		      and	#$20
+     62  f076		       d0 08		      bne	InputDown
+     63  f078		       98		      tya
+     64  f079		       29 10		      and	#$10
+     65  f07b		       d0 33		      bne	InputUp
+     66  f07d		       4c d5 f0 	      jmp	Skip
+     67  f080				   InputDown		;Update values according to new inputs
+     68  f080		       85 02		      sta	WSYNC
+     69  f082		       a5 80		      lda	currentAttribute
+     70  f084		       18		      clc
+     71  f085		       69 01		      adc	#$1
+     72  f087		       c9 03		      cmp	#$3
+     73  f089		       85 80		      sta	currentAttribute
+     74  f08b		       30 35		      bmi	UpdateAudioRegisters
+     75  f08d		       a9 00		      lda	#$0
+     76  f08f		       85 80		      sta	currentAttribute
+     77  f091		       4c c2 f0 	      jmp	UpdateAudioRegisters
+     78  f094				   InputRight
+     79  f094		       85 02		      sta	WSYNC
+     80  f096		       a6 80		      ldx	currentAttribute
+     81  f098		       b5 81		      lda	soundType,x
+     82  f09a		       18		      clc
+     83  f09b		       69 01		      adc	#$1
+     84  f09d		       95 81		      sta	soundType,x
+     85  f09f		       4c c2 f0 	      jmp	UpdateAudioRegisters
+     86  f0a2				   InputLeft
+     87  f0a2		       85 02		      sta	WSYNC
+     88  f0a4		       a6 80		      ldx	currentAttribute
+     89  f0a6		       b5 81		      lda	soundType,x
+     90  f0a8		       38		      sec
+     91  f0a9		       e9 01		      sbc	#$1
+     92  f0ab		       95 81		      sta	soundType,x
+     93  f0ad		       4c c2 f0 	      jmp	UpdateAudioRegisters
+     94  f0b0				   InputUp
+     95  f0b0		       85 02		      sta	WSYNC
+     96  f0b2		       a5 80		      lda	currentAttribute
+     97  f0b4		       f0 08		      beq	InputUpWrapAround
+     98  f0b6		       38		      sec
+     99  f0b7		       e9 01		      sbc	#$1
+    100  f0b9		       85 80		      sta	currentAttribute
+    101  f0bb		       4c c2 f0 	      jmp	UpdateAudioRegisters
+    102  f0be				   InputUpWrapAround
+    103  f0be		       a9 02		      lda	#$2
+    104  f0c0		       85 80		      sta	currentAttribute
+    105  f0c2				   UpdateAudioRegisters
+    106  f0c2		       85 02		      sta	WSYNC
+    107  f0c4		       a5 81		      lda	soundType
+    108  f0c6		       85 15		      sta	AUDC0
+    109  f0c8		       a5 82		      lda	frequency
+    110  f0ca		       85 17		      sta	AUDF0
+    111  f0cc		       a5 83		      lda	volume
+    112  f0ce		       85 19		      sta	AUDV0
+    113  f0d0		       85 02		      sta	WSYNC
+    114  f0d2		       4c db f0 	      jmp	DrawPicture
+    115  f0d5				   Skip
+    116  f0d5		       85 02		      sta	WSYNC
+    117  f0d7		       85 02		      sta	WSYNC
+    118  f0d9		       85 02		      sta	WSYNC
+    119  f0db				   DrawPicture
+    120  f0db							;Draw the picture to the screen.
+    121  f0db		       a2 97		      ldx	#$97
+    122  f0dd		       86 09		      stx	COLUBK
+    123  f0df		       a2 64		      ldx	#$64
+    124  f0e1		       86 08		      stx	COLUPF
+    125  f0e3		       85 02		      sta	WSYNC
+    126  f0e5
+    127  f0e5		       a5 81		      lda	soundType
+    128  f0e7		       29 0f		      and	#$0f
+    129  f0e9		       85 0f		      sta	PF2
+    130  f0eb		       85 02		      sta	WSYNC
+    131  f0ed		       85 02		      sta	WSYNC
+    132  f0ef		       a5 82		      lda	frequency
+    133  f0f1		       29 1f		      and	#$1f
+    134  f0f3		       85 0f		      sta	PF2
+    135  f0f5		       85 02		      sta	WSYNC
+    136  f0f7		       85 02		      sta	WSYNC
+    137  f0f9		       a5 83		      lda	volume
+    138  f0fb		       29 0f		      and	#$0f
+    139  f0fd		       85 0f		      sta	PF2
+    140  f0ff		       85 02		      sta	WSYNC
+    141  f101		       85 02		      sta	WSYNC
+    142  f103		       a9 00		      lda	#$0
+    143  f105		       85 0f		      sta	PF2
+    144  f107
+    145  f107					      REPEAT	185
+    146  f107		       85 02		      sta	WSYNC
+    145  f107					      REPEND
+    146  f109		       85 02		      sta	WSYNC
+    145  f109					      REPEND
+    146  f10b		       85 02		      sta	WSYNC
+    145  f10b					      REPEND
+    146  f10d		       85 02		      sta	WSYNC
+    145  f10d					      REPEND
+    146  f10f		       85 02		      sta	WSYNC
+    145  f10f					      REPEND
+    146  f111		       85 02		      sta	WSYNC
+    145  f111					      REPEND
+    146  f113		       85 02		      sta	WSYNC
+    145  f113					      REPEND
+    146  f115		       85 02		      sta	WSYNC
+    145  f115					      REPEND
+    146  f117		       85 02		      sta	WSYNC
+    145  f117					      REPEND
+    146  f119		       85 02		      sta	WSYNC
+    145  f119					      REPEND
+    146  f11b		       85 02		      sta	WSYNC
+    145  f11b					      REPEND
+    146  f11d		       85 02		      sta	WSYNC
+    145  f11d					      REPEND
+    146  f11f		       85 02		      sta	WSYNC
+    145  f11f					      REPEND
+    146  f121		       85 02		      sta	WSYNC
+    145  f121					      REPEND
+    146  f123		       85 02		      sta	WSYNC
+    145  f123					      REPEND
+    146  f125		       85 02		      sta	WSYNC
+    145  f125					      REPEND
+    146  f127		       85 02		      sta	WSYNC
+    145  f127					      REPEND
+    146  f129		       85 02		      sta	WSYNC
+    145  f129					      REPEND
+    146  f12b		       85 02		      sta	WSYNC
+    145  f12b					      REPEND
+    146  f12d		       85 02		      sta	WSYNC
+    145  f12d					      REPEND
+    146  f12f		       85 02		      sta	WSYNC
+    145  f12f					      REPEND
+    146  f131		       85 02		      sta	WSYNC
+    145  f131					      REPEND
+    146  f133		       85 02		      sta	WSYNC
+    145  f133					      REPEND
+    146  f135		       85 02		      sta	WSYNC
+    145  f135					      REPEND
+    146  f137		       85 02		      sta	WSYNC
+    145  f137					      REPEND
+    146  f139		       85 02		      sta	WSYNC
+    145  f139					      REPEND
+    146  f13b		       85 02		      sta	WSYNC
+    145  f13b					      REPEND
+    146  f13d		       85 02		      sta	WSYNC
+    145  f13d					      REPEND
+    146  f13f		       85 02		      sta	WSYNC
+    145  f13f					      REPEND
+    146  f141		       85 02		      sta	WSYNC
+    145  f141					      REPEND
+    146  f143		       85 02		      sta	WSYNC
+    145  f143					      REPEND
+    146  f145		       85 02		      sta	WSYNC
+    145  f145					      REPEND
+    146  f147		       85 02		      sta	WSYNC
+    145  f147					      REPEND
+    146  f149		       85 02		      sta	WSYNC
+    145  f149					      REPEND
+    146  f14b		       85 02		      sta	WSYNC
+    145  f14b					      REPEND
+    146  f14d		       85 02		      sta	WSYNC
+    145  f14d					      REPEND
+    146  f14f		       85 02		      sta	WSYNC
+    145  f14f					      REPEND
+    146  f151		       85 02		      sta	WSYNC
+    145  f151					      REPEND
+    146  f153		       85 02		      sta	WSYNC
+    145  f153					      REPEND
+    146  f155		       85 02		      sta	WSYNC
+    145  f155					      REPEND
+    146  f157		       85 02		      sta	WSYNC
+    145  f157					      REPEND
+    146  f159		       85 02		      sta	WSYNC
+    145  f159					      REPEND
+    146  f15b		       85 02		      sta	WSYNC
+    145  f15b					      REPEND
+    146  f15d		       85 02		      sta	WSYNC
+    145  f15d					      REPEND
+    146  f15f		       85 02		      sta	WSYNC
+    145  f15f					      REPEND
+    146  f161		       85 02		      sta	WSYNC
+    145  f161					      REPEND
+    146  f163		       85 02		      sta	WSYNC
+    145  f163					      REPEND
+    146  f165		       85 02		      sta	WSYNC
+    145  f165					      REPEND
+    146  f167		       85 02		      sta	WSYNC
+    145  f167					      REPEND
+    146  f169		       85 02		      sta	WSYNC
+    145  f169					      REPEND
+    146  f16b		       85 02		      sta	WSYNC
+    145  f16b					      REPEND
+    146  f16d		       85 02		      sta	WSYNC
+    145  f16d					      REPEND
+    146  f16f		       85 02		      sta	WSYNC
+    145  f16f					      REPEND
+    146  f171		       85 02		      sta	WSYNC
+    145  f171					      REPEND
+    146  f173		       85 02		      sta	WSYNC
+    145  f173					      REPEND
+    146  f175		       85 02		      sta	WSYNC
+    145  f175					      REPEND
+    146  f177		       85 02		      sta	WSYNC
+    145  f177					      REPEND
+    146  f179		       85 02		      sta	WSYNC
+    145  f179					      REPEND
+    146  f17b		       85 02		      sta	WSYNC
+    145  f17b					      REPEND
+    146  f17d		       85 02		      sta	WSYNC
+    145  f17d					      REPEND
+    146  f17f		       85 02		      sta	WSYNC
+    145  f17f					      REPEND
+    146  f181		       85 02		      sta	WSYNC
+    145  f181					      REPEND
+    146  f183		       85 02		      sta	WSYNC
+    145  f183					      REPEND
+    146  f185		       85 02		      sta	WSYNC
+    145  f185					      REPEND
+    146  f187		       85 02		      sta	WSYNC
+    145  f187					      REPEND
+    146  f189		       85 02		      sta	WSYNC
+    145  f189					      REPEND
+    146  f18b		       85 02		      sta	WSYNC
+    145  f18b					      REPEND
+    146  f18d		       85 02		      sta	WSYNC
+    145  f18d					      REPEND
+    146  f18f		       85 02		      sta	WSYNC
+    145  f18f					      REPEND
+    146  f191		       85 02		      sta	WSYNC
+    145  f191					      REPEND
+    146  f193		       85 02		      sta	WSYNC
+    145  f193					      REPEND
+    146  f195		       85 02		      sta	WSYNC
+    145  f195					      REPEND
+    146  f197		       85 02		      sta	WSYNC
+    145  f197					      REPEND
+    146  f199		       85 02		      sta	WSYNC
+    145  f199					      REPEND
+    146  f19b		       85 02		      sta	WSYNC
+    145  f19b					      REPEND
+    146  f19d		       85 02		      sta	WSYNC
+    145  f19d					      REPEND
+    146  f19f		       85 02		      sta	WSYNC
+    145  f19f					      REPEND
+    146  f1a1		       85 02		      sta	WSYNC
+    145  f1a1					      REPEND
+    146  f1a3		       85 02		      sta	WSYNC
+    145  f1a3					      REPEND
+    146  f1a5		       85 02		      sta	WSYNC
+    145  f1a5					      REPEND
+    146  f1a7		       85 02		      sta	WSYNC
+    145  f1a7					      REPEND
+    146  f1a9		       85 02		      sta	WSYNC
+    145  f1a9					      REPEND
+    146  f1ab		       85 02		      sta	WSYNC
+    145  f1ab					      REPEND
+    146  f1ad		       85 02		      sta	WSYNC
+    145  f1ad					      REPEND
+    146  f1af		       85 02		      sta	WSYNC
+    145  f1af					      REPEND
+    146  f1b1		       85 02		      sta	WSYNC
+    145  f1b1					      REPEND
+    146  f1b3		       85 02		      sta	WSYNC
+    145  f1b3					      REPEND
+    146  f1b5		       85 02		      sta	WSYNC
+    145  f1b5					      REPEND
+    146  f1b7		       85 02		      sta	WSYNC
+    145  f1b7					      REPEND
+    146  f1b9		       85 02		      sta	WSYNC
+    145  f1b9					      REPEND
+    146  f1bb		       85 02		      sta	WSYNC
+    145  f1bb					      REPEND
+    146  f1bd		       85 02		      sta	WSYNC
+    145  f1bd					      REPEND
+    146  f1bf		       85 02		      sta	WSYNC
+    145  f1bf					      REPEND
+    146  f1c1		       85 02		      sta	WSYNC
+    145  f1c1					      REPEND
+    146  f1c3		       85 02		      sta	WSYNC
+    145  f1c3					      REPEND
+    146  f1c5		       85 02		      sta	WSYNC
+    145  f1c5					      REPEND
+    146  f1c7		       85 02		      sta	WSYNC
+    145  f1c7					      REPEND
+    146  f1c9		       85 02		      sta	WSYNC
+    145  f1c9					      REPEND
+    146  f1cb		       85 02		      sta	WSYNC
+    145  f1cb					      REPEND
+    146  f1cd		       85 02		      sta	WSYNC
+    145  f1cd					      REPEND
+    146  f1cf		       85 02		      sta	WSYNC
+    145  f1cf					      REPEND
+    146  f1d1		       85 02		      sta	WSYNC
+    145  f1d1					      REPEND
+    146  f1d3		       85 02		      sta	WSYNC
+    145  f1d3					      REPEND
+    146  f1d5		       85 02		      sta	WSYNC
+    145  f1d5					      REPEND
+    146  f1d7		       85 02		      sta	WSYNC
+    145  f1d7					      REPEND
+    146  f1d9		       85 02		      sta	WSYNC
+    145  f1d9					      REPEND
+    146  f1db		       85 02		      sta	WSYNC
+    145  f1db					      REPEND
+    146  f1dd		       85 02		      sta	WSYNC
+    145  f1dd					      REPEND
+    146  f1df		       85 02		      sta	WSYNC
+    145  f1df					      REPEND
+    146  f1e1		       85 02		      sta	WSYNC
+    145  f1e1					      REPEND
+    146  f1e3		       85 02		      sta	WSYNC
+    145  f1e3					      REPEND
+    146  f1e5		       85 02		      sta	WSYNC
+    145  f1e5					      REPEND
+    146  f1e7		       85 02		      sta	WSYNC
+    145  f1e7					      REPEND
+    146  f1e9		       85 02		      sta	WSYNC
+    145  f1e9					      REPEND
+    146  f1eb		       85 02		      sta	WSYNC
+    145  f1eb					      REPEND
+    146  f1ed		       85 02		      sta	WSYNC
+    145  f1ed					      REPEND
+    146  f1ef		       85 02		      sta	WSYNC
+    145  f1ef					      REPEND
+    146  f1f1		       85 02		      sta	WSYNC
+    145  f1f1					      REPEND
+    146  f1f3		       85 02		      sta	WSYNC
+    145  f1f3					      REPEND
+    146  f1f5		       85 02		      sta	WSYNC
+    145  f1f5					      REPEND
+    146  f1f7		       85 02		      sta	WSYNC
+    145  f1f7					      REPEND
+    146  f1f9		       85 02		      sta	WSYNC
+    145  f1f9					      REPEND
+    146  f1fb		       85 02		      sta	WSYNC
+    145  f1fb					      REPEND
+    146  f1fd		       85 02		      sta	WSYNC
+    145  f1fd					      REPEND
+    146  f1ff		       85 02		      sta	WSYNC
+    145  f1ff					      REPEND
+    146  f201		       85 02		      sta	WSYNC
+    145  f201					      REPEND
+    146  f203		       85 02		      sta	WSYNC
+    145  f203					      REPEND
+    146  f205		       85 02		      sta	WSYNC
+    145  f205					      REPEND
+    146  f207		       85 02		      sta	WSYNC
+    145  f207					      REPEND
+    146  f209		       85 02		      sta	WSYNC
+    145  f209					      REPEND
+    146  f20b		       85 02		      sta	WSYNC
+    145  f20b					      REPEND
+    146  f20d		       85 02		      sta	WSYNC
+    145  f20d					      REPEND
+    146  f20f		       85 02		      sta	WSYNC
+    145  f20f					      REPEND
+    146  f211		       85 02		      sta	WSYNC
+    145  f211					      REPEND
+    146  f213		       85 02		      sta	WSYNC
+    145  f213					      REPEND
+    146  f215		       85 02		      sta	WSYNC
+    145  f215					      REPEND
+    146  f217		       85 02		      sta	WSYNC
+    145  f217					      REPEND
+    146  f219		       85 02		      sta	WSYNC
+    145  f219					      REPEND
+    146  f21b		       85 02		      sta	WSYNC
+    145  f21b					      REPEND
+    146  f21d		       85 02		      sta	WSYNC
+    145  f21d					      REPEND
+    146  f21f		       85 02		      sta	WSYNC
+    145  f21f					      REPEND
+    146  f221		       85 02		      sta	WSYNC
+    145  f221					      REPEND
+    146  f223		       85 02		      sta	WSYNC
+    145  f223					      REPEND
+    146  f225		       85 02		      sta	WSYNC
+    145  f225					      REPEND
+    146  f227		       85 02		      sta	WSYNC
+    145  f227					      REPEND
+    146  f229		       85 02		      sta	WSYNC
+    145  f229					      REPEND
+    146  f22b		       85 02		      sta	WSYNC
+    145  f22b					      REPEND
+    146  f22d		       85 02		      sta	WSYNC
+    145  f22d					      REPEND
+    146  f22f		       85 02		      sta	WSYNC
+    145  f22f					      REPEND
+    146  f231		       85 02		      sta	WSYNC
+    145  f231					      REPEND
+    146  f233		       85 02		      sta	WSYNC
+    145  f233					      REPEND
+    146  f235		       85 02		      sta	WSYNC
+    145  f235					      REPEND
+    146  f237		       85 02		      sta	WSYNC
+    145  f237					      REPEND
+    146  f239		       85 02		      sta	WSYNC
+    145  f239					      REPEND
+    146  f23b		       85 02		      sta	WSYNC
+    145  f23b					      REPEND
+    146  f23d		       85 02		      sta	WSYNC
+    145  f23d					      REPEND
+    146  f23f		       85 02		      sta	WSYNC
+    145  f23f					      REPEND
+    146  f241		       85 02		      sta	WSYNC
+    145  f241					      REPEND
+    146  f243		       85 02		      sta	WSYNC
+    145  f243					      REPEND
+    146  f245		       85 02		      sta	WSYNC
+    145  f245					      REPEND
+    146  f247		       85 02		      sta	WSYNC
+    145  f247					      REPEND
+    146  f249		       85 02		      sta	WSYNC
+    145  f249					      REPEND
+    146  f24b		       85 02		      sta	WSYNC
+    145  f24b					      REPEND
+    146  f24d		       85 02		      sta	WSYNC
+    145  f24d					      REPEND
+    146  f24f		       85 02		      sta	WSYNC
+    145  f24f					      REPEND
+    146  f251		       85 02		      sta	WSYNC
+    145  f251					      REPEND
+    146  f253		       85 02		      sta	WSYNC
+    145  f253					      REPEND
+    146  f255		       85 02		      sta	WSYNC
+    145  f255					      REPEND
+    146  f257		       85 02		      sta	WSYNC
+    145  f257					      REPEND
+    146  f259		       85 02		      sta	WSYNC
+    145  f259					      REPEND
+    146  f25b		       85 02		      sta	WSYNC
+    145  f25b					      REPEND
+    146  f25d		       85 02		      sta	WSYNC
+    145  f25d					      REPEND
+    146  f25f		       85 02		      sta	WSYNC
+    145  f25f					      REPEND
+    146  f261		       85 02		      sta	WSYNC
+    145  f261					      REPEND
+    146  f263		       85 02		      sta	WSYNC
+    145  f263					      REPEND
+    146  f265		       85 02		      sta	WSYNC
+    145  f265					      REPEND
+    146  f267		       85 02		      sta	WSYNC
+    145  f267					      REPEND
+    146  f269		       85 02		      sta	WSYNC
+    145  f269					      REPEND
+    146  f26b		       85 02		      sta	WSYNC
+    145  f26b					      REPEND
+    146  f26d		       85 02		      sta	WSYNC
+    145  f26d					      REPEND
+    146  f26f		       85 02		      sta	WSYNC
+    145  f26f					      REPEND
+    146  f271		       85 02		      sta	WSYNC
+    145  f271					      REPEND
+    146  f273		       85 02		      sta	WSYNC
+    145  f273					      REPEND
+    146  f275		       85 02		      sta	WSYNC
+    145  f275					      REPEND
+    146  f277		       85 02		      sta	WSYNC
+    147  f279					      REPEND
+    148  f279
+    149  f279							;End of picture creation-- Start overscan.
+    150  f279		       a9 42		      lda	#%01000010
+    151  f27b		       85 01		      sta	VBLANK
+    152  f27d
+    153  f27d					      REPEAT	30
+    154  f27d		       85 02		      sta	WSYNC
+    153  f27d					      REPEND
+    154  f27f		       85 02		      sta	WSYNC
+    153  f27f					      REPEND
+    154  f281		       85 02		      sta	WSYNC
+    153  f281					      REPEND
+    154  f283		       85 02		      sta	WSYNC
+    153  f283					      REPEND
+    154  f285		       85 02		      sta	WSYNC
+    153  f285					      REPEND
+    154  f287		       85 02		      sta	WSYNC
+    153  f287					      REPEND
+    154  f289		       85 02		      sta	WSYNC
+    153  f289					      REPEND
+    154  f28b		       85 02		      sta	WSYNC
+    153  f28b					      REPEND
+    154  f28d		       85 02		      sta	WSYNC
+    153  f28d					      REPEND
+    154  f28f		       85 02		      sta	WSYNC
+    153  f28f					      REPEND
+    154  f291		       85 02		      sta	WSYNC
+    153  f291					      REPEND
+    154  f293		       85 02		      sta	WSYNC
+    153  f293					      REPEND
+    154  f295		       85 02		      sta	WSYNC
+    153  f295					      REPEND
+    154  f297		       85 02		      sta	WSYNC
+    153  f297					      REPEND
+    154  f299		       85 02		      sta	WSYNC
+    153  f299					      REPEND
+    154  f29b		       85 02		      sta	WSYNC
+    153  f29b					      REPEND
+    154  f29d		       85 02		      sta	WSYNC
+    153  f29d					      REPEND
+    154  f29f		       85 02		      sta	WSYNC
+    153  f29f					      REPEND
+    154  f2a1		       85 02		      sta	WSYNC
+    153  f2a1					      REPEND
+    154  f2a3		       85 02		      sta	WSYNC
+    153  f2a3					      REPEND
+    154  f2a5		       85 02		      sta	WSYNC
+    153  f2a5					      REPEND
+    154  f2a7		       85 02		      sta	WSYNC
+    153  f2a7					      REPEND
+    154  f2a9		       85 02		      sta	WSYNC
+    153  f2a9					      REPEND
+    154  f2ab		       85 02		      sta	WSYNC
+    153  f2ab					      REPEND
+    154  f2ad		       85 02		      sta	WSYNC
+    153  f2ad					      REPEND
+    154  f2af		       85 02		      sta	WSYNC
+    153  f2af					      REPEND
+    154  f2b1		       85 02		      sta	WSYNC
+    153  f2b1					      REPEND
+    154  f2b3		       85 02		      sta	WSYNC
+    153  f2b3					      REPEND
+    154  f2b5		       85 02		      sta	WSYNC
+    153  f2b5					      REPEND
+    154  f2b7		       85 02		      sta	WSYNC
+    155  f2b9					      REPEND
+    156  f2b9
+    157  f2b9		       4c 0a f0 	      jmp	StartOfFrame
+    158  f2bc
+    159  fffa					      ORG	$FFFA
+    160  fffa
+    161  fffa		       00 f0		      .word.w	Reset
+    162  fffc		       00 f0		      .word.w	Reset
+    163  fffe		       00 f0		      .word.w	Reset
+    164  10000
+    165  10000				    END

@@ -1,0 +1,156 @@
+--- BLINDFIRE CHANGELOG ---
+
+...
+
+5-30-21
+	-Made changelog
+	-Separated graphics data across multiple pages to better facilitate animation code
+	-Created lookup table for getting enemy graphics pointers by enemy type
+	-Created lookup table for getting enemy color by enemy type
+	-Restructured how enemy data is stored
+	-Introduced new kernel, and a host of related bugfixes
+	-Added playfield border to cover HMOVE lines
+	-Updated player coarse position timing to be less terrible
+	-Commented a bunch of older code
+5-31-21
+	-Wrote fine and coarse missile placement code
+	-Rewrote missile enabling/disabling logic to be faster
+	-Missiles can now be updated on the same scanlines as enemies
+	-Preliminary code for handling trigger buttons
+	-Ability to fire missiles
+	-Preliminary logic for missile firing
+	-Added missile movement logic
+	-Fixed bug where kernel had too many scanlines when parsing trigger
+6-2-21
+	-Fixed bug where player's missile would spawn in unpredictable locations
+	-Increased the size of the main playarea
+	-Created separate copy of enemy+missile rendering routine that allows for enemy missiles as well.
+	-Enemy missile placement+rendering logic
+	-Created separate rendering loop which does not render enemies, but does render both enemies.
+	-Fixed a bug where paddles were polled more or less often in different rendering loops, causing player placement anomalies
+	-Preliminary logic to select the correct rendering loop
+6-3-21
+	-Changed VBLANK and Overscan to be based on timers, instead of using the correct number of WSYNCs.
+		-Therefore fixing bug of scanline count to do with enemy missile movement code.
+	-Enemy missile movement+despawn logic
+	-Enemy missile can now actually hit the player
+	-Subroutine for calculating fine/coarse positions from x values
+		-Enemies can now get fine/coarse values from x coordinates
+		
+	-Massive Rewrite+Restructure of rendering section to support a modified game idea
+		-Enemy missiles now irrelevant
+		-Now uses playfield more actively
+		-No more different enemy types, just enemies and explosions
+		-Player can no longer die, and as such does not need extra lives
+		-Lose condition is now total destruction of playfield cityscape
+	-Added cityscape graphics and pointers
+6-4-21
+	-A whole bunch of bullshit about enemy rendering, city rendering, and paddle controls
+	-Doubled height of cityscape
+	-Various cityscape related memory changes and bugfixes
+	-Enemies now properly vanish at lower heights in accordance with the shrinking city.
+6-5-21
+	-Added a random number generator
+	-Created lookup tables for enemy counts per wave and enemy speed per wave
+	-Preliminary brightness and transition logic
+	-Enemy speed is now dependent on current wave
+	-Preliminary work on color lookup tables
+6-7-21
+	-Added lookup table for ammunition per wave
+	-Enemies now despawn+destruct when they reach the bottom of the screen, no city damaging logic yet though
+	-Preliminary enemy spawning + management logic
+6-8-21
+	-Enemies actually move again
+	-Fixed a bug where holding the fire button would prevent the transition from completing.
+	-Working InsertAtFront subroutine
+	-Fixed a bug where the city starting drawing on different scanlines depending on the rendering loop being used.
+	-Working DeleteAtY subroutine
+	-Fixed a bug where the missile would get stuck if onscreen when a transition started
+	-Enemies can now spawn
+6-9-21
+	-Enemies can now collide with missiles
+	-Enemy arrays now fill with $FF to prevent garbage rendering
+	-Fixed bug where enemies could only collide with missiles when they were being drawn
+	-Code that allows for enemy color changing according to current background color
+	-Player now drifts towards paddle position instead of blinking instantly
+6-13-21
+	NEW GOAL: Make Blindfire a fun, relatively unique 2K game.
+	
+	-Removed a bunch of useless cityscape graphics --saving 30ish bytes!
+	-Restructured graphics information to take up only a single page-- FF00-FFFA with 6 bytes to spare.
+	-Removed ability to do animation
+	-Ton of optimization --saving 96+ bytes!
+	-Absolutely insane switch from four lsrs to subroutine which saves exactly 1 byte.
+	-Switched Blindfire to be interpreted as a 2K cartridge... For better or for worse.
+6-14-21
+	-Removed debris, and all related graphics and code
+	-Scoring subroutine
+	-Excess missiles are counted towards score at the end of the wave
+	-Shooting enemies grants points
+	-Reset switch now actually resets the game
+	-Difficulty switches are read, but no logic yet
+6-15-21
+	-Reworked lower ui rendering to not be dependent on the player
+	-Added game over mode
+	-Player is not rendered during game over mode
+	-Preliminary rangefinder code
+		-Better rangefinder code (clamping if outside certain distance grants better precision for same number of frequencies)
+	-Rangefinder pulsing effect
+	-Enemies only spawn when it is dark
+	-Made missile wider
+	-Fixed bug where RNG could seed with 0, guaranteeing every following number to be 0
+6-16-21
+	-Removed EnemySpawnIntervals lookup table
+	-Deleted some sound code because it was terrible
+6-23-21
+	-Changed digit graphics pointer code to be a subroutine, saving over 20 bytes.
+	-What appears to be working sound effect routines -- knock on wood
+	-Initial sound effect creation
+	-Each sound effect can use a unique waveform
+	-Fixed deadzone issue in janky way
+		-By shrinking the horizontal space the player can move in slightly-- Enemy spawning code is still valid
+	-Difficulty is only updated on reset
+	-Left difficulty setting now limits the max wave index
+	-Sound effects only update every other frame
+	-Number of enemies per wave is now a function of waveIndex
+		-Removed EnemiesPerWave table
+	-Removed redundant transition color information
+	-Added fire, hit, city damaged, and city repaired sound effects
+	-City will be repaired 1 level every time a 10,000 point barrier is crossed
+	-Added ability for the score to max out at 999,999
+		-Kind of unstable, but it's a killscreen so whatever
+	
+	-10 bytes remaining... ain't enough for alarm during starting transition
+6-24-21
+	-Fixed bug where background would not dim after firing missiles
+	-Now plays city damaged sound when player loses
+	-Reusing the same returns
+	-Relocated everyOtherFrame to save space
+	-Sound effects only update every 4 frames
+	-Relocated and shortened waveDifficulty code
+	-Added warning alarm during transition to wave
+	-Fixed RangeFinder voice type bug
+	
+	Source code done?
+		-Exactly 0 bytes remaining
+		
+	-Removed some magic pointer numbers
+6-26-21
+	-Improved digit graphics
+6-27-21
+	-Some ammunition balancing?
+11-25-22
+	-Theorized difficulty bug is actually not a bug, just a mistake while testing
+	-Replaced some pointer initialization with a loop to save enough bytes
+		
+TODO:
+	REQUIRES SPACE:
+				
+	DOES NOT REQUIRE SPACE:
+	-Final graphics
+		-Enemies
+	-Number tuning
+		-Scoring
+		-Ammunition
+	-Final color choices
+	-Better commented source code lul

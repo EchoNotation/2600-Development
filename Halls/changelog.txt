@@ -1,0 +1,394 @@
+--- HORRID HALLS CHANGELOG --- (CATACRAWLER)
+
+7/6/21
+	-Created project, along with extremely basic NTSC kernel
+	-Maze generation algorithm designed in Python script
+7/8/21
+	-Changed kernel to be based on timers/loops instead of DASM macros
+	-Reset switch resets the game completely
+7/10/21
+	-Maze rendering kernel
+	-Subroutine for accessing maze data from x,y coordinates
+	-Preliminary maze rendering logic
+	-Added ability for the player to turn in place
+7/11/21
+	-Added ability for the player to move through the maze
+9/7/21
+	-Removed roof over entrance graphics, trying to look more like a gap than a door.
+9/12/21
+	-Added compass at top of screen.
+9/14/21
+	-Added alphanumeric font
+	-Replaced spaces with tabs everywhere
+	-Changed GetMazeData subroutine to use local labels instead of global ones.
+9/15/21
+	-Added some preliminary graphics for avatars
+	-Start of UI and text rendering code
+9/16/21
+	-More text rendering code
+	-Holding the down button causes HP and MP to be visible instead of names/avatars
+	-Realization that font needs to be remade
+9/22/21
+	-Remade font
+		-Now allows for blanks, data is spread out across different pages
+	-Stable text rendering + kernel!
+9/28/21
+	-Added subroutine for clearing all maze data. Will be useful when ORing later.
+	-Started subroutine for random maze generation, very little implemented.
+10/5/21
+	-Random maze generation appears to work, as long as mazeWidth is even.
+10/6/21
+	-Converted game to use 2*4K bankswitching setup. Hopefully one bank can be used during battle, and the other when
+	not in battle.
+	-Created generic kernel for battle bank
+	-Code refactoring, labels starting with M are in the maze bank, labels starting with B are in the battle bank
+10/7/21
+	-Preliminary work on battle scene rendering, text and battle box
+	-Fixed a bug where attempting to view hp&mp in battle would encounter an invalid opcode
+10/8/21
+	-Ability to view character's class and level in battle
+	-Added position indicator in battle, as well as variable representing it
+10/10/21
+	-Modified MUpdateMazeRenderingPointers to use tempPointers2-4, saving 8 bytes of RAM
+	-Pressing down in maze mode now shows character class and level, not HP and MP
+	-Party position can now be viewed in maze mode
+10/12/21
+	-Starting work on menu rendering and cursor movement
+10/14/21
+	-Battle options can now be selected and stored per battler
+		-No corresponding logic yet of course
+	-Improved input detection code
+10/18/21
+	-Beginning process of swapping all rendering related stuff into 1 bank, and moving logic into the other bank
+		-Mostly successful! Just need to fix all the random bugs
+			-Compass misaligned
+			-Drawing HP/MP in maze view takes 3 extra scanlines
+			-Shouldn't be able to hold left and right to see UI in maze view
+			-Maze view input handling seems bad.
+10/22/21
+	-Fixed horizontal alignment of compass
+	-RDrawCharacterInfo subroutine now takes into account whether or not the party is in battle.
+	-Fixed LUpdatePlayerMovement to account for the new double input prevention scheme
+	-Fixed input handling to no longer be dependent on being in battle
+	-Can no longer move throughout the maze while in battle
+	-Able to change party positioning in maze view
+	-Party members can be highlighted
+	
+	-Need to fix couple of scanline count related issues with DrawCharacterInfo, but that code should be nearly complete
+10/23/21
+	-RDrawCharacterInfo timing issues now appear to be fixed. Albeit a little jankily
+		-I think that subroutine may now be completely finished.
+	-Renamed change to move
+	-Fixed a bug where the magus and ranger classes could not be highlighted
+	-Decided to fix mazes to be 8x8 to save RAM on storing mazeWidth and halfMazeWidth
+	-Designed+picked first revision of spells
+	-Added spell and battle message literals, along with tables that point to said literals
+		-These take up a lot of space...
+	
+	-Realization that rendering code may need to have access to the spell listings for each class...
+		-Probably okay, because the spell list data shouldn't be too long
+10/24/21
+	-Functional battle message rendering
+	-Added table for spell colors
+	
+	-Starting work on spell list rendering, hopefully saving a lot of ROM
+10/25/21
+	-Rewrote Battle Actions menu rendering to use a lot less ROM
+	-Removed PARTY GOT XP message in order to make room for BACK in the spell text bank
+	-Added spell list data for the three spellcasting classes, although no code uses it yet.
+10/26/21
+	-Spell list menu rendering
+	-Advanced menuing routines, although there will need to be more associated code for targeting...
+		-Point is, spells can now be selected
+	-Number of spells shown and what spells are shown is determined by level and class
+	-Fixed an issue with needing to render fewer than 3 things in a menu
+	-Decided to cut down to 3 enemies maximum, freeing 2 bytes of RAM and simplifying eventual rendering a bit
+	
+	-Converted cartridge to use the 16KiB F6 bankswitching scheme instead
+		-Allows a lot more space for enemy graphics as well as sound effects and music
+			-Still have a lot of features to implement, so seems like the right idea
+			-This game idea is pretty ambitious after all
+10/27/21
+	-Added bankswitching connections for bank 2 to handle enemy rendering
+	-Created some basic subroutines for rendering enemies based on preset graphics and color information
+		-Untested, timing in EDrawLargeEnemy is certainly wrong
+		
+	-Add highlighted but invalid color. (Spells when out of MP, CAST when not a spellcaster)
+10/28/21
+	-Some basic functional enemy rendering
+		-Can only support up to two small enemies, or one large enemy
+10/29/21
+	-Going to amend to small, medium and large enemies, making 4 small, 1 medium in place of 2 small, or 1 large possible
+	-Starting code that can use enemyIDs to get size, graphical, and color information for enemy rendering
+		-Currently unstable in terms of scanline count and also behavior when pressing left and right???
+10/31/21
+	-Fixed color and graphical stability of enemy rendering when pressing left and right
+	-Modified (and simplified) enemy rendering code so that all valid combinations of enemies use constant scanlines
+	
+	-Starting work on spell and fight targeting logic
+11/1/21
+	-Decision to make target selection render in the menu/message location
+	-Ally and enemy targeting logic works correctly with setting battle actions, but there is no rendering code in place
+	-RDrawAllyTargeting completed, so spells targeting allies can be properly selected
+	-RDrawEnemyTargeting completed, so fighting and spells targeting enemies can be properly selected
+		-Does not support names for enemies, just says ENEMY, that functionality should be easy to add in future
+	-Fighting and casting spells with targeting do not prompt target selection if there is only 1 enemy
+	
+	-Need to sort out messages for enemy actions...
+12/21/21
+	-Beginning work on message system rework
+12/22/21
+	-Added distinction between source and target battler names in message system
+	-New system supports 32 unique enemies, each with their own color and name.
+	-Completed message system rework, I think.
+	-Enemy targeting menu now uses enemy names.
+	-Fixed bug to do with non-targeted spell selection
+12/23/21
+	-Changed some messages around in order to allow for party members recovering from unconsciousness and status effects
+	-Added balanceable lookup tables for all classes' stats
+	-Added even more messages
+	
+	-Beginning work on actual battle logic
+		-Moving and Running are close to functional, but these are the two easiest
+12/24/21
+	-Added a function for converting from binary to decimal
+	-Beginning work on FIGHTing
+		-Seems to mostly work for both allies and enemies
+	-Added LDetermineNextBattler subroutine
+		-Unstable behavior for carrying out these actions, needs quite a lot of debugging.
+		-Does sort of work however, actions can be taken in turn.
+		-Repeats the action of the person in position 0 a lot.
+		-Investigate ways to make the first action after a new currentBattler is set happen without pressing the button an 
+			additional time
+		
+	Need to sort out how enemy death works, what happens to actions that target dead creatures.
+12/26/21
+	-Battle system is a lot more stable now
+		-Last textbox of last message before going back to menu gets cut off
+		-Need to deal with how party and enemy death affects actions still
+	-Initiative is now properly calculated for both allies and enemies
+	-Last battle messages are no longer cutoff by the action menu appearing
+	-Semi-functional combat
+		-Need to implement death and spellcasting
+		-Also lots of status effects, partyPos, and other things are not correctly accounted for yet.
+12/27/21
+	-Started working on routines that are necessary for dealing with enemy death
+1/2?/22
+	-Did the majority of the work on HallsEnemyPainter, a paint tool for drawing the enemy graphics for this game.
+2/28/22
+	-Finished work on HallsEnemyPainter tool, which will be extremely useful for making all of the enemy graphics
+	
+	-Made the necessary changes to the Medium and Large enemy drawing routines in order to display the output of the paint
+	tool correctly.
+3/1/22
+	-Fixed the ROM page that the spell names were drawing from. Was $FA, needed to be $F9.
+	-Selecting spells now advances to the correct targeting menu.
+	-Fixed a minor graphics bug where ally targeting text was 1 scanline higher than the rest of the text.
+3/2/22
+	-Combined the four bytes used for party mood into two, saving two bytes of RAM
+	-Added effectCounter, so different spells can flash for different amounts of time
+		-It would be swell if there were multiple spell effects, instead of just different flash lengths.
+	-Added mazeLevel variable, which is going to be needed if a run will ever end.
+		-No implementation yet
+	-Basic effect system
+3/3/22
+	-Fixed the rendering system, so that no HMOVE lines are ever present, and so enemy rendering is based on position now
+		-This will need some changes in current logic, but should be fine overall.
+		-Targeting is the most affected by this system
+			-There is now a disconnect between the rendering system and targeting system indices
+			-Make a subroutine for converting from menu position to target id
+	-Added IndexToEnemyPosition functions in L and R, which will hopefully simplify the targeting mess a little
+	-Auto-targeting when only 1 enemy is left alive sets target position correctly
+	-Two enemy targeting is relatively stable, code just runs too long...
+3/4/22
+	-Three enemy targeting logic is fixed, code still runs too long though
+	-Scanlines and targeting logic now seems to be completely fixed.
+	-Preliminary death capability
+		-Kinda works
+		-hasAction does not get set correctly on new turns, nor do battles seem to have any natural way of ending
+	-Added message for TARGET DOWN, solving an issue that didn't seem to have any better solution
+	-hasAction is now set correctly at the end of each turn
+3/5/22
+	-Refactored high-level battle logic, which seems to be an improvement
+	-Fixed a bug with initiative that caused the first battler to always go first
+	-Party members can now die correctly
+	-Battles can be won or lost
+		-Still no character advancement code
+3/6/22
+	-Made it so that battle text cannot be progressed if a visual or sound effect is in progress
+	-Fixed a scanline count bug that had to do with pressing down out of battle
+	-Decided to allocate the last byte to aoeTargetID, which should make spellcasting code a lot simpler
+	-Added TARGET EXILED message, for use with banish spell
+	-Starting spellcasting framework
+	-Replaced REVIVE spell with AEGIS, which grants all allies a shield
+		-Restoring any health to a downed party member revives them, which includes campfires
+3/7/22
+	-Beginning of spellcasting code, mostly just setting up targeting
+3/9/22
+	-Relocated tempPointer4-6 to use temp4-6 as the low byte, saving 3 bytes of RAM
+	-FIGHTs directed to spots that are now empty miss.
+	-Added different maze colors that change depending on mazeLevel
+3/14/22
+	-Added ranger spell list for now
+		-Rangers don't get any mana though
+	-Modified magus spell list
+	-Refactored BLIZRA to VANISH, and MUTE to BLIGHT
+3/23/22
+	-Added LGetBattlerMagic subroutine
+4/5/22
+	-Rangers actually get magic and MP now
+	-Added LGetEnemyStatus subroutine
+4/10/22
+	-Fixed a bug where the first party member could still pick actions even when unconscious.
+6/23/22
+	-Added LGetEnemyResistances subroutine
+	-Trying a rewrite of the spellcasting routines
+7/23/22
+	-Fixed bug to do with cursor pos after ending battle
+	-Modified lots of battle logic to depend on enemyHP instead of enemyIDAndStatus, allowing for better messages.
+		-TARGET message component is now obsolete
+7/24/22
+	-Added some new moods
+	-Refactored party level to be stored in the same byte as mazeLevel
+	-Refactored moods to be stored with the character's class information, saving 2 bytes.
+	-Made compass draw in the exact center of the screen
+	-Added LOverrideAvatar subroutine
+	-Added LDecimalToBinary subroutine
+	-Added LUpdateAvatars subroutine
+		-Now the avatar icons will update corresponding to the health of that member
+	-Fixed a bug that incorrectly displayed who was paralyzed in the X CANNOT MOVE message
+7/25/22
+	-Modified PC stat tables to use less ROM
+	-Preliminary Advanced Effect System
+	-Lots of scuffed bankswitching code needed to convert the highlighting system to use the effect system
+	-Removed frameCounter variable
+	-Removed ESpellColors
+7/31/22
+	-Moved some maze related functions from L to S.
+		-Still need to implement the necessary bankswitching
+9/6/22
+	-Working bankswitching for moved maze logic
+11/22/22
+	-Working python implementation of spiral maze generation
+11/23/22
+	-Implemented spiral maze generation into assembly
+		-Still don't know if it completely works without re-writing SUpdateMazeRenderingPointers though ;)
+11/24/22
+	-Modified maze related functions to support edges instead of room-based maze storage.
+		-Need to debug player movement and maze rendering code first in order to verify maze generation logic
+	-Designed function-oriented bankswitching scheme (allowing L bank to call functions stored in S bank)
+11/25/22
+	-Fixed bugs in SUpdatePlayerMovement and SUpdateMazeRenderingPointers
+	-Fixed maze generation bug that prevented North and West corners from forcing an adjacent exit
+11/27/22
+	-Spell additions and deletions (design work)
+		-Also decided to add GUARD and PARRY for KNIGHT and ROGUE respectively
+11/29/22
+	-Lots of spell list redesign, which will lead to messaging system shenanigans
+
+	-Added new spell text
+	-Message system stability
+11/30/22
+	-Renamed FIGHTR to KNIGHT
+	-New spell colors
+	-Updated Wizard and Cleric spell lists to use the new spells
+		-Also updated Paladin and Ranger spell lists, but the menu rendering doesn't account for them yet	
+	-Moved compass 1 pixel to the left :)
+
+	-Did some RAM allocation to account for new status rules
+	-Fixed LGetEnemyResistances subroutine
+
+	-Starting work on new menu rendering routines
+12/1/22
+	-Fixed enemy name assembly directive bug
+	-Finished rendering side of new battle menu routines (spells and scanline stability)
+	-Started work on battle menu routine rewrite
+
+Known Issues:
+	 
+TODO:
+
+	-Potentially try to center enemies more precisely?
+
+	-Battle system rewrite
+		-High/low battle logic?
+		
+	-Make compass that points towards the boss location
+	-Campfire rendering
+		-Give campfire battle-like scene??
+	
+	-Rework menu rendering routines
+		-Rework enemy targeting system to use cursor instead of menu
+		-Rework ally targeting system to use cursor instead of menu
+	-Modify spell list rendering code to handle half casters, also GUARD and PARRY
+	
+	-Move player hp to be directly before enemy hp, 8 byte battlerHP, which simplifies some routines
+	
+	-Create a sleeping avatar (mood 6) to replace the paralyzed avatar
+	-Fix LUpdatePlayerAvatar subroutine to conform to new statuses
+
+	-Investigate how the maze movement currently controls, might need to change to be more hand-friendly
+
+	Overarching questions:	
+		-Should there be some sort of rangefinder to the exit? I think so.
+			-Hear a "roar" when getting near the boss?
+		-Rendering exit and campfire? Rendering campfire should be possible, but I don't know about the exit
+			-Fullheal after defeating a boss? If so, then campfires might be able to be removed
+
+	-Invalid text color + associated logic?
+		-Mana implementation
+		-Do a visual effect instead? To save space in the rendering bank?
+			-Play a corresponding "error" sound effect
+	-How is enemy AI going to be stored?
+		-Number of action slots, list of actual enemyAction bytes right after --Seem's that this is not going to be a viable option anymore
+			-This is very simplistic, but as a result is space-efficient
+		-Number of action slots, list of meta-enemyActions
+			-Meta-enemyActions might be along the lines of "attack", "heal ally", "paralyze enemy", etc.
+			-These meta-actions are then converted into actual enemyAction by LDetermineEnemyAI routine
+			-More sophisticated, less data space, more code space. Seems like a good idea
+			-How smart should this be? Does it prefer to paralyze heavy physical attackers, for instance?
+				-Probably not that smart
+	-How is encounter data going to be stored?
+		-Depends on whether or not certain groups of enemies should appear together
+			-If not, then just have a list of which enemies can appear on which floors
+				-Decreased data complexity, increased code complexity, worse design control, higher encounter variety
+				-Will probably need to be this option due to ROM limitations
+			-If yes, then need to actual store all possible encounters by floor
+				-Increased data complexity, decreased code complexity, better game design, lower encounter variety
+
+	Requirements for functional game loop:
+		-Functional combat - 60%
+			-Fighting - 95%
+			-Spellcasting - 5%
+			-Moving - 100%
+			-Running - 95%
+			-Functional status effects - 15%
+			-Enemy AI
+		-Additional maze logic: moving between floors, random generation for encounters, transitioning between maze and battles
+		-Mana implementation
+		-Encounter generation
+			-Affected by mazeLevel
+		-Character advancement
+		-Bosses
+
+		-Advanced effect system - 80%
+			-No routine for setting a visual effect
+			
+		-Changing player avatars depending on status - 50%
+		-Sound effects
+		
+		-Name entry and class selection screen
+		-Title screen
+			-Should these two be the same screen? Probably
+			-What bank will this be in? S?
+				-Hopefully sound code and data will be light enough to handle another 1K or so kernel...
+					-Should have no problem being light enough-- In fact, might need to add some game logic in there too :/
+		
+	Should have functional game loop first:
+		-Create all enemies
+			-Graphics
+			-AI
+		-Create all encounter tables?
+		-Create all visual effects
+		-Create all sound effects
+		-Try to balance everything

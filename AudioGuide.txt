@@ -1,0 +1,52 @@
+Audio Guide:
+SoundType:
+0 - No sound
+1 - Pure-ish buzz
+2 - Rumble, car engine, noise
+3 - Same as above, but more energetic
+4 - Pure
+5 - Same as 4
+6 - Lower pure-ish buzz
+7 - More "nasal" buzz
+8 - Explosion, gunfire
+9 - Same as 7
+A - Same as 6
+B - No sound
+C - Pure square wave
+D - Same as C
+E - Tonal rumbling
+F - Gritty buzz
+
+Frequency (for voice C/D):
+00 - E-8
+01 - E-7
+02 - A-6
+03 - E-6
+04 - C-6
+05 - A-5
+06 - F#-5
+07 - E-5
+08 - D-5
+09 - C-5
+0A - A#-4
+0B - A-4
+0C - G-4
+0D - F#-4
+0E - F-4
+0F - E-4
+10 - D#-4
+11 - D-4
+12 - C#-4
+13 - C-4
+14 - B-3
+15 - A#-3
+16 - A-3/A#-3?
+17 - A-3
+18 - G#-3
+19 - G-3
+1A - G-3
+1B - F#-3
+1C - F-3/F#-3?
+1D - F-3
+1E - E-3
+1F - D#-3

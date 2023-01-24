@@ -1,0 +1,291 @@
+--- HORRID HALLS --- (CATACRAWLER?)
+Targeted ROM size: 16-32K
+	-Preferably doesn't need to use Melody board for RAM expansion
+			
+Possible RAM optimization:
+	-Combine the playerX and playerY bytes if possible. 1 byte
+	-highlightedIndex could share with a separate battle logic variable, such as aoeTargetID
+	
+Each small enemy takes up 16 bytes.
+Each medium enemy takes up 64 bytes.
+Each large enemy takes up 192 bytes.	
+
+40 total enemies:
+16 small enemies would take up exactly 256 bytes of data
+16 medium enemies would take up exactly 1K of data
+8 large enemies would take up exactly 1.5K of data
+This would also take up 40 * 2 = 80 bytes of pointer data
+This would also take up 40 bytes of size data
+total = 256 + 1024 + 1536 + 80 + 40 = 2936 bytes of enemy data,
+	(not accounting for AI and encounter information, which would be stored elsewhere)
+	This would also require 6*40 + 40 = 280 bytes of name information, which would have to be stored in the rendering bank.
+	As well as another 40 bytes of color information in the rendering bank.
+		There does seem to currently be enough room for this...
+
+If each spell effect is <=32 unique frames long, the total would be <=512 bytes of data.
+So it should be possible to have this enemy configuration with unique spell effects.
+Maybe spell effects can be updated every other frame, or every 4 frames, to create spells that could be longer.
+	-Would need to store effect frequency information as well (not necessarily)
+
+inBattle states:
+$80 currently getting player actions, goes to $81 when complete
+$81 needs to determine next action to take, and set currentBattler appropriately.
+
+$82 Basic attack windup
+$83 Basic attack result
+$84 Basic attack kill
+
+$90 Party Wins
+$91 Party Down
+$92 Party member levels up
+$93 Party member learns spell
+
+$A0 Casting spell windup
+$A1 Doing damage to one target
+$A2 Status one target
+$A3 Healing one target
+$A4 Killing one target 
+
+$B0 AoE Damage
+$B1 AoE Debuff
+$B2 AoE Healing
+$B3 AoE Banish
+$B4 AoE Buff
+$B5 AoE Kill
+
+$C0 Moving result
+
+$E0 Running windup
+$E1 Running result
+
+Reserved for something to do with battles ending.
+$FF
+
+--- MENU IDs ---
+$80 Showing battle options to select (in battle) | Changing party positions (in maze)
+$81 Targeting enemies
+$82 Targeting allies
+$83 Target other ally (GUARD, DONATE)
+$84 Show spells to select
+
+--- EFFECTS ---
+$00 - No effect
+$01 - Party member highlighting
+$02 - Test Effect
+
+--- SUBROUTINE IDs ---
+$00 - SGenerateMazeData
+$01 - SUpdateMazeRenderingPointers
+$02 - SUpdatePlayerMovement
+$03 - SClearMazeData
+
+Current system allows for 40 enemies.
+Each enemy has 1 byte for its resistances
+	Format is LPFIGEP0
+
+5 stats per person:
+Attack : The amount of damage done by physical attacks
+Magic : Magical power
+Speed : Determines turn order and ability to flee
+HP : Self explanatory
+MP : Self explanatory
+
+Classes:
+0-Fighter : High durability, good physical damage output, slow, frontline
+1-Rogue : Low durability, very good physical damage output, very fast, frontline
+2-Cleric : High durability, mediocre physical damage ouput, healing spells, slow, frontline
+3-Wizard : Low durability, low physical extremely good magic damage output, medium speed, backline
+4-Ranger : Medium durability, good physical damage output, fast, inverse damage penalty from position
+5-Paladin : Medium durability, medium physical damage, medium speed, damage and healing spells just limited list
+
+Stats for classes:
+ATK, MAG, SPD start at 3 plus the per level value
+HP starts at 10 plus half the per level value
+MP starts at 5 plus the per level value
+
+Fighter:
+3 ATK per level
+0 MAG per level
+2 SPD per level
+10 HP per level
+0 MP per level
+
+Rogue:
+5 ATK per level
+0 MAG per level
+5 SPD per level
+4 HP per level
+0 MP per level
+
+Cleric:
+2 ATK per level
+3 MAG per level
+1 SPD per level
+8 HP per level
+3 MP per level
+
+Wizard:
+1 ATK per level
+5 MAG per level
+3 SPD per level
+2 HP per level
+5 MP per level
+
+Ranger:
+4 ATK per level
+2 MAG per level
+4 SPD per level
+4 HP per level
+2 MP per level
+
+Paladin:
+3 ATK per level
+3 MAG per level
+3 SPD per level
+6 HP per level
+3 MP per level
+
+MESSAGE COMPONENTS:	
+00: Source battler's name
+01: Target battler's name
+02: Spell name
+03: Y HP
+04: STABS
+05: SHOOTS
+06: SLAMS
+07: BITES
+08: RUSHES
+09: CASTS
+0A: HEALS
+0B: LOSES
+0C: MISSES
+0D: LEVELS
+0E: UP
+0F: LEARNS
+10: MOVES
+11: BACKS
+12: DOWN
+13: AWAY
+14: WASTES
+15: WAS
+16: CURED
+17: WAKES
+18: HAS A
+19: SHIELD
+1A: PARTY
+1B: FLEES
+1C: WINS
+1D: TRIES
+1E: TO RUN
+1F: NO
+20: EFFECT
+21: CANNOT
+22: ESCAPE
+23: GUARDS
+24: ATTACK
+25: FELL
+26: ASLEEP
+27: IS
+28: EVADES
+29: FADES
+2A: EXILED
+
+Messages:
+00: X STABS Y
+01: X SHOOTS Y
+02: X SLAMS Y
+03: X BITES Y
+04: X RUSHES Y
+05: X CASTS Y
+06: X HEALS Y HP
+07: X LOSES Y HP
+08: X MISSES
+09: X DOWN
+0A: X LEVELS UP
+0B: X LEARNS Y
+0C: X MOVES UP
+0D: X BACKS AWAY
+0E: X WASTES AWAY
+0F: X WAS CURED
+10: X HAS A SHIELD
+11: PARTY DOWN
+12: PARTY FLEES
+13: PARTY WINS
+14: X TRIES TO RUN
+15: NO EFFECT
+16: X CANNOT ESCAPE
+17: X EXILED
+18: X WAKES UP
+19: X GUARDS Y
+1A: X ATTACK UP
+1B: X FELL ASLEEP
+1C: X IS ASLEEP
+1D: X EVADES
+1E: X SHIELD FADES
+
+X STATUS CLEAR?
+
+Status Effects:
+Pos:
+-Sharpened : Target's attack power is doubled
+-Shielded : Magic attacks are negated twice
+Neg:
+-Asleep : Target is unable to attack, move, or run ---With a probability of waking up before each turn
+-Poisoned : Target receives half healing, and takes damage per turn, either %MAX HP or %CURRENT HP
+
+SPELL LISTING
+0: BACK : Just for spell menuing purposes
+
+1: FIRE : Deals fire damage to a single target
+2: SLEEP : Attempts to put a single target to sleep
+3: BLIZRD : Deals ice damage to all enemies
+4: DRAIN : Deals non-elemental damage to a single target, then heals the caster by the damage dealt 
+5: THUNDR : Deals electric damage to the highest health enemy
+6: SHIELD : Gives one ally a shield
+7: METEOR : Deals physical damage to one enemy, then fire damage to the two surrounding enemies
+8: CHAOS : Deals damage of a random element to each enemy
+9: HEAL : Heals a single ally, removes blight instead of healing if blighted
+A: SMITE : Deals damage to target based on attack and magic power
+B: POISON : Deals physical/poison damage to target based on magic and attack
+C: SHARP : Doubles attack power of ally
+D: BLIGHT : Attempts to apply poisoned status to enemy
+E: TRIAGE : Heals all allies
+F: WITHER : Deals poison damage to a single target
+10: BANISH : Attempts to banish all enemies
+11: TRANCE : Self sleep 1, regain some mana, shield self? self heal?
+12: DONATE : Deal damage to self, heal target for some formula based on damage dealt
+
+ENEMY ONLY?
+SHIFT
+
+Wizard Spell List:
+-FIRE - 1
+-BLIZRD - 2
+-DRAIN - 3
+-SLEEP - 4
+-THUNDR - 5
+-SHIELD - 6
+-CHAOS - 7
+-METEOR - 8
+
+Cleric Spell List:
+-HEAL - 1
+-WITHER - 2
+-SHARP - 3
+-TRIAGE - 4
+-BLIGHT - 5
+-TRANCE - 6
+-DONATE - 7
+-BANISH - 8
+
+Paladin Spell List:
+-HEAL - 2
+-SMITE - 4
+-SHARP - 6
+-SHIELD - 8
+
+Ranger Spell List:
+-POISON - 2
+-HEAL - 4
+-SLEEP - 6
+-BLIGHT - 8
