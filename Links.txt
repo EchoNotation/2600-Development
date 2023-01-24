@@ -1,0 +1,18 @@
+Atari 2600 Programmer's Manual:
+https://cdn.hackaday.io/files/1646277043401568/stella.pdf
+
+TIA-1A Progammer's Manual:
+https://www.atariarchives.org/dev/tia/
+
+6502 Assembly References:
+http://www.6502.org/tutorials/6502opcodes.html
+https://www.masswerk.at/6502/6502_instruction_set.html
+
+Bankswitching Reference:
+http://kevtris.org/files/sizes.txt
+
+Color Reference:
+http://www.qotile.net/minidig/docs/tia_color.html
+
+Sound Reference:
+https://www.randomterrain.com/atari-2600-memories-batari-basic-music-toy.html
