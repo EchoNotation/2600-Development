@@ -303,6 +303,8 @@
 	-Fixed enemy name assembly directive bug
 	-Finished rendering side of new battle menu routines (spells and scanline stability)
 	-Started work on battle menu routine rewrite
+1/24/23
+	-Seems that there may still be some issues with maze rendering pointer selection
 
 Known Issues:
 	 
@@ -318,8 +320,8 @@ TODO:
 		-Give campfire battle-like scene??
 	
 	-Rework menu rendering routines
-		-Rework enemy targeting system to use cursor instead of menu
-		-Rework ally targeting system to use cursor instead of menu
+		-Rework enemy targeting system to use cursor instead of menu?
+		-Rework ally targeting system to use cursor instead of menu?
 	-Modify spell list rendering code to handle half casters, also GUARD and PARRY
 	
 	-Move player hp to be directly before enemy hp, 8 byte battlerHP, which simplifies some routines
