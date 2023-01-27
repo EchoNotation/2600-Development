@@ -751,9 +751,14 @@ RDrawCharacterInfo: SUBROUTINE
 .RStoreIndicatorColor:
 	sta COLUPF
 
+	lda #TEXT_HIGHLIGHTED_COLOR
+	sta COLUP0
+	sta COLUP1
+	lda #LEFT_MASK
+	and SWCHA
+	sta temp1
 	sta WSYNC
-	lda currentMenu
-	beq .RNoHighlighting
+
 	cpx highlightedIndex
 	bne .RNoHighlighting
 	lda currentEffect ;Should be highlighting, and this is the currently hovered character
@@ -762,9 +767,6 @@ RDrawCharacterInfo: SUBROUTINE
 	lda effectCountdown
 	and #$10
 	beq .RNoHighlighting
-	lda #TEXT_HIGHLIGHTED_COLOR
-	sta COLUP0
-	sta COLUP1
 	bne .RPostClassColorSetting ;this should always branch, just saves one byte over jmp
 .RNoHighlighting:
 	lda RClassColors,y ;Get the color that corresponds with this class, and set both players to use that color
@@ -778,21 +780,18 @@ RDrawCharacterInfo: SUBROUTINE
 .RGoToShowingHPAndMP:
 	jmp .RShowingHPAndMP
 
-.RInBattle:
-	lda #LEFT_MASK ;Show HP and MP if the joystick is being held down, else show name and avatar
-	bit SWCHA
+.RNotInBattle:
+	lda currentMenu
+	bne .RInBattlePosMenu
+	beq .RSetupMood
+.RInBattle
+.RInBattlePosMenu:
+	lda temp1
 	beq .RGoToShowingHPAndMP
 	lda #RIGHT_MASK
 	bit SWCHA
 	bne .RSetupMood
 	jmp .RShowingClassAndLevel
-.RNotInBattle:
-	lda currentMenu
-	bne .RSetupMood
-	lda #DOWN_MASK
-	bit SWCHA
-	bne .RSetupMood
-	jmp .RShowingClassAndLevel ;Should this be class and level or hp and mp? --Currently going with class and level, because it runs fast enough.
 
 .RSetupMood:
 	;Need to set the mood picture and name

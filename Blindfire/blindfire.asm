@@ -36,7 +36,7 @@ SOUND_EFFECT_VOLUME = 3
 RANGEFINDER_VOLUME = 3
 ENEMY_SPAWN_INTERVAL = 120
 
-BRIGHTNESS_COUNTER_TRANSITION = 128 ;These numbers are arbitrary. However, they will be needed to compute indices into color lookup tables.
+BRIGHTNESS_COUNTER_TRANSITION = 128 ;These numbers are arbitrary. However, they will be needed to compute indices into color lookup tables
 BRIGHTNESS_COUNTER_SHOOT = 8
 
 	SEG.U Variables
@@ -369,7 +369,7 @@ MissileOff:
 	ldy #0
 	sty ENAM0
 PostMissile:
-	cpx nextEnemyY ;Check to see if we are at the y-value of the next enemy to be drawn.
+	cpx nextEnemyY ;Check to see if we  re at the y-value of the next enemy to be drawn.
 	beq PlaceEnemyPrep
 	cpx cityDelayMinusFour ;Check to see if we have reached the bottom of the enemy-area
 	bcc MainLoop ;Not reached the bottom yet, loop again.
@@ -599,7 +599,7 @@ FinishDrawing:
 	sta VBLANK
 	sta HMCLR
 	lda #OVERSCAN_TIMER_VALUE
-	sta TIM64T ;Set timer to reach 0 at the end of overscan.s
+	sta TIM64T ;Set timer to reach 0 at the end of overscan.
 	
 	lda inTransition
 	cmp #1
@@ -1003,7 +1003,7 @@ UpdateMissilePosition:
 DestroyMissile:
 	lda #$FF
 	sta missileStartY
-	sta missileEndY
+	sta missileEndY 
 
 CalculateScorePointers:
 	ldx scoreLo ;Load the low two digits of the player score.

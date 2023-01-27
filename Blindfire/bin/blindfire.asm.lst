@@ -741,7 +741,7 @@
     369  f95f		       a0 00		      ldy	#0
     370  f961		       84 1d		      sty	ENAM0
     371  f963				   PostMissile
-    372  f963		       e4 bf		      cpx	nextEnemyY	;Check to see if we are at the y-value of the next enemy to be drawn.
+    372  f963		       e4 bf		      cpx	nextEnemyY	;Check to see if we  re at the y-value of the next enemy to be drawn.
     373  f965		       f0 07		      beq	PlaceEnemyPrep
     374  f967		       e4 92		      cpx	cityDelayMinusFour	;Check to see if we have reached the bottom of the enemy-area
     375  f969		       90 dc		      bcc	MainLoop	;Not reached the bottom yet, loop again.

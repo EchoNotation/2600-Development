@@ -303,8 +303,13 @@
 	-Fixed enemy name assembly directive bug
 	-Finished rendering side of new battle menu routines (spells and scanline stability)
 	-Started work on battle menu routine rewrite
-1/24/23
-	-Seems that there may still be some issues with maze rendering pointer selection
+1/25/22
+	-Fixed bug where MazeRenderingPointers would interpret the far room as the room the player is in when facing west
+	-Started work on changing RDrawCharacterInfo's behavior out of battle
+		-Need to save a single cycle in the ShowingHPAndMP portion
+			-Changing the player highlighting effect to be effect #0 is also an option
+1/26/22
+	-Saved enough time in the RDrawingCharacterInfo subroutine
 
 Known Issues:
 	 
@@ -318,6 +323,7 @@ TODO:
 	-Make compass that points towards the boss location
 	-Campfire rendering
 		-Give campfire battle-like scene??
+		-Give staircase battle-like scene?
 	
 	-Rework menu rendering routines
 		-Rework enemy targeting system to use cursor instead of menu?
@@ -330,6 +336,11 @@ TODO:
 	-Fix LUpdatePlayerAvatar subroutine to conform to new statuses
 
 	-Investigate how the maze movement currently controls, might need to change to be more hand-friendly
+		-Rework maze controls so that left and right turn in place, pushing the button or pressing up moves forward, and down moves into the battle pos menu:
+			-Battle pos menu is now exited by going up "off of" the top party member.
+			-Advance by moving up or down.
+			-Holding left shows HP and MP, and holding right shows class, just like in battle
+			-Pressing the button changes the selected party member from frontline->backline or backline->frontline
 
 	Overarching questions:	
 		-Should there be some sort of rangefinder to the exit? I think so.
@@ -359,12 +370,13 @@ TODO:
 				-Increased data complexity, decreased code complexity, better game design, lower encounter variety
 
 	Requirements for functional game loop:
-		-Functional combat - 60%
-			-Fighting - 95%
-			-Spellcasting - 5%
-			-Moving - 100%
-			-Running - 95%
-			-Functional status effects - 15%
+		-Functional combat - 10%
+			-Control Flow/Battler Selection - 75%
+			-Fighting - 0%
+			-Spellcasting - 0%
+			-Moving - 0%
+			-Running - 0%
+			-Functional status effects - 0%
 			-Enemy AI
 		-Additional maze logic: moving between floors, random generation for encounters, transitioning between maze and battles
 		-Mana implementation

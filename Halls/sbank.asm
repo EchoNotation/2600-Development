@@ -316,6 +316,8 @@ SUpdateMazeRenderingPointers: SUBROUTINE
 	jsr SGetMazeRoomData
 	sta temp1
 	ldx playerX
+	dex
+	dex
 	jsr SGetMazeRoomData
 	sta temp2
 .SUpdatePointers:

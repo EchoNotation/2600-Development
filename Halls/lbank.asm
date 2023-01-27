@@ -24,7 +24,8 @@ LClear:
 	sta playerY
 	sta playerFacing
 
-	lda INTIM ;Seed the random number generator
+	lda #$1 ;Force a seed for the rng
+	;lda INTIM ;Seed the random number generator
 	bne LSkipSeeding
 	lda #$6B ;Extremely random random number generator here
 LSkipSeeding:
@@ -109,19 +110,19 @@ LSkipSeeding:
 
 	jsr LUpdateAvatars
 
-	lda #$80
-	sta inBattle
-	lda #$FF
-	sta hasAction
-	;lda #$80
-	;sta currentMenu
-	;lda #$03
-	;sta menuSize
-	lda #1
-	sta enemyHP
-	sta enemyHP+1
-	sta enemyHP+2
-	sta enemyHP+3
+	; lda #$80
+	; sta inBattle
+	; lda #$FF
+	; sta hasAction
+	; lda #$80
+	; sta currentMenu
+	; lda #$03
+	; sta menuSize
+	; lda #1
+	; sta enemyHP
+	; sta enemyHP+1
+	; sta enemyHP+2
+	; sta enemyHP+3
 
 LStartOfFrame:
 	lda #$82
