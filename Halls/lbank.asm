@@ -258,69 +258,7 @@ LSkipBattleLogic:
 
 LMazeLogic:
 	;Need to check for the maze exit and campfire location
-	;Need to determine if a random encounter occurs
-
-	lda INPT4
-	bmi LButtonNotPressed
-	and #$80
-	lsr
-	lsr
-	lsr
-	lsr
-	sta temp1
-	lda previousInput
-	and #$08
-	eor temp1
-	beq LButtonNotPressed
-	lda currentMenu
-	bne LExitPosSwapMenu
-LEnterPosSwapMenu:
-	lda #$82
-	sta currentMenu
-	lda #1
-	sta currentEffect
-	sta effectCounter
-	sta effectCountdown
-	lda #$03
-	sta menuSize
-	bne LButtonNotPressed ;Should always be true, just saves one byte over jmp
-LExitPosSwapMenu:
-	lda #$00
-	sta currentEffect
-	sta effectCounter
-	sta currentMenu
-	sta menuSize
-LButtonNotPressed:
-	lda currentMenu
-	beq LNoPartyPosSwapLogic
-	lda previousInput
-	lda SWCHA
-	and #$F0
-	sta temp1
-	lda previousInput
-	and #$F0
-	cmp temp1
-	beq LNoPartyPosSwapLogic
-	jsr LUpdateMenuCursorPos
-	lda cursorIndexAndMessageY
-	sta highlightedIndex
-	lda #LEFT_MASK
-	bit SWCHA
-	bne LNoPartyPosSwapLogic
-	;Left is held down, so swap this person
-	lda #1
-	ldy highlightedIndex
-	iny
-LPartyPosMaskLoop:
-	dey
-	beq LAfterPartyPosMaskLoop
-	asl
-	jmp LPartyPosMaskLoop
-LAfterPartyPosMaskLoop:
-	eor partyBattlePos
-	sta partyBattlePos
-LNoPartyPosSwapLogic:
-	
+	;Need to determine if a random encounter occurs	
 
 LDoneWithSeparateLogic:
 

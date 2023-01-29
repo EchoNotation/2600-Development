@@ -740,6 +740,24 @@ RDrawCharacterInfo: SUBROUTINE
 	and #$0F ;Get the class of this character
 	tay
 
+	lda #TEXT_HIGHLIGHTED_COLOR
+	sta COLUP0
+	sta COLUP1
+	cpx highlightedIndex
+	bne .RNoHighlighting
+	lda currentEffect ;Should be highlighting, and this is the currently hovered character
+	cmp #$1
+	bne .RNoHighlighting
+	lda effectCountdown
+	and #$10
+	beq .RPostClassColorSetting
+.RNoHighlighting:
+	lda RClassColors,y ;Get the color that corresponds with this class, and set both players to use that color
+	sta COLUP0
+	sta COLUP1
+.RPostClassColorSetting:
+	sta WSYNC
+
 	lda partyBattlePos
 	and RPartyPositionMasks,x
 	beq .RBackline
@@ -750,29 +768,6 @@ RDrawCharacterInfo: SUBROUTINE
 	lda #BACKLINE_INDICATOR_COLOR
 .RStoreIndicatorColor:
 	sta COLUPF
-
-	lda #TEXT_HIGHLIGHTED_COLOR
-	sta COLUP0
-	sta COLUP1
-	lda #LEFT_MASK
-	and SWCHA
-	sta temp1
-	sta WSYNC
-
-	cpx highlightedIndex
-	bne .RNoHighlighting
-	lda currentEffect ;Should be highlighting, and this is the currently hovered character
-	cmp #$1
-	bne .RNoHighlighting
-	lda effectCountdown
-	and #$10
-	beq .RNoHighlighting
-	bne .RPostClassColorSetting ;this should always branch, just saves one byte over jmp
-.RNoHighlighting:
-	lda RClassColors,y ;Get the color that corresponds with this class, and set both players to use that color
-	sta COLUP0
-	sta COLUP1
-.RPostClassColorSetting:
 
 	lda inBattle
 	beq .RNotInBattle
@@ -786,7 +781,8 @@ RDrawCharacterInfo: SUBROUTINE
 	beq .RSetupMood
 .RInBattle
 .RInBattlePosMenu:
-	lda temp1
+	lda #LEFT_MASK
+	and SWCHA
 	beq .RGoToShowingHPAndMP
 	lda #RIGHT_MASK
 	bit SWCHA

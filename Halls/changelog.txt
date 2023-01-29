@@ -310,6 +310,7 @@
 			-Changing the player highlighting effect to be effect #0 is also an option
 1/26/22
 	-Saved enough time in the RDrawingCharacterInfo subroutine
+	-Work in SUpdatePlayerMovement to include new menuing logic for party battle position
 
 Known Issues:
 	 
@@ -325,6 +326,8 @@ TODO:
 		-Give campfire battle-like scene??
 		-Give staircase battle-like scene?
 	
+	-Rework previousInput to be currentInput, which only gets set once per frame, avoiding repeat calculations
+
 	-Rework menu rendering routines
 		-Rework enemy targeting system to use cursor instead of menu?
 		-Rework ally targeting system to use cursor instead of menu?
@@ -335,18 +338,12 @@ TODO:
 	-Create a sleeping avatar (mood 6) to replace the paralyzed avatar
 	-Fix LUpdatePlayerAvatar subroutine to conform to new statuses
 
-	-Investigate how the maze movement currently controls, might need to change to be more hand-friendly
-		-Rework maze controls so that left and right turn in place, pushing the button or pressing up moves forward, and down moves into the battle pos menu:
-			-Battle pos menu is now exited by going up "off of" the top party member.
-			-Advance by moving up or down.
-			-Holding left shows HP and MP, and holding right shows class, just like in battle
-			-Pressing the button changes the selected party member from frontline->backline or backline->frontline
+	-Rework maze controls so that left and right turn in place, pushing the button or pressing up moves forward, and down moves into the battle pos menu
 
 	Overarching questions:	
 		-Should there be some sort of rangefinder to the exit? I think so.
 			-Hear a "roar" when getting near the boss?
 		-Rendering exit and campfire? Rendering campfire should be possible, but I don't know about the exit
-			-Fullheal after defeating a boss? If so, then campfires might be able to be removed
 
 	-Invalid text color + associated logic?
 		-Mana implementation

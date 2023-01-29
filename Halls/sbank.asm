@@ -440,29 +440,104 @@ STurnRight:
 
 SUpdatePlayerMovement: SUBROUTINE
 	lda currentMenu
-	bne .SReturnFromPlayerMovement
+	cmp #$80
+	beq .SInPositionSwapMenu
+	cmp #0
+	bne .SReturnFromPlayerMovement2
 	lda previousInput
 	and #$F0
 	sta temp1
 	lda SWCHA
 	and #$F0
 	cmp temp1
-	beq .SReturnFromPlayerMovement
+	beq .SReturnFromPlayerMovement2
 	lda SWCHA
 	bpl .SRightPressed
 	asl
 	bpl .SLeftPressed
-	jmp .SCheckForForwardMovement
-.SRightPressed
+	asl
+	bmi .SGoToCheckForForwardMovement
+.SDownPressed:
+	lda #$80
+	sta currentMenu
+	lda #3
+	sta menuSize
+	lda #1
+	sta currentEffect
+	jmp .SReturnFromPlayerMovement2	
+.SRightPressed:
 	ldy playerFacing
 	lda STurnRight,y
 	sta playerFacing
-	jmp .SCheckForForwardMovement
-.SLeftPressed
+	jmp .SGoToCheckForForwardMovement
+.SLeftPressed:
 	ldy playerFacing
 	lda STurnLeft,y
 	sta playerFacing
-.SCheckForForwardMovement
+	jmp .SGoToCheckForForwardMovement
+.SInPositionSwapMenu:
+	lda SWCHA
+	and #$F0
+	sta temp1
+	lda INPT4
+	and #$80
+	lsr
+	lsr
+	lsr
+	lsr
+	ora temp1
+	sta temp1
+	lda previousInput
+	and #$F8
+	cmp temp1
+	beq .SReturnFromPlayerMovement2
+	lda INPT4
+	bpl .SSwapBattlerPos
+	ldy highlightedIndex
+	lda #DOWN_MASK
+	bit SWCHA
+	beq .SDownPressedInMenu
+	lda #UP_MASK
+	bit SWCHA
+	beq .SUpPressedInMenu
+.SReturnFromPlayerMovement2:
+	rts
+.SGoToCheckForForwardMovement:
+	jmp .SCheckForForwardMovement
+.SSwapBattlerPos:
+	lda #1
+	ldy highlightedIndex
+	iny
+.SPartyPosMaskLoop:
+	dey
+	beq .SAfterPartyPosMaskLoop
+	asl
+	jmp .SPartyPosMaskLoop
+.SAfterPartyPosMaskLoop:
+	eor partyBattlePos
+	sta partyBattlePos
+	rts
+.SDownPressedInMenu:
+	cpy menuSize
+	bcc .SNotAtLastPosition
+	rts
+.SNotAtLastPosition
+	iny
+	sty highlightedIndex
+	rts
+.SUpPressedInMenu:
+	ldy highlightedIndex
+	bne .SNotAtFirstPosition
+	lda #0
+	sta currentMenu
+	sta currentEffect
+	rts
+.SNotAtFirstPosition
+	dey
+	sty highlightedIndex
+	rts
+
+.SCheckForForwardMovement:
 	lda SWCHA
 	and #$10
 	bne .SReturnFromPlayerMovement
