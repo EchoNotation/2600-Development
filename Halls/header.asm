@@ -99,10 +99,12 @@ name2 ds 4
 name3 ds 4
 name4 ds 4
 name5 ds 4
+battlerHP ds 0
 hp1 ds 1
 hp2 ds 1
 hp3 ds 1
 hp4 ds 1
+enemyHP ds 4
 mp1 ds 1
 mp2 ds 1
 mp3 ds 1
@@ -137,14 +139,11 @@ highlightedIndex ds 1
 menuSize ds 1
 inBattle ds 1
 currentBattler ds 1
-currentBattlerAttack ds 1
-currentBattlerSpeed ds 1
 
 vEdges ds 8 ;Vertical edges of the maze   0xxxxxxx
 hEdges ds 7 ;Horizontal edges of the maze xxxxxxxx
 
 battleActions ds 4
-enemyHP ds 4
 enemyID ds 4
 battlerStatus ds 8 ;TGSSlPAB - T:Guard/shield timer, G:Guard flag, S:Shield flag, Sl:Sleep timer, P:Parrying, A:Sharpened, B:Blighted
 enemyAction ds 1

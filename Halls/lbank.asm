@@ -24,8 +24,8 @@ LClear:
 	sta playerY
 	sta playerFacing
 
-	lda #$1 ;Force a seed for the rng
-	;lda INTIM ;Seed the random number generator
+	;lda #$1 ;Force a seed for the rng
+	lda INTIM ;Seed the random number generator
 	bne LSkipSeeding
 	lda #$6B ;Extremely random random number generator here
 LSkipSeeding:
@@ -103,10 +103,15 @@ LSkipSeeding:
 	sta name4+3
 	lda #EMPTY
 	sta name5+3
-	lda #$10
+	lda #$0
 	sta hp4
 	lda #$00
 	sta mp4
+
+	lda #$80
+	sta battlerStatus+1
+	lda #$18
+	sta battlerStatus+2
 
 	jsr LUpdateAvatars
 
@@ -734,9 +739,10 @@ LUpdateAvatars: SUBROUTINE
 	rts
 .LContinue:
 	ldy #3
+	sty charIndex
 .LUpdateAvatarLoop:
 	;Check for status effect
-	tya
+	ldy charIndex
 
 	lda battlerStatus,y
 	sta tempPointer1
@@ -747,6 +753,7 @@ LUpdateAvatars: SUBROUTINE
 	bne .LBlighted
 
 	;Check for HP
+
 	lda hp1,y
 	beq .LDead
 	jsr LDecimalToBinary
@@ -759,9 +766,6 @@ LUpdateAvatars: SUBROUTINE
 	sta tempPointer2
 	lda #(LStat1PerLevel >> 8 & $FF)
 	sta tempPointer2+1
-
-	tya
-	tax
 
 	lda mazeAndPartyLevel
 	and #$0F
@@ -795,15 +799,15 @@ LUpdateAvatars: SUBROUTINE
 .LChangeMood:
 	sta tempPointer1
 
-	txa
-	tay
+	ldy charIndex
 
 .LChangeMoodLater:
 	lda char1,y
 	and #$0F
 	ora tempPointer1
 	sta char1,y
-	dey
+	
+	dec charIndex
 	bpl .LUpdateAvatarLoop
 	rts
 

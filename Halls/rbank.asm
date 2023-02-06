@@ -1899,14 +1899,14 @@ RCharacterHighLookupTable: ;Contains the high bytes of the pointers to all the c
 	RORG $FC00
 
 RAvatarDead:
-	.byte #%11111111
-	.byte #%10000001
-	.byte #%10000001
-	.byte #%10000001
-	.byte #%10000001
-	.byte #%10000001
-	.byte #%10000001
-	.byte #%11111111
+	.byte %11111111
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %01111110
+	.byte %01111110
+	.byte %00011000
+	.byte %00011000
 RAvatarSad:
 	.byte #%11111111
 	.byte #%10000001
@@ -1952,15 +1952,15 @@ RAvatarPain:
 	.byte #%10100101
 	.byte #%10000001
 	.byte #%11111111
-RAvatarParalyzed:
-	.byte #%11111111
-	.byte #%10000001
-	.byte #%10101011
-	.byte #%11010101
-	.byte #%10000001
-	.byte #%10100101
-	.byte #%10000001
-	.byte #%11111111
+RAvatarSleeping:
+	.byte %11100000
+	.byte %10000000
+	.byte %01000000
+	.byte %00101110
+	.byte %11101000
+	.byte %00000100
+	.byte %00000010
+	.byte %00001110
 RAvatarSick:
 	.byte #%11111111
 	.byte #%10000001
@@ -2087,7 +2087,7 @@ RMoodLookupTable:
 	.byte (RAvatarHappy & $FF)
 	.byte (RAvatarExcited & $FF)
 	.byte (RAvatarPain & $FF)
-	.byte (RAvatarParalyzed & $FF)
+	.byte (RAvatarSleeping & $FF)
 	.byte (RAvatarSick & $FF)
 
 	ORG $CD00 ;Used for holding the letters of the alphabet

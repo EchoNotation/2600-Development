@@ -430,8 +430,6 @@ SUpdateMazeRenderingPointers: SUBROUTINE
 STurnLeft:
 	.byte 3
 	.byte 0
-	.byte 1
-	.byte 2
 STurnRight:
 	.byte 1
 	.byte 2
@@ -442,15 +440,20 @@ SUpdatePlayerMovement: SUBROUTINE
 	lda currentMenu
 	cmp #$80
 	beq .SInPositionSwapMenu
-	cmp #0
-	bne .SReturnFromPlayerMovement2
-	lda previousInput
-	and #$F0
-	sta temp1
 	lda SWCHA
 	and #$F0
-	cmp temp1
+	sta temp1
+	lda INPT4
+	lsr
+	lsr
+	lsr
+	lsr
+	and #$08
+	ora temp1
+	cmp previousInput
 	beq .SReturnFromPlayerMovement2
+	lda INPT4
+	bpl .SGoToForwardMovement
 	lda SWCHA
 	bpl .SRightPressed
 	asl
@@ -464,17 +467,17 @@ SUpdatePlayerMovement: SUBROUTINE
 	sta menuSize
 	lda #1
 	sta currentEffect
-	jmp .SReturnFromPlayerMovement2	
+	rts	
 .SRightPressed:
 	ldy playerFacing
 	lda STurnRight,y
 	sta playerFacing
-	jmp .SGoToCheckForForwardMovement
+	rts
 .SLeftPressed:
 	ldy playerFacing
 	lda STurnLeft,y
 	sta playerFacing
-	jmp .SGoToCheckForForwardMovement
+	rts
 .SInPositionSwapMenu:
 	lda SWCHA
 	and #$F0
@@ -504,6 +507,8 @@ SUpdatePlayerMovement: SUBROUTINE
 	rts
 .SGoToCheckForForwardMovement:
 	jmp .SCheckForForwardMovement
+.SGoToForwardMovement:
+	jmp .SMoveForward
 .SSwapBattlerPos:
 	lda #1
 	ldy highlightedIndex
@@ -543,6 +548,7 @@ SUpdatePlayerMovement: SUBROUTINE
 	bne .SReturnFromPlayerMovement
 
 	;Code for checking if possible to move forward from current direction, and moving if so
+.SMoveForward:
 	ldx playerX
 	ldy playerY
 	jsr SGetMazeRoomData
