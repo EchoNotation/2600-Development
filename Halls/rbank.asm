@@ -260,11 +260,24 @@ RShowSpellOptions:
 	sta tempPointer1
 	lda #(RFireText >> 8 & $FF)
 	sta tempPointer1+1
-	lda #TEXT_COLOR
-	cpx highlightedLine
-	bne RDontHighlightSpell
+	
+	lda highlightedLine
+	and #$7F
+	sta temp4
+	lda highlightedLine
+	bpl REnoughMana
+	cpx temp4
+	bne RDontHighlightSpell ;Branch if this line isn't hovered
+	lda #TEXT_INVALID_COLOR
+	bne RStoreSpellColor
+REnoughMana:
+	cpx temp4
+	bne RDontHighlightSpell ;Branch if this line isn't hovered
 	lda RSpellColors,y
-RDontHighlightSpell
+	bne RStoreSpellColor ;No spells are black
+RDontHighlightSpell:
+	lda #TEXT_COLOR
+RStoreSpellColor:
 	sta COLUP0
 	sta COLUP1
 
