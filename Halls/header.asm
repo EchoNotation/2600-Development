@@ -116,6 +116,7 @@ playerFacing ds 1 ; 000000XX 00 is east, 01 is south, 10 is west, 11 is north
 exitLocation ds 1
 campfireLocation ds 1
 previousInput ds 1
+currentInput ds 1
 temp1 ds 1
 temp2 ds 1
 temp3 ds 1

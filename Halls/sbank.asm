@@ -440,21 +440,13 @@ SUpdatePlayerMovement: SUBROUTINE
 	lda currentMenu
 	cmp #$80
 	beq .SInPositionSwapMenu
-	lda SWCHA
-	and #$F0
-	sta temp1
-	lda INPT4
-	lsr
-	lsr
-	lsr
-	lsr
-	and #$08
-	ora temp1
+	lda currentInput
 	cmp previousInput
 	beq .SReturnFromPlayerMovement2
-	lda INPT4
-	bpl .SGoToForwardMovement
-	lda SWCHA
+	lda #$08
+	bit currentInput
+	beq .SGoToForwardMovement
+	lda currentInput
 	bpl .SRightPressed
 	asl
 	bpl .SLeftPressed
@@ -479,29 +471,18 @@ SUpdatePlayerMovement: SUBROUTINE
 	sta playerFacing
 	rts
 .SInPositionSwapMenu:
-	lda SWCHA
-	and #$F0
-	sta temp1
-	lda INPT4
-	and #$80
-	lsr
-	lsr
-	lsr
-	lsr
-	ora temp1
-	sta temp1
-	lda previousInput
-	and #$F8
-	cmp temp1
+	lda currentInput
+	cmp previousInput
 	beq .SReturnFromPlayerMovement2
-	lda INPT4
-	bpl .SSwapBattlerPos
+	lda #$08 ;Mask for pressing button
+	bit currentInput
+	beq .SSwapBattlerPos
 	ldy highlightedIndex
 	lda #DOWN_MASK
-	bit SWCHA
+	bit currentInput
 	beq .SDownPressedInMenu
 	lda #UP_MASK
-	bit SWCHA
+	bit currentInput
 	beq .SUpPressedInMenu
 .SReturnFromPlayerMovement2:
 	rts
@@ -543,7 +524,7 @@ SUpdatePlayerMovement: SUBROUTINE
 	rts
 
 .SCheckForForwardMovement:
-	lda SWCHA
+	lda currentInput
 	and #$10
 	bne .SReturnFromPlayerMovement
 

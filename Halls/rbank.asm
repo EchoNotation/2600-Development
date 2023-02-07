@@ -795,10 +795,10 @@ RDrawCharacterInfo: SUBROUTINE
 .RInBattle
 .RInBattlePosMenu:
 	lda #LEFT_MASK
-	and SWCHA
+	bit currentInput
 	beq .RGoToShowingHPAndMP
 	lda #RIGHT_MASK
-	bit SWCHA
+	bit currentInput
 	bne .RSetupMood
 	jmp .RShowingClassAndLevel
 

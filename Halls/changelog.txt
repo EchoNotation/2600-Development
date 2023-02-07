@@ -303,20 +303,23 @@
 	-Fixed enemy name assembly directive bug
 	-Finished rendering side of new battle menu routines (spells and scanline stability)
 	-Started work on battle menu routine rewrite
-1/25/22
+1/25/23
 	-Fixed bug where MazeRenderingPointers would interpret the far room as the room the player is in when facing west
 	-Started work on changing RDrawCharacterInfo's behavior out of battle
 		-Need to save a single cycle in the ShowingHPAndMP portion
 			-Changing the player highlighting effect to be effect #0 is also an option
-1/26/22
+1/26/23
 	-Saved enough time in the RDrawingCharacterInfo subroutine
 	-Work in SUpdatePlayerMovement to include new menuing logic for party battle position
-2/4/22
+2/4/23
 	-Pressing button while in maze view moves forward 1 room.
 	-Added new graphics for Sleeping and Dead avatars (subject to change again)
-2/5/22
+2/5/23
 	-Fixed indexing bug in LUpdateAvatars
 	-Reorganized RAM so that enemy HP is immediately after party HP
+	-Added invalid text color for spell list rendering
+2/6/23
+	-Changed input handling logic to be cleaner, but require an extra byte of RAM
 
 Known Issues:
 	 
@@ -331,21 +334,18 @@ TODO:
 	-Campfire rendering
 		-Give campfire battle-like scene??
 		-Give staircase battle-like scene?
-	
-	-Rework previousInput to be currentInput, which only gets set once per frame, avoiding repeat calculations
-		-Doing this actually requires an extra byte of RAM, so this is a late-project space saving technique
 
 	-Rework menu rendering routines
 		-Rework enemy targeting system to use cursor instead of menu?
 		-Rework ally targeting system to use cursor instead of menu?
-	-Modify spell list rendering code to handle half casters, also GUARD and PARRY
+		-Make sure to handle half casters, also GUARD and PARRY in lieu of CAST for knights and rogues respectively
 	
 	Overarching questions:	
 		-Should there be some sort of rangefinder to the exit? I think so.
 			-Hear a "roar" when getting near the boss?
 		-Rendering exit and campfire? Rendering campfire should be possible, but I don't know about the exit
 
-	-Invalid text color + associated logic?
+	-Invalid text color  + associated logic?
 		-Mana implementation
 		-Do a visual effect instead? To save space in the rendering bank?
 			-Play a corresponding "error" sound effect

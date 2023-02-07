@@ -207,28 +207,17 @@ LOverscan:
 	beq LMazeLogic ;Skip the following logic if we are in maze mode...
 
 LBattleLogic:
-	lda SWCHA
-	and #$F0
-	sta temp1
-	lda INPT4
-	and #$80
-	lsr
-	lsr
-	lsr
-	lsr
-	ora temp1
-	sta temp1
 	lda currentMenu
 	bpl LNotInMenu
 LInMenu:
-	lda temp1
+	lda currentInput
 	eor previousInput
 	and #$F0
 	beq LNoMenuMovement
 LMenuMovement:
 	jsr LUpdateMenuCursorPos
 LNoMenuMovement:
-	lda temp1
+	lda currentInput
 	eor previousInput
 	and #$08
 	beq LNoMenuAdvancement
@@ -243,7 +232,7 @@ LMenuAdvancement:
 LNoMenuAdvancement:
 	jmp LSkipBattleLogic
 LNotInMenu:
-	lda temp1
+	lda currentInput
 	eor previousInput
 	and #$08
 	beq LSkipBattleLogic ;Button is not pressed, so don't advance battle logic
@@ -268,6 +257,8 @@ LMazeLogic:
 LDoneWithSeparateLogic:
 
 	;Update the previousInput variable, since both maze and battle logic use this.
+	lda currentInput
+	sta previousInput
 	lda SWCHA
 	and #$F0
 	sta temp1
@@ -278,7 +269,7 @@ LDoneWithSeparateLogic:
 	lsr
 	lsr
 	ora temp1
-	sta previousInput
+	sta currentInput
 
 LWaitForOverscanTimer:
 	lda INTIM
@@ -298,8 +289,9 @@ LHasActionMasks:
 	.byte #$01
 
 LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the next battler to take their action
-	lda INPT4
-	bpl .LButtonPressed
+	lda #$08
+	bit currentInput
+	beq .LButtonPressed
 	rts
 .LButtonPressed:
 	;Need to check if either side has lost
@@ -657,8 +649,9 @@ LRandom: SUBROUTINE ;Ticks the random number generator when called
 	rts
 
 LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advances with the selected options if so.
-	lda INPT4
-	bpl .LContinue ;Return if the button is not pressed
+	lda #$08
+	bit currentInput
+	beq .LContinue ;Return if the button is not pressed
 .LReturn:
 	rts
 .LContinue:
@@ -706,10 +699,10 @@ LUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine acco
 LUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick presses
 	ldy cursorIndexAndMessageY
 	lda #DOWN_MASK
-	bit SWCHA
+	bit currentInput
 	beq .LDownPressed
 	lda #UP_MASK
-	bit SWCHA
+	bit currentInput
 	beq .LUpPressed
 	rts
 .LDownPressed:
@@ -734,8 +727,9 @@ LUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick press
 LUpdateAvatars: SUBROUTINE
 	lda inBattle
 	bpl .LContinue
-	lda INPT4
-	bpl .LContinue
+	lda #$08
+	bit currentInput
+	beq .LContinue
 	rts
 .LContinue:
 	ldy #3
