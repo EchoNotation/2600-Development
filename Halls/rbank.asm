@@ -46,6 +46,8 @@ RDrawCompass:
 	sta GRP0
 	jmp RDrawCompass
 RPrepareToDrawMaze:
+	lda #0
+	sta REFP0
 	sta HMCLR
 	iny
 	sty GRP0
@@ -2102,6 +2104,52 @@ RMoodLookupTable:
 	.byte (RAvatarPain & $FF)
 	.byte (RAvatarSleeping & $FF)
 	.byte (RAvatarSick & $FF)
+
+RArrowUp:
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %01111110
+	.byte %00111100
+	.byte %00011000
+RArrowDiagonalUp:
+	.byte %11000000
+	.byte %11100000
+	.byte %01110000
+	.byte %00111001
+	.byte %00011101
+	.byte %00001111
+	.byte %00000111
+	.byte %00011111
+RArrowRight:
+	.byte %00000000
+	.byte %00000100
+	.byte %00000110
+	.byte %11111111
+	.byte %11111111
+	.byte %00000110
+	.byte %00000100
+	.byte %00000000
+RArrowDiagonalDown:
+	.byte %00011111
+	.byte %00000111
+	.byte %00001111
+	.byte %00011101
+	.byte %00111001
+	.byte %01110000
+	.byte %11100000
+	.byte %11000000
+RArrowDown:
+	.byte %00011000
+	.byte %00111100
+	.byte %01111110
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
 
 	ORG $CD00 ;Used for holding the letters of the alphabet
 	RORG $FD00

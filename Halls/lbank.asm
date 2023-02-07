@@ -158,38 +158,11 @@ LStartOfFrame:
 	ldy #1; Subroutine ID for SUpdateMazeRenderingPointers
 	jsr LRunFunctionInSBank
 
-	jmp LUpdateCompassPointer
-
+	jsr LUpdateCompassPointerBoss
+	jmp LGoToUpdateEffects
 
 LGoToReset:
 	jmp LReset
-
-LUpdateCompassPointer:
-	ldy playerFacing
-	beq LCompassEast
-	dey
-	beq LCompassSouth
-	dey
-	beq LCompassWest
-LCompassNorth:
-	lda #(RLetterN & $FF)
-	jmp LStoreCompassPointer
-LCompassSouth:
-	lda #(RLetterS & $FF)
-	jmp LStoreCompassPointer
-LCompassWest:
-	lda #(RLetterW & $FF)
-	jmp LStoreCompassPointer
-LCompassEast:
-	lda #(RLetterE & $FF)
-
-LStoreCompassPointer:
-	sta tempPointer1
-
-	lda #(RLetterN >> 8 & $FF)
-	sta tempPointer1+1
-
-	jmp LGoToUpdateEffects
 
 LAfterEffectUpdate:
 LWaitForVblankTimer:
@@ -818,6 +791,116 @@ LOverrideAvatar: SUBROUTINE ;Sets party member Y's mood to X.
 	sta char1,y
 	rts
 
+LUpdateCompassPointerNormal: SUBROUTINE ;Updates tempPointer1 to point to the letter N, S, E, or W based on which direction the player is facing
+	ldy playerFacing
+	beq .LCompassEast
+	dey
+	beq .LCompassSouth
+	dey
+	beq .LCompassWest
+.LCompassNorth:
+	lda #(RLetterN & $FF)
+	jmp .LStoreCompassPointer
+.LCompassSouth:
+	lda #(RLetterS & $FF)
+	jmp .LStoreCompassPointer
+.LCompassWest:
+	lda #(RLetterW & $FF)
+	jmp .LStoreCompassPointer
+.LCompassEast:
+	lda #(RLetterE & $FF)
+.LStoreCompassPointer:
+	sta tempPointer1
+	lda #(RLetterN >> 8 & $FF)
+	sta tempPointer1+1
+	rts
+
+LUpdateCompassPointerBoss: SUBROUTINE
+	lda exitLocation
+	and #$0F
+	sta temp2 ;Y location of boss
+	lda exitLocation
+	and #$F0
+	lsr
+	lsr
+	lsr
+	lsr
+	sta temp1 ;X location of boss
+	sec
+	sbc playerX
+	sta temp1 ;X offset
+	lda temp2
+	sec
+	sbc playerY
+	sta temp2 ;Y offset
+
+	lda temp1
+	beq .LNoDeltaX
+	bpl .LDeltaXPositive
+.LDeltaXNegative:
+	lda #$04
+	sta temp3
+	bne .LEncodeDeltaY
+.LNoDeltaX:
+	sta temp3
+	beq .LEncodeDeltaY
+.LDeltaXPositive
+	lda #$08
+	sta temp3
+.LEncodeDeltaY:
+	lda temp2
+	beq .LNoDeltaY
+	bpl .LDeltaYPositive
+.LDeltaYNegative:
+	lda #$01
+	ora temp3
+	bne .LGetArrowID
+.LNoDeltaY:
+	ora temp3
+	bpl .LGetArrowID
+.LDeltaYPositive:
+	lda #$02
+	ora temp3
+.LGetArrowID:
+	tax
+	lda LArrows,x ;Get the correct arrowID if facing east
+	cmp #$FF
+	bne .LNotOnExit
+	lda #(RLetterX & $FF)
+	sta tempPointer1
+	lda #(RLetterX >> 8 & $FF)
+	sta tempPointer1+1
+	rts
+
+.LNotOnExit:
+	;Get proper arrow ID according to facing bias
+	ldy playerFacing
+	iny
+.LRotateLoop:
+	dey
+	beq .LDoneRotating
+	sec
+	sbc #2
+	jmp .LRotateLoop
+.LDoneRotating:
+	cmp #0
+	bpl .LNoUnderflow
+	clc
+	adc #8
+
+.LNoUnderflow:
+	;Set compass pointer and reflection state
+	tax
+	lda LArrowGraphicsLookup,X
+	sta tempPointer1
+	lda #(RArrowUp >> 8 & $FF)
+	sta tempPointer1+1
+
+	lda LArrowReflectionLookup,X
+	sta REFP0
+
+	rts
+
 	ORG $DC40 ;Used to hold enemy stats and related data
 	RORG $FC40
 
@@ -1114,6 +1197,40 @@ LPaladinSpellList:
 	.byte #3 ;Hold
 	.byte #11 ;Shield
 	.byte #4 ;Fira
+
+	;Arrow IDs start with 0 at straight east, then increasing moving clockwise
+LArrows:
+	.byte $FF
+	.byte 6
+	.byte 2
+	.byte $FF ;Unused
+	.byte 4
+	.byte 5
+	.byte 3
+	.byte $FF ;Unused
+	.byte 0
+	.byte 7
+	.byte 1 ;Values for LArrows,11-15 should never be accessed
+
+LArrowGraphicsLookup:
+	.byte (RArrowUp & $FF)
+	.byte (RArrowDiagonalUp & $FF)
+	.byte (RArrowRight & $FF)
+	.byte (RArrowDiagonalDown & $FF)
+	.byte (RArrowDown & $FF)
+	.byte (RArrowDiagonalDown & $FF)
+	.byte (RArrowRight & $FF)
+	.byte (RArrowDiagonalUp & $FF)
+
+LArrowReflectionLookup:
+	.byte #0
+	.byte #0
+	.byte #0
+	.byte #0
+	.byte #0
+	.byte #%00001000
+	.byte #%00001000
+	.byte #%00001000
 
 	ORG $DFB0
 	RORG $FFB0

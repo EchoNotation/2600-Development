@@ -320,6 +320,7 @@
 	-Added invalid text color for spell list rendering
 2/6/23
 	-Changed input handling logic to be cleaner, but require an extra byte of RAM
+	-Created arrow that points towards the exit location
 
 Known Issues:
 	 
@@ -330,7 +331,6 @@ TODO:
 	-Battle system rewrite
 		-High/low battle logic?
 		
-	-Make compass that points towards the boss location
 	-Campfire rendering
 		-Give campfire battle-like scene??
 		-Give staircase battle-like scene?
