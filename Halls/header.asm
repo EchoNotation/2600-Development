@@ -136,7 +136,6 @@ currentMenu ds 1
 cursorIndexAndMessageY ds 1
 startingCursorIndexAndTargetID ds 1
 aoeTargetID ds 1
-highlightedIndex ds 1
 menuSize ds 1
 inBattle ds 1
 currentBattler ds 1

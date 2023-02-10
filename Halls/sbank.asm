@@ -477,7 +477,7 @@ SUpdatePlayerMovement: SUBROUTINE
 	lda #$08 ;Mask for pressing button
 	bit currentInput
 	beq .SSwapBattlerPos
-	ldy highlightedIndex
+	ldy currentBattler
 	lda #DOWN_MASK
 	bit currentInput
 	beq .SDownPressedInMenu
@@ -492,7 +492,7 @@ SUpdatePlayerMovement: SUBROUTINE
 	jmp .SMoveForward
 .SSwapBattlerPos:
 	lda #1
-	ldy highlightedIndex
+	ldy currentBattler
 	iny
 .SPartyPosMaskLoop:
 	dey
@@ -509,10 +509,10 @@ SUpdatePlayerMovement: SUBROUTINE
 	rts
 .SNotAtLastPosition
 	iny
-	sty highlightedIndex
+	sty currentBattler
 	rts
 .SUpPressedInMenu:
-	ldy highlightedIndex
+	ldy currentBattler
 	bne .SNotAtFirstPosition
 	lda #0
 	sta currentMenu
@@ -520,7 +520,7 @@ SUpdatePlayerMovement: SUBROUTINE
 	rts
 .SNotAtFirstPosition
 	dey
-	sty highlightedIndex
+	sty currentBattler
 	rts
 
 .SCheckForForwardMovement:

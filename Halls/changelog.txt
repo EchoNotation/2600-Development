@@ -321,6 +321,9 @@
 2/6/23
 	-Changed input handling logic to be cleaner, but require an extra byte of RAM
 	-Created arrow that points towards the exit location
+2/8/23
+	-Removed highlightedIndex, swapping all of its uses with currentBattler
+	-Added color to the battlebox when current menu = $81 (targeting enemies)
 
 Known Issues:
 	 
@@ -336,10 +339,11 @@ TODO:
 		-Give staircase battle-like scene?
 
 	-Rework menu rendering routines
-		-Rework enemy targeting system to use cursor instead of menu?
-		-Rework ally targeting system to use cursor instead of menu?
 		-Make sure to handle half casters, also GUARD and PARRY in lieu of CAST for knights and rogues respectively
 	
+	-Make it so that the button enters into the menu when in maze view?
+		-Make back button move you backwards while maintaining facing direction
+
 	Overarching questions:	
 		-Should there be some sort of rangefinder to the exit? I think so.
 			-Hear a "roar" when getting near the boss?
@@ -347,8 +351,7 @@ TODO:
 
 	-Invalid text color  + associated logic?
 		-Mana implementation
-		-Do a visual effect instead? To save space in the rendering bank?
-			-Play a corresponding "error" sound effect
+		-Play a corresponding "error" sound effect
 	-How is enemy AI going to be stored?
 		-Number of action slots, list of actual enemyAction bytes right after --Seems that this is not going to be a viable option anymore
 			-This is very simplistic, but as a result is space-efficient
@@ -385,10 +388,10 @@ TODO:
 		-Advanced effect system - 80%
 			-No routine for setting a visual effect
 			
-		-Changing player avatars depending on status - 50%
-		-Sound effects
+		-Changing player avatars depending on status - 70%
+		-Sound effects - 0%
 		
-		-Name entry and class selection screen
+		-Name entry and class selection screen - 0%
 		-Title screen
 			-Should these two be the same screen? Probably
 			-What bank will this be in? S?

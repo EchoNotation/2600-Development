@@ -4,7 +4,6 @@ Targeted ROM size: 16-32K
 			
 Possible RAM optimization:
 	-Combine the playerX and playerY bytes if possible. 1 byte
-	-highlightedIndex could share with a separate battle logic variable, such as aoeTargetID
 	
 Each small enemy takes up 16 bytes.
 Each medium enemy takes up 64 bytes.
@@ -21,11 +20,18 @@ total = 256 + 1024 + 1536 + 80 + 40 = 2936 bytes of enemy data,
 	This would also require 6*40 + 40 = 280 bytes of name information, which would have to be stored in the rendering bank.
 	As well as another 40 bytes of color information in the rendering bank.
 		There does seem to currently be enough room for this...
+	-Encounter generation bank needs access to enemy size information
+
+All small enemies graphics and colors go in the same page
+Medium enemies graphics and colors are split across 4 pages
+Large enemy graphics take up 4 pages, colors take up 2 pages
+
 
 If each spell effect is <=32 unique frames long, the total would be <=512 bytes of data.
 So it should be possible to have this enemy configuration with unique spell effects.
 Maybe spell effects can be updated every other frame, or every 4 frames, to create spells that could be longer.
 	-Would need to store effect frequency information as well (not necessarily)
+	-Ended up storing effect frequency information as part of the advanced effect system
 
 inBattle states:
 $80 currently getting player actions, goes to $81 when complete
@@ -71,7 +77,7 @@ $84 Show spells to select
 --- EFFECTS ---
 $00 - No effect
 $01 - Party member highlighting
-$02 - Test Effect
+$02 - Test effect
 
 --- SUBROUTINE IDs ---
 $00 - SGenerateMazeData

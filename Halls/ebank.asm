@@ -92,6 +92,16 @@ EDrawBlankEnemyLoop:
 	sta temp1
 	jmp EEnemyRenderingLoop
 ERenderEnemy:
+	sta WSYNC
+	lda currentMenu
+	cmp #$81
+	bne EUseNormalPFColor
+	lda EEnemySpotColors,x
+	bne EStorePlayfieldColor
+EUseNormalPFColor:
+	lda #BATTLE_BOX_COLOR
+EStorePlayfieldColor:
+	sta COLUPF
 	lda enemyID,x
 	and #$3F
 	tax
@@ -109,11 +119,9 @@ EPrepSmallEnemy:
 	sta tempPointer5
 	lda EEnemyColorsLowLookup,x
 	sta temp5
-	nop
-	nop
+	
 	sta WSYNC
 	jsr EDrawSmallEnemy
-
 	ldx temp3
 	inx
 	stx temp3
@@ -141,7 +149,6 @@ EPrepMediumEnemy:
 	sta WSYNC
 	sta WSYNC
 	jsr EDrawMediumEnemy
-	sta WSYNC
 	ldx temp3
 	inx
 	inx
@@ -164,6 +171,7 @@ EPrepLargeEnemy:
 	sta tempPointer3
 	adc #32
 	sta tempPointer2
+	sta WSYNC
 	adc #32
 	sta tempPointer1
 	lda EEnemyColorsHighLookup,x
@@ -173,7 +181,6 @@ EPrepLargeEnemy:
 	sta temp6
 	adc #32
 	sta temp5
-	sta WSYNC
 	jsr EDrawLargeEnemy
 	ldx temp3
 	inx
@@ -218,6 +225,8 @@ EDrawSmallEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that ar
 	jmp .EDrawSmallEnemyLoop
 .EDoneDrawingSmallEnemy
 	iny
+	lda #BATTLE_BOX_COLOR
+	sta COLUPF
 	sty GRP0
 	sty COLUP0
 	sty HMP0
@@ -262,6 +271,8 @@ EDrawMediumEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that a
 	jmp .EDrawMediumEnemyLoop
 .EDoneDrawingMediumEnemy:
 	iny
+	lda #BATTLE_BOX_COLOR
+	sta COLUPF
 	sty GRP0
 	sty GRP1
 	sty COLUP0
@@ -272,11 +283,8 @@ ESpinWheels:
 EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that are 32x32 in size. Graphical information is pulled from tempPointers1-4, color information for columns 0 and 2 is pulled from tempPointer5, and color information for columns 1 and 3 is pulled from tempPointer6.
 	lda #$10 ;Moves one pixel to the left
 	sta HMP1
-	jsr ESpinWheels
-	jsr ESpinWheels
 	nop
 	nop
-	cmp temp1
 	sta RESP0
 	sta RESP1
 	sta WSYNC
@@ -288,7 +296,6 @@ EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that ar
 	cpx temp1
 	cpx temp1
 	cpx temp1
-	;sta WSYNC
 	sta HMOVE ;need to lose 5
 	ldy #32
 	lda #1 ;Two copies close
@@ -329,6 +336,8 @@ EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that ar
 	jmp .EDrawLargeEnemyLoop
 .EDoneDrawingLargeEnemy
 	iny
+	lda #BATTLE_BOX_COLOR
+	sta COLUPF
 	sty GRP0
 	sty GRP1
 	sty COLUP0
@@ -381,6 +390,12 @@ EUpdateEffects: SUBROUTINE
 	sta effectCounter
 	sta temp2
 	rts
+
+EEnemySpotColors:
+	.byte $38
+	.byte $68
+	.byte $98
+	.byte $C8
 
 	ORG $EC00
 	RORG $FC00

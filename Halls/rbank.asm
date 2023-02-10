@@ -280,9 +280,6 @@ REnoughMana:
 RDontHighlightSpell:
 	lda #TEXT_COLOR
 RStoreSpellColor:
-	sta COLUP0
-	sta COLUP1
-
 	jsr RDrawBattleMenuLine
 	jmp RDrawBattleMenuLoop
 RShowBattleOptions:
@@ -298,8 +295,6 @@ RShowBattleOptions:
 	bne RDontHighlightBattleOption
 	lda #TEXT_HIGHLIGHTED_COLOR
 RDontHighlightBattleOption:
-	sta COLUP0
-	sta COLUP1
 	jsr RDrawBattleMenuLine
 	jmp RDrawBattleMenuLoop
 RShowBattlerName:
@@ -343,12 +338,14 @@ RShowEnemyName:
 	sta tempPointer1
 	lda #(RZombieText >> 8 & $FF)
 	sta tempPointer1+1
+	lda REnemySpotColors,x
+	sta COLUPF
 	lda REnemyColorLookup,y
-	sta COLUP0
-	sta COLUP1
 
 	jsr RDrawBattleMenuLine
+
 	jmp RDrawBattleMenuLoop
+
 RDrawBattleText:
 	lda #0
 	sta WSYNC
@@ -758,7 +755,7 @@ RDrawCharacterInfo: SUBROUTINE
 	lda #TEXT_HIGHLIGHTED_COLOR
 	sta COLUP0
 	sta COLUP1
-	cpx highlightedIndex
+	cpx currentBattler
 	bne .RNoHighlighting
 	lda currentEffect ;Should be highlighting, and this is the currently hovered character
 	cmp #$1
@@ -1077,7 +1074,19 @@ RCalculateDigitIndices: SUBROUTINE ;Will interpret whatever is in A when called 
 RDrawText: SUBROUTINE ;Will update graphics registers accordingly as long as the sprites are positioned correctly and the pointers set.
 	sta WSYNC
 	ldy #CHARACTER_HEIGHT-1
-	cmp temp1 ;Just used to delay 3 cycles
+	jsr RSpinWheels
+	jsr RSpinWheels
+	nop
+	nop
+	nop
+	nop
+	nop
+	sta RESBL
+	lda currentMenu
+	cmp #$81
+	bne .RTextLoop
+	lda #2
+	sta ENABL
 .RTextLoop
 	sty temp1 ;Stores how many loops are left
 	lda (temp6),y
@@ -1103,10 +1112,12 @@ RDrawText: SUBROUTINE ;Will update graphics registers accordingly as long as the
 	bpl .RTextLoop
 
 	iny
+	sty ENABL
 	sty GRP0 ;Clear player graphics while HP, MP data is being prepared
 	sty GRP1
 	sty GRP0
 	sty GRP1
+	sty ENABL
 	rts	
 
 RIndexToEnemyPosition: SUBROUTINE ;Converts the position of a menu cursor into the correct location in the enemyID array of the target
@@ -1123,6 +1134,12 @@ RIndexToEnemyPosition: SUBROUTINE ;Converts the position of a menu cursor into t
 	jmp .RIndexConversionLoop
 .RDone
 	rts ;Y is the correct offset into the enemyID array
+
+REnemySpotColors:
+	.byte $38
+	.byte $68
+	.byte $98
+	.byte $C8
 
 	ORG $C810 ;Used to hold enemy names, nothing else can go in this section
 	RORG $F810

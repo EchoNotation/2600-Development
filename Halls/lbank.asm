@@ -115,19 +115,22 @@ LSkipSeeding:
 
 	jsr LUpdateAvatars
 
-	; lda #$80
-	; sta inBattle
-	; lda #$FF
-	; sta hasAction
-	; lda #$80
-	; sta currentMenu
-	; lda #$03
-	; sta menuSize
-	; lda #1
-	; sta enemyHP
-	; sta enemyHP+1
-	; sta enemyHP+2
-	; sta enemyHP+3
+	lda #$44
+	sta exitLocation
+
+	lda #$80
+	sta inBattle
+	lda #$FF
+	sta hasAction
+	lda #$80
+	sta currentMenu
+	lda #$03
+	sta menuSize
+	lda #1
+	sta enemyHP
+	sta enemyHP+1
+	sta enemyHP+2
+	sta enemyHP+3
 
 LStartOfFrame:
 	lda #$82
@@ -340,7 +343,6 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	sta menuSize
 	jsr LFindFirstLivingAlly
 	stx currentBattler
-	stx highlightedIndex
 	rts
 .LContinue:
 	lda #0
