@@ -328,28 +328,25 @@
 	-Undid color for enemy targeting, instead highlighting the appropriate part of the battlebox
 2/11/23
 	-Fixed graphical issue with highlighting enemies
+	-Starting work on LUpdateMenuRendering
+		-Battle option selection done
+		-Other ally targeting done
+		-Normal ally targeting done
 
 Known Issues:
 	 
 TODO:
 
-	-Potentially try to center enemies more precisely?
-
 	-Battle system rewrite
 		-High/low battle logic?
 		
 	-Campfire rendering
-		-Give campfire battle-like scene??
-		-Give staircase battle-like scene?
+		-Give campfire battle-like scene?
 
 	-Rework menu rendering routines
 		-Make sure to handle half casters, also GUARD and PARRY in lieu of CAST for knights and rogues respectively
-	
-	-Make it so that the button enters into the menu when in maze view?
-		-Make back button move you backwards while maintaining facing direction
 
 	-Title on actual title screen?
-	-Not all enemies are centered, create more of a "group skirmish" appearance
 	-Decouple button presses and position indicator from RDrawCharacterInfo, allowing it to be used on the title screen?
 
 	Overarching questions:	
@@ -391,6 +388,7 @@ TODO:
 		-Encounter generation
 			-Affected by mazeLevel
 		-Character advancement
+		-Campfires
 		-Bosses
 
 		-Advanced effect system - 80%
@@ -401,10 +399,8 @@ TODO:
 		
 		-Name entry and class selection screen - 0%
 		-Title screen
-			-Should these two be the same screen? Probably
+			-Should these two be the same screen? Yes
 			-What bank will this be in? S?
-				-Hopefully sound code and data will be light enough to handle another 1K or so kernel...
-					-Should have no problem being light enough-- In fact, might need to add some game logic in there too :/
 		
 	Should have functional game loop first:
 		-Create all enemies
@@ -414,3 +410,9 @@ TODO:
 		-Create all visual effects
 		-Create all sound effects
 		-Try to balance everything
+
+	Version 1.1 considerations:
+		-Make it so that the button enters into the menu when in maze view?
+			-Make back button move you backwards while maintaining facing direction
+		-Not all enemies are centered, create more of a "group skirmish" appearance
+		-Potentially try to center enemies more precisely?

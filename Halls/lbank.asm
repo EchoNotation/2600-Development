@@ -120,10 +120,9 @@ LSkipSeeding:
 
 	lda #$80
 	sta inBattle
+	sta currentMenu
 	lda #$FF
 	sta hasAction
-	lda #$81
-	sta currentMenu
 	lda #$03
 	sta menuSize
 	lda #1
@@ -134,12 +133,6 @@ LSkipSeeding:
 	sta highlightedLine
 	sta currentEffect
 	sta enemyAction
-	ldx #4
-	stx menuLines
-	inx
-	stx menuLines+1
-	inx
-	stx menuLines+2
 
 LStartOfFrame:
 	lda #$82
@@ -240,7 +233,7 @@ LMazeLogic:
 	;Need to determine if a random encounter occurs	
 
 LDoneWithSeparateLogic:
-
+	jsr LUpdateMenuRendering
 	;Update the previousInput variable, since both maze and battle logic use this.
 	lda currentInput
 	sta previousInput
@@ -678,6 +671,114 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	rts
 
 LUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine according to the current menu state
+	lda currentMenu
+	cmp #$80
+	beq .LSetupBattleOptions
+	cmp #$81
+	beq .LGoToEnemyTargeting
+	cmp #$82
+	beq .LSetupAllyTargeting
+	cmp #$83
+	beq .LSetupOtherAllyTargeting
+	cmp #$84
+	beq .LGoToSpellOptions
+.LReturn
+	rts
+.LGoToEnemyTargeting:
+	jmp .LSetupEnemyTargeting
+.LGoToSpellOptions:
+	jmp .LSetupSpellOptions
+
+.LSetupBattleOptions:
+	ldx currentBattler
+	lda char1,x
+	and #$0F ;Get just the class of this party member
+	tay
+	lda LBattleTables,y
+	sta tempPointer1
+	lda #(LKnightBattleTable >> 8 & $FF)
+	sta tempPointer1+1
+	ldy cursorIndexAndMessageY
+	beq .LTopOfOptionsMenu
+	cpy menuSize
+	bcc .LMiddleOfOptionsMenu
+.LBottomOfOptionsMenu:
+	lda #2
+	sta highlightedLine
+	dey
+	dey
+	jmp .LSelectOptionLines
+.LMiddleOfOptionsMenu:
+	lda #1
+	sta highlightedLine
+	dey
+	jmp .LSelectOptionLines
+.LTopOfOptionsMenu:
+	sty highlightedLine
+.LSelectOptionLines:
+	sty startingCursorIndexAndTargetID
+	ldx #0
+.LOptionLinesLoop:
+	lda (tempPointer1),y
+	sta menuLines,x
+	inx
+	iny
+	cpx #3
+	bcs .LReturn
+	bne .LOptionLinesLoop 
+
+.LSetupOtherAllyTargeting:
+	ldy cursorIndexAndMessageY
+	sty highlightedLine
+	ldx #0
+	ldy #0
+.LOtherAllyLinesLoop:
+	cpx #3
+	bcs .LReturn
+	cpy currentBattler
+	beq .LIsSelf
+	sty menuLines,x
+	inx
+.LIsSelf:
+	iny
+	bne .LOtherAllyLinesLoop
+
+.LSetupAllyTargeting:
+	ldy cursorIndexAndMessageY
+	beq .LTopOfAllyMenu
+	cpy menuSize
+	bcc .LMiddleOfAllyMenu
+.LBottomOfAllyMenu:
+	dey
+	dey
+	sty startingCursorIndexAndTargetID
+	ldy #2
+	bne .LSetAllyLines
+.LMiddleOfAllyMenu:
+	dey
+	sty startingCursorIndexAndTargetID
+	ldy #1
+	bne .LSetAllyLines
+.LTopOfAllyMenu:
+	sty startingCursorIndexAndTargetID
+.LSetAllyLines:
+	sty highlightedLine
+	ldx #0
+	ldy startingCursorIndexAndTargetID
+.LAllyLoop:
+	sty menuLines,x
+	iny
+	inx
+	cpx #3
+	bcc .LAllyLoop
+	rts
+
+.LSetupEnemyTargeting:
+
+	rts
+
+.LSetupSpellOptions:
+
 	rts
 
 LUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick presses
@@ -950,6 +1051,30 @@ LEnemyFightMessages:
 	.byte $3 ;Zombie
 	.byte $2 ;Giant
 	.byte $4 ;Dragon
+
+LNormalBattleTable:
+	.byte $80
+	.byte $81
+	.byte $82
+	.byte $83
+LKnightBattleTable:
+	.byte $80
+	.byte $84
+	.byte $82
+	.byte $83
+LRogueBattleTable:
+	.byte $80
+	.byte $85
+	.byte $82
+	.byte $83
+
+LBattleTables:
+	.byte (LKnightBattleTable & $FF)
+	.byte (LRogueBattleTable & $FF)
+	.byte (LNormalBattleTable & $FF)
+	.byte (LNormalBattleTable & $FF)
+	.byte (LNormalBattleTable & $FF)
+	.byte (LNormalBattleTable & $FF)
 
 LAllZeroes:
 	.byte 0
@@ -1280,7 +1405,7 @@ LRunFunctionInSBank:
 LGoToUpdateEffects:
 	sta $1FF8 ;Go to bank 2
 	nop ;
-	nop ; JSR EUpdateEffects
+	nop ; jsr EUpdateEffects
 	nop ;
 	nop ;
 	nop ; sta $1FF7

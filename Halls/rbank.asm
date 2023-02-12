@@ -317,10 +317,16 @@ RShowAllyName:
 	lda #EMPTY
 	sta temp6
 
+	cpx highlightedLine
+	bne .RDontHighlightAllyName
 	lda char1,y
 	and #$0f
 	tay
 	lda RClassColors,y
+	bne .RStoreAllyNameColor
+.RDontHighlightAllyName:
+	lda #TEXT_COLOR
+.RStoreAllyNameColor:
 	sta COLUP0
 	sta COLUP1
 
