@@ -92,11 +92,17 @@ EDrawBlankEnemyLoop:
 	sta temp1
 	jmp EEnemyRenderingLoop
 ERenderEnemy:
-	sta WSYNC
+	;sta WSYNC
 	lda currentMenu
 	cmp #$81
+	sta WSYNC
 	bne EUseNormalPFColor
-	lda EEnemySpotColors,x
+	cpx enemyAction ;Needs to be set to be the absolute index of the enemy that is being targeted
+	bne EUseNormalPFColor
+	lda effectCountdown
+	and #$10
+	bne EUseNormalPFColor
+	lda #TEXT_HIGHLIGHTED_COLOR
 	bne EStorePlayfieldColor
 EUseNormalPFColor:
 	lda #BATTLE_BOX_COLOR
@@ -167,6 +173,7 @@ EPrepLargeEnemy:
 	lda EEnemyGraphicsLowLookup,x
 	sta temp4
 	clc
+	sta WSYNC
 	adc #32
 	sta tempPointer3
 	adc #32
@@ -190,7 +197,7 @@ EPrepLargeEnemy:
 	stx temp3
 	lda temp1
 	sec
-	sbc #69
+	sbc #70
 	sta temp1
 	jmp EEnemyRenderingLoop
 EAfterRenderingEnemies:
@@ -288,7 +295,7 @@ EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that ar
 	sta RESP0
 	sta RESP1
 	sta WSYNC
-	jsr ESpinWheels
+	jsr ESpinWheels ;Loses 12 cycles
 	jsr ESpinWheels
 	jsr ESpinWheels
 	jsr ESpinWheels
@@ -296,7 +303,7 @@ EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that ar
 	cpx temp1
 	cpx temp1
 	cpx temp1
-	sta HMOVE ;need to lose 5
+	sta HMOVE
 	ldy #32
 	lda #1 ;Two copies close
 	sta NUSIZ0
@@ -390,12 +397,6 @@ EUpdateEffects: SUBROUTINE
 	sta effectCounter
 	sta temp2
 	rts
-
-EEnemySpotColors:
-	.byte $38
-	.byte $68
-	.byte $98
-	.byte $C8
 
 	ORG $EC00
 	RORG $FC00

@@ -324,6 +324,10 @@
 2/8/23
 	-Removed highlightedIndex, swapping all of its uses with currentBattler
 	-Added color to the battlebox when current menu = $81 (targeting enemies)
+2/9/23
+	-Undid color for enemy targeting, instead highlighting the appropriate part of the battlebox
+2/11/23
+	-Fixed graphical issue with highlighting enemies
 
 Known Issues:
 	 
@@ -343,6 +347,10 @@ TODO:
 	
 	-Make it so that the button enters into the menu when in maze view?
 		-Make back button move you backwards while maintaining facing direction
+
+	-Title on actual title screen?
+	-Not all enemies are centered, create more of a "group skirmish" appearance
+	-Decouple button presses and position indicator from RDrawCharacterInfo, allowing it to be used on the title screen?
 
 	Overarching questions:	
 		-Should there be some sort of rangefinder to the exit? I think so.

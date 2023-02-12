@@ -122,7 +122,7 @@ LSkipSeeding:
 	sta inBattle
 	lda #$FF
 	sta hasAction
-	lda #$80
+	lda #$81
 	sta currentMenu
 	lda #$03
 	sta menuSize
@@ -131,6 +131,15 @@ LSkipSeeding:
 	sta enemyHP+1
 	sta enemyHP+2
 	sta enemyHP+3
+	sta highlightedLine
+	sta currentEffect
+	sta enemyAction
+	ldx #4
+	stx menuLines
+	inx
+	stx menuLines+1
+	inx
+	stx menuLines+2
 
 LStartOfFrame:
 	lda #$82

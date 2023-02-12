@@ -76,7 +76,7 @@ $84 Show spells to select
 
 --- EFFECTS ---
 $00 - No effect
-$01 - Party member highlighting
+$01 - Party member highlighting (also highlighting enemies if current menu = $81. Set enemyAction to be the absolute enemy index in this mode)
 $02 - Test effect
 
 --- SUBROUTINE IDs ---
