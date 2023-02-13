@@ -73,6 +73,7 @@ $81 Targeting enemies
 $82 Targeting allies
 $83 Target other ally (GUARD, DONATE)
 $84 Show spells to select
+$85 No spells known
 
 --- EFFECTS ---
 $00 - No effect
@@ -84,6 +85,14 @@ $00 - SGenerateMazeData
 $01 - SUpdateMazeRenderingPointers
 $02 - SUpdatePlayerMovement
 $03 - SClearMazeData
+
+--- BATTLE ACTIONS --- (STTIIIII) S: is Spell, TT: target ID, I: index
+0TT00000 : FIGHT
+00000001 : MOVE
+00000010 : RUN
+0TT00011 : GUARD
+00000100 : PARRY
+1TTIIIII : Casting a spell
 
 Current system allows for 40 enemies.
 Each enemy has 1 byte for its resistances

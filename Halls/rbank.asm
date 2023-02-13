@@ -246,14 +246,18 @@ RDoNothingLoop:
 	dey
 	bne RDoNothingLoop
 	jmp RDrawBattleMenuLoop
+RGoToSpecialOptions:
+	jmp RShowSpecialOptions
 RNoBlankLines:
 	sta WSYNC
 	ldx aoeTargetID
 	cmp #$0
 	bpl RShowBattlerName
-	and #$C0
+	and #$E0
 	cmp #$80
 	beq RShowBattleOptions
+	cmp #$C0
+	bne RGoToSpecialOptions
 RShowSpellOptions:
 	lda menuLines,x
 	and #$3F
@@ -351,9 +355,19 @@ RShowEnemyName:
 RUseEnemyColor:
 	lda REnemyColorLookup,y
 RColorLoaded:
-
 	jsr RDrawBattleMenuLine
+	jmp RDrawBattleMenuLoop
 
+RShowSpecialOptions:
+	lda menuLines,x
+	and #$1F
+	tay
+	lda RSpecialLines,y
+	sta tempPointer1
+	lda #(RSpellsText >> 8 & $FF)
+	sta tempPointer1+1
+	lda #TEXT_COLOR
+	jsr RDrawBattleMenuLine
 	jmp RDrawBattleMenuLoop
 
 RDrawBattleText:
@@ -1534,6 +1548,9 @@ REvadesText:
 RIsText:
 	.byte #I
 	.byte #S
+REmptyText:
+	.byte #EMPTY
+	.byte #EMPTY
 	.byte #EMPTY
 	.byte #EMPTY
 	.byte #EMPTY
@@ -1565,6 +1582,20 @@ RFellText:
 	.byte #L
 	.byte #L
 	.byte #EMPTY
+	.byte #EMPTY
+RSpellsText:
+	.byte #S
+	.byte #P
+	.byte #E
+	.byte #L
+	.byte #L
+	.byte #S
+RKnownText:
+	.byte #K
+	.byte #N
+	.byte #O
+	.byte #W
+	.byte #N
 	.byte #EMPTY
 
 RClassColors:
@@ -1787,55 +1818,6 @@ RParryText:
 	.byte #Y
 	.byte #EMPTY
 
-RSpellListLookup:
-	.byte #0
-	.byte #0
-	.byte (RClericSpellList & $FF)
-	.byte (RWizardSpellList & $FF)
-	.byte (RRangerSpellList & $FF)
-	.byte (RPaladinSpellList & $FF)
-
-RWizardSpellList:
-	.byte #$0 ;BACK
-	.byte #$1 ;FIRE
-	.byte #$3 ;BLIZRD
-	.byte #$4 ;DRAIN
-	.byte #$2 ;SLEEP
-	.byte #$5 ;THUNDR
-	.byte #$6 ;SHIELD
-	.byte #$8 ;CHAOS
-	.byte #$7 ;METEOR
-RClericSpellList:
-	.byte #$0 ;BACK
-	.byte #$9 ;HEAL
-	.byte #$F ;WITHER
-	.byte #$C ;SHARP
-	.byte #$E ;TRIAGE
-	.byte #$D ;BLIGHT
-	.byte #$11 ;TRANCE
-	.byte #$12 ;DONATE
-	.byte #$10 ;BANISH
-RPaladinSpellList:
-	.byte #$0 ;BACK
-	.byte #$FF 
-	.byte #$9 ;HEAL
-	.byte #$FF
-	.byte #$A ;SMITE
-	.byte #$FF
-	.byte #$C ;SHARP
-	.byte #$FF 
-	.byte #$6 ;SHIELD
-RRangerSpellList:
-	.byte #$0 ;BACK
-	.byte #$FF
-	.byte #$B ;POISON
-	.byte #$FF
-	.byte #$9 ;HEAL
-	.byte #$FF
-	.byte #$2 ;SLEEP
-	.byte #$FF
-	.byte #$D ;BLIGHT
-
 RCharacterLowLookupTable: ;Contains the low bytes of the pointers to all the character graphics.
 	.byte (RNoCharacter & $FF)
 	.byte (RLetterA & $FF)
@@ -1915,6 +1897,12 @@ RCharacterHighLookupTable: ;Contains the high bytes of the pointers to all the c
 	.byte (RNumber7 >> 8 & $FF)
 	.byte (RNumber8 >> 8 & $FF)
 	.byte (RNumber9 >> 8 & $FF)
+
+RSpecialLines:
+	.byte (REmptyText & $FF)
+	.byte (RNoText & $FF)
+	.byte (RSpellsText & $FF)
+	.byte (RKnownText & $FF)
 
 	ORG $CC00 ;Used to hold more graphics data
 	RORG $FC00

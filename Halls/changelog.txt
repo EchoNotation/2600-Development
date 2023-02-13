@@ -332,19 +332,21 @@
 		-Battle option selection done
 		-Other ally targeting done
 		-Normal ally targeting done
+2/12/23
+	-Enemy targeting menu done
+	-Other mode menu done (currently just supports NO SPELLS KNOWN, will eventually need to support camping)
+	-Spell selection menu done, now supporting half casters!
+	-Very basic mana related logic
 
-Known Issues:
-	 
+	-Starting work on updating LUpdateMenuAdvancement
+
 TODO:
 
 	-Battle system rewrite
-		-High/low battle logic?
+		-High/low battle logic? Would be preferable if possible
 		
 	-Campfire rendering
 		-Give campfire battle-like scene?
-
-	-Rework menu rendering routines
-		-Make sure to handle half casters, also GUARD and PARRY in lieu of CAST for knights and rogues respectively
 
 	-Title on actual title screen?
 	-Decouple button presses and position indicator from RDrawCharacterInfo, allowing it to be used on the title screen?
