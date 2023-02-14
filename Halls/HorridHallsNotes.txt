@@ -94,6 +94,14 @@ $03 - SClearMazeData
 00000100 : PARRY
 1TTIIIII : Casting a spell
 
+--- SPELL TARGETING LOOKUP ---
+0: No targeting (THUNDR, TRANCE)
+1: Target enemy (FIRE, SLEEP, DRAIN, METEOR, SMITE, POISON, BLIGHT, WITHER)
+2: Target all enemies (BLIZRD, CHAOS, BANISH)
+3: Target any ally (SHIELD, HEAL, SHARP)
+4: Target other ally (DONATE)
+5: Target all allies (TRIAGE)
+
 Current system allows for 40 enemies.
 Each enemy has 1 byte for its resistances
 	Format is LPFIGEP0
@@ -257,7 +265,7 @@ SPELL LISTING
 4: DRAIN : Deals non-elemental damage to a single target, then heals the caster by the damage dealt 
 5: THUNDR : Deals electric damage to the highest health enemy
 6: SHIELD : Gives one ally a shield
-7: METEOR : Deals physical damage to one enemy, then fire damage to the two surrounding enemies
+7: METEOR : Deals physical damage to one enemy, then fire damage to the two surrounding/other enemies
 8: CHAOS : Deals damage of a random element to each enemy
 9: HEAL : Heals a single ally, removes blight instead of healing if blighted
 A: SMITE : Deals damage to target based on attack and magic power

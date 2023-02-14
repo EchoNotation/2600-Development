@@ -88,7 +88,7 @@ LSkipSeeding:
 	sta name5+2
 	lda #$45
 	sta hp3
-	lda #$00
+	lda #$02
 	sta mp3
 
 	lda #$34
@@ -103,9 +103,9 @@ LSkipSeeding:
 	sta name4+3
 	lda #EMPTY
 	sta name5+3
-	lda #$0
+	lda #$1
 	sta hp4
-	lda #$00
+	lda #$04
 	sta mp4
 
 	lda #$80
@@ -334,13 +334,15 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	lda #$80 ;At least one battler on each side is still alive, so continue the battle
 	sta inBattle
 	sta currentMenu
-	lda #0
-	sta cursorIndexAndMessageY
-	sta battleActions
-	sta battleActions+1
-	sta battleActions+2
-	sta battleActions+3
-	sta enemyAction
+	ldx #1
+	stx currentEffect
+	dex
+	stx cursorIndexAndMessageY
+	stx battleActions
+	stx battleActions+1
+	stx battleActions+2
+	stx battleActions+3
+	stx enemyAction
 	lda #3
 	sta menuSize
 	jsr LFindFirstLivingAlly
@@ -638,29 +640,44 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	cmp #$80
 	beq .LBattleOptionsMenu
 	cmp #$81
-	beq .LSelectEnemyMenu
+	beq .LGoToSelectEnemyMenu
 	cmp #$82
 	beq .LSelectAllyMenu
 	cmp #$83
-	beq .LSelectAllyMenuUnique
+	beq .LSelectOtherAllyMenu
 	cmp #$84
-	beq .LSelectSpellMenu
+	beq .LGoToSelectSpellMenu
 	cmp #$85
 	beq .LNoSpellsKnownMenu
 	rts
+
+.LGoToSelectEnemyMenu:
+	jmp .LSelectEnemyMenu
+.LGoToSelectSpellMenu:
+	jmp .LSelectSpellMenu
+
 .LNoSpellsKnownMenu
 	lda #$80
 	sta currentMenu
 	rts
-.LSelectAllyMenuUnique:
-	rts
-.LSelectAllyMenu:
-	lda #hp1
-	sta tempPointer1
-	lda #0
-	sta tempPointer1+1
+
+.LSelectOtherAllyMenu:
 	ldx cursorIndexAndMessageY
-	jsr LCursorIndexToBattlerIndex
+	inx
+	ldy #0
+.LIndexConversionLoop
+	cpy currentBattler
+	beq .LIsCurrent
+	dex
+	beq .LSaveAllyTargeting
+.LIsCurrent:
+	iny
+	bpl .LIndexConversionLoop ;Saves byte over jmp
+
+
+.LSelectAllyMenu:
+	ldy cursorIndexAndMessageY
+.LSaveAllyTargeting:
 	tya
 	asl
 	asl
@@ -687,7 +704,7 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .LSetParryAction:
 	lda #$04
 	sta battleActions,x
-	bne .LCheckNextBattler
+	jmp .LCheckNextBattler
 .LSetGuardAction:
 	lda #$03
 	sta battleActions,x
@@ -701,28 +718,173 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .LSetRunAction:
 	lda #$02
 	sta battleActions,x
-	bne .LCheckNextBattler
+	jmp .LCheckNextBattler
 .LSetMoveAction:
 	lda #$01
 	sta battleActions,x
-	bne .LCheckNextBattler
+	jmp .LCheckNextBattler
 .LSetFightAction:
 	lda #$00
 	sta battleActions,x
 	;Check how many enemies are alive, proceeding to $81 if more than 1 is alive
-
+	jsr LCheckEnemies
+	cpx #2
+	bcs .LNeedToTargetFight
+	;Only one enemy, so auto-target this fight
+	ldx currentBattler ;Changed by LCheckEnemies
+	tya
+	asl
+	asl
+	asl
+	asl
+	asl
+	ora battleActions,x
+	sta battleActions,x
+	jmp .LCheckNextBattler
+.LNeedToTargetFight
+	lda #$81
+	sta currentMenu
+	dex
+	stx menuSize
+	lda #0
+	sta cursorIndexAndMessageY
 	rts
 .LEnterSpellMenu:
 	;Check how many spells this party member has
+	ldx currentBattler
+	lda char1,x
+	and #$0F ;Get just the class of this battler
+	tay
+	lda mazeAndPartyLevel
+	and #$0F ;Get the level of the party
+	tax
+	cpy #4
+	bcs .LIsHalfCaster
+	cpx #8
+	bcs .LClampLevel
+	bcc .LDontClampLevel
+.LClampLevel:
+	dex
+.LDontClampLevel:
+	stx menuSize
+	ldy #0
+	sty cursorIndexAndMessageY
 	lda #$84
 	sta currentMenu
 	rts
+.LIsHalfCaster:
+	txa
+	lsr
+	beq .LLevel1HalfCaster
+	tax
+	bne .LDontClampLevel
+.LLevel1HalfCaster
+	lda #$85 ;Show a special message if this party member knows no spells (only possible for level 1 Paladin and Ranger)
+	sta currentMenu
+	rts
 .LSelectSpellMenu:
+	lda highlightedLine
+	and #$7F
+	tay
+	lda menuLines,y
+	and #$1F ;Get just the spell ID
+	bne .LCheckSpellLogic
+	;Back button was selected
+	lda #$80
+	sta currentMenu
+	lda #0
+	sta cursorIndexAndMessageY
+	lda #3
+	sta menuSize
+	rts
+.LCheckSpellLogic:
 	;Need to determine what the targeting of this spell is in order to advance to none or correct targeting
-
+	ldx currentBattler
+	ora battleActions,x
+	ora #$80 ;Set the spell flag of the action
+	sta battleActions,x
+	and #$1F ;Get just the spell ID again
+	tax
+	lda LSpellTargetingLookup,x
+	beq .LNoSpellTargeting
+	cmp #1
+	beq .LTargetEnemy
+	cmp #2
+	beq .LAllEnemies
+	cmp #3
+	beq .LTargetAlly
+	cmp #4
+	beq .LOtherAlly
+	cmp #5
+	beq .LAllAllies
+	rts
+.LTargetEnemy:
+	lda #$81
+	sta currentMenu
+	jsr LCheckEnemies
+	dex
+	stx menuSize
+	lda #0
+	sta cursorIndexAndMessageY
+	rts
+.LTargetAlly:
+	lda #$82
+	sta currentMenu
+	lda #$03
+	sta menuSize
+	lda #0
+	sta cursorIndexAndMessageY
+	rts
+.LOtherAlly:
+	lda #$83
+	sta currentMenu
+	lda #$02
+	sta menuSize
+	lda #0
+	sta cursorIndexAndMessageY
+	rts
+.LAllEnemies:
+.LAllAllies:
+.LNoSpellTargeting:
+	jmp .LCheckNextBattler
 .LSelectEnemyMenu:
-	
+	lda #enemyHP
+	sta tempPointer1
+	lda #0
+	sta tempPointer1+1
+	ldx cursorIndexAndMessageY
+	jsr LCursorIndexToBattlerIndex
+	tya
+	asl
+	asl
+	asl
+	asl
+	asl
+	ora battleActions,x
+	sta battleActions,x
 .LCheckNextBattler:
+	ldx currentBattler
+	cpx #3
+	bcs .LNoMoreActions
+.LFindNextBattler:
+	inx
+	cpx #4
+	bcs .LNoMoreActions ;Make sure to avoid checking enemyHP!
+	lda hp1,x
+	beq .LFindNextBattler
+	stx currentBattler ;Found another party member, keep getting actions!
+	lda #$80
+	sta currentMenu
+	lda #3
+	sta menuSize
+	lda #0
+	sta cursorIndexAndMessageY
+	rts
+.LNoMoreActions:
+	lda #$81 ;No more party member actions to collect.
+	sta inBattle
+	lda #0
+	sta currentMenu
 	rts
 
 LUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine according to the current menu state
@@ -987,7 +1149,20 @@ LUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick press
 	sty cursorIndexAndMessageY
 	rts
 
-
+LCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in X, and the last index of an alive enemy in Y
+	ldx #0
+	ldy #0
+.LCheckEnemyLoop:
+	lda enemyHP,y
+	beq .LEnemyDead
+	sty tempPointer6
+	inx
+.LEnemyDead
+	iny
+	cpy #4
+	bcc .LCheckEnemyLoop
+	ldy tempPointer6
+	rts
 
 LUpdateAvatars: SUBROUTINE
 	lda inBattle
@@ -1490,6 +1665,27 @@ LRangerSpellList:
 	.byte #$2 ;SLEEP
 	.byte #$FF
 	.byte #$D ;BLIGHT
+
+LSpellTargetingLookup:
+	.byte 0 ;BACK
+	.byte 1 ;FIRE
+	.byte 1 ;SLEEP
+	.byte 2 ;BLIZRD
+	.byte 1 ;DRAIN
+	.byte 0 ;THUNDR
+	.byte 3 ;SHIELD
+	.byte 1 ;METEOR
+	.byte 2 ;CHAOS
+	.byte 3 ;HEAL
+	.byte 1 ;SMITE
+	.byte 1 ;POISON
+	.byte 3 ;SHARP
+	.byte 1 ;BLIGHT
+	.byte 5 ;TRIAGE
+	.byte 1 ;WITHER
+	.byte 2 ;BANISH
+	.byte 0 ;TRANCE
+	.byte 4 ;DONATE
 
 LSpellManaLookup:
 	.byte 0

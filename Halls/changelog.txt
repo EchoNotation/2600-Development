@@ -339,6 +339,16 @@
 	-Very basic mana related logic
 
 	-Starting work on updating LUpdateMenuAdvancement
+2/13/23
+	-FIGHT actions can be selected properly
+	-MOVE actions can be selected properly
+	-RUN actions can be selected properly
+	-currentBattler increases correctly during action selection?
+
+	-Selecting CAST option shows correct spell list based on party level (even for half casters!)
+	-Selecting BACK option in spell list works properly
+
+	-All spell targeting menu logic looks good
 
 TODO:
 
