@@ -792,7 +792,7 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	;Back button was selected
 	lda #$80
 	sta currentMenu
-	lda #0
+	lda #1 ;Put the cursor on CAST
 	sta cursorIndexAndMessageY
 	lda #3
 	sta menuSize
