@@ -43,7 +43,7 @@ $84 Basic attack kill
 
 $90 Party Wins
 $91 Party Down
-$92 Party member levels up
+$92 Party levels up
 $93 Party member learns spell
 
 $A0 Casting spell windup
@@ -104,7 +104,7 @@ $03 - SClearMazeData
 
 Current system allows for 40 enemies.
 Each enemy has 1 byte for its resistances
-	Format is LPFIGEP0
+	Format is LPFIDEP0 (Legendary, physical, fire, ice, divine, electric, poison)
 
 5 stats per person:
 Attack : The amount of damage done by physical attacks

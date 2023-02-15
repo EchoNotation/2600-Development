@@ -186,46 +186,27 @@ LOverscan:
 
 LBattleLogic:
 	lda currentMenu
-	bpl LNotInMenu
-LInMenu:
+	bpl LAfterMenuLogic
 	lda currentInput
 	eor previousInput
-	and #$F0
-	beq LNoMenuMovement
-LMenuMovement:
+	and #$F8
+	beq LAfterMenuLogic
 	jsr LUpdateMenuCursorPos
-LNoMenuMovement:
-	lda currentInput
-	eor previousInput
-	and #$08
-	beq LNoMenuAdvancement
-LMenuAdvancement:
 	jsr LUpdateMenuAdvancement
-	lda inBattle
-	cmp #$81
-	bne LSkipBattleLogic 
-	jsr LDetermineNextBattler ;If battle options menu was just exited, force a new battler to be chosen
-	jsr LUpdateAvatars
-	jsr LDoBattle
-LNoMenuAdvancement:
-	jmp LSkipBattleLogic
-LNotInMenu:
+LAfterMenuLogic:
 	lda currentInput
 	eor previousInput
 	and #$08
-	beq LSkipBattleLogic ;Button is not pressed, so don't advance battle logic
+	beq LSkipBattleLogic
 	lda inBattle
 	cmp #$81
-	beq LNeedANewBattler
-	jsr LUpdateAvatars
-	jsr LDoBattle
-	jmp LSkipBattleLogic
-LNeedANewBattler
+	bne LDontNeedANewBattler
 	jsr LDetermineNextBattler
-	;lda inBattle
+LDontNeedANewBattler:
 	jsr LUpdateAvatars
 	jsr LDoBattle
 LSkipBattleLogic:
+	jsr LUpdateMenuRendering
 	jmp LDoneWithSeparateLogic
 
 LMazeLogic:
@@ -233,7 +214,6 @@ LMazeLogic:
 	;Need to determine if a random encounter occurs	
 
 LDoneWithSeparateLogic:
-	jsr LUpdateMenuRendering
 	;Update the previousInput variable, since both maze and battle logic use this.
 	lda currentInput
 	sta previousInput
@@ -256,6 +236,50 @@ LWaitForOverscanTimer:
 	sta WSYNC
 	jmp LStartOfFrame
 
+LBattleProcessLowBytes:
+	.byte (LProcessFighting & $FF)
+	.byte (LProcessMoving & $FF)
+	.byte (LProcessRunning & $FF)
+	.byte (LProcessGuarding & $FF)
+	.byte (LProcessParrying & $FF)
+LBattleProcessHighBytes:
+	.byte (LProcessFighting >> 8 & $FF)
+	.byte (LProcessMoving >> 8 & $FF)
+	.byte (LProcessRunning >> 8 & $FF)
+	.byte (LProcessGuarding >> 8 & $FF)
+	.byte (LProcessParrying >> 8 & $FF)
+
+LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.
+	ldx currentBattler
+	cpx #4
+	bcs .LNeedEnemyAction
+	lda battleActions,x
+	jmp .LGotCurrentAction
+.LNeedEnemyAction
+	lda enemyAction
+.LGotCurrentAction:
+	sta temp1 ;temp1 will contain the current battler's action
+	bmi LProcessCasting
+	and #$07
+	tay
+	lda LBattleProcessLowBytes,y
+	sta tempPointer1
+	lda LBattleProcessHighBytes,y
+	sta tempPointer1+1
+	jmp (tempPointer1)
+LProcessCasting:
+	rts
+LProcessFighting:
+	rts
+LProcessMoving:
+	rts
+LProcessRunning:
+	rts
+LProcessGuarding:
+	rts
+LProcessParrying:
+	rts
+
 LHasActionMasks:
 	.byte #$80
 	.byte #$40
@@ -267,9 +291,14 @@ LHasActionMasks:
 	.byte #$01
 
 LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the next battler to take their action
+	;TODO make the speed checking routine less awful-space wise
+	lda inBattle
+	cmp #$81
+	bne .LNotSeekingNewBattler
 	lda #$08
 	bit currentInput
 	beq .LButtonPressed
+.LNotSeekingNewBattler:
 	rts
 .LButtonPressed:
 	;Need to check if either side has lost
@@ -286,8 +315,7 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	lda hasAction
 	bne .LContinue
 	;If here, that means that all actions have been taken, so need to take new actions
-	jmp .LDoneDelaying ;Rename this label if this code works
-	rts
+	beq .LUpdateHasAction
 .LPartyDead:
 	lda #$91
 	sta inBattle
@@ -296,40 +324,17 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	lda #$90
 	sta inBattle
 	rts
-.LDoneDelaying:
-	ldx #0
-	stx hasAction
-.LDetermineIfBattlerIsAlive:
-	cpx #4
-	bcs .LCheckEnemies
-	lda hp1,x
-	beq .LBattlerIsUnconscious
-	bne .L1
-.LCheckEnemies:
-	stx temp1
-	dex
-	dex
-	dex
-	dex
-	lda enemyHP,x
-	ldx temp1
-	cmp #0
-	beq .LBattlerIsUnconscious
-.L1:
-	lda #1
-	sta temp1
-	bne .LAfterChecking
-.LBattlerIsUnconscious:
-	lda #0
-	sta temp1
-.LAfterChecking:
-	lda hasAction
-	asl
-	ora temp1
+.LUpdateHasAction:
+	ldx #7
+.LSetHasActionLoop:
+	lda battlerHP,x
+	beq .NoActionThisTurn
+	lda LHasActionMasks,x
+	ora hasAction
 	sta hasAction
-	inx
-	cpx #8
-	bcc .LDetermineIfBattlerIsAlive
+.NoActionThisTurn:	
+	dex
+	bpl .LSetHasActionLoop
 
 	lda #$80 ;At least one battler on each side is still alive, so continue the battle
 	sta inBattle
@@ -342,73 +347,28 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	stx battleActions+1
 	stx battleActions+2
 	stx battleActions+3
-	stx enemyAction
 	lda #3
 	sta menuSize
 	jsr LFindFirstLivingAlly
 	stx currentBattler
 	rts
+
 .LContinue:
 	lda #0
 	sta temp5 ;Will be used to hold the currentBattler value of the battler with the current max speed
 	sta temp6 ;Will be used to hold the current max speed
 	ldx #7
-	lda inBattle
-	cmp #$81
-	beq .LFindMaxSpeed
-	rts ;inBattle is not 81, so do not update the current battler
 .LFindMaxSpeed
 	lda hasAction
-	and LHasActionMasks,x ;Go check the next person if this battler has already acted this turn
-	beq .LNextIteration 
-	cpx #4
-	bcs .LCheckEnemySpeed
-.LCheckAllySpeed:
-	lda char1,x
-	and #$0F ;Get the class of this character
-	tay
-	lda LClassSpeedLookup,y ;Get the pointer to the table for this class's speed data
-	sta tempPointer1
-	lda #(LStat1PerLevel >> 8 & $FF)
-	sta tempPointer1+1
-	lda mazeAndPartyLevel
-	and #$0F ;Get the level of the party
-	tay
-	dey
-	lda (tempPointer1),y ;Get the speed for this character's class and level
+	and LHasActionMasks,x 
+	beq .LNextIteration ;Go check the next person if this battler has already acted this turn
+
+	jsr LGetBattlerSpeed
 	cmp temp6
 	bcc .LNextIteration
+	;This battler is faster than the currently assumed fastest
+	sta temp6
 	stx temp5
-	sta temp6	
-	jmp .LNextIteration
-.LCheckEnemySpeed:
-	dex
-	dex
-	dex
-	dex
-	lda enemyHP,x
-	inx
-	inx
-	inx
-	inx
-	cmp #0
-	beq .LNextIteration
-	dex
-	dex
-	dex
-	dex
-	lda enemyID,x ;Horrifically inefficient
-	inx
-	inx
-	inx
-	inx
-	and #$3F
-	tay
-	lda LEnemySpeed,y
-	cmp temp6
-	bcc .LNextIteration ;This enemy's speed is not high enough to be the new max
-	stx temp5 ;The currentBattler value
-	sta temp6 ;The new speed value to compare against
 .LNextIteration:
 	dex
 	bpl .LFindMaxSpeed
@@ -436,109 +396,135 @@ LFindFirstLivingAlly: SUBROUTINE ;Returns the id of first party member with posi
 
 LSetEnemyAction: SUBROUTINE ;Choose what action this enemy will perform and set enemyAction accordingly.
 	;Will have to be way more complicated in the future, but this works for the moment. RIP Whomever is in front of the party
+	;This is a likely candidate for relocation into the S bank if more space is necessary
 	lda #$00
 	sta enemyAction
 	rts
 
-LKillTarget: SUBROUTINE ;Performs the correct housekeeping after a target has suffered lethal damage.
-	ldx startingCursorIndexAndTargetID
+LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X
+	sta temp2
+	stx temp3
+	sty temp4
+	jsr LGetBattlerResistances
+	and temp4
+	beq .LDamageNotResisted
+	lda temp2
+	lsr
+	jmp .LDealDamage
+.LDamageNotResisted:
+	lda temp2
+.LDealDamage:
+	ldx temp3
+	;A now contains binary damage that should be dealt to target X after accounting for resistances
+	cpx #4
+	bcs .LDealDamageToEnemy
+.LDealDamageToAlly:
+	jsr LBinaryToDecimal
+	sta temp2
+	ldx temp3
+	lda battlerHP,x
+	sed
+	clc
+	sbc temp2
+	cld
+	beq .LDied
+	bcc .LDied
+	bcs .LSurvived
+.LDealDamageToEnemy:
+	lda battlerHP,x
+	clc
+	sbc temp2
+	beq .LDied
+	bcc .LDied
+.LSurvived:
+	sta battlerHP,x
+	rts
+.LDied:
 	lda LHasActionMasks,x
 	eor #$FF
 	and hasAction
 	sta hasAction ;Make sure this battler loses their action on death
+	lda #0
+	sta battlerHP,x
+	rts
+
+LApplyStatus: SUBROUTINE ;Applies additional status A to target X
+	sta temp4
+	cmp #$18
+	bne .LPuttingTargetToSleep
+	eor #$FF
+	bne .LAddNewStatus
+.LPuttingTargetToSleep:
+	lda $E7
+.LAddNewStatus:
+	and battlerStatus,x
+	ora temp4
+	sta battlerStatus,x
+	rts
+
+LLowAllyStatPointers:
+	.byte (LClassAttackLookup & $FF)
+	.byte (LClassMagicLookup & $FF)
+	.byte (LClassSpeedLookup & $FF)
+LHighAllyStatPointers:
+	.byte (LClassAttackLookup >> 8 & $FF)
+	.byte (LClassMagicLookup >> 8 & $FF)
+	.byte (LClassSpeedLookup >> 8 & $FF)
+LLowEnemyStatPointers:
+	.byte (LEnemyAttack & $FF)
+	.byte (LEnemyMagic & $FF)
+	.byte (LEnemySpeed & $FF)
+LHighEnemyStatPointers:
+	.byte (LEnemyAttack >> 8 & $FF)
+	.byte (LEnemyMagic >> 8 & $FF)
+	.byte (LEnemySpeed >> 8 & $FF)
+
+LGetBattlerStat: SUBROUTINE ;Returns the appropriate stat of battlerID X in A
+LGetBattlerAttack:
+	ldy #0
+	beq LSetStatPointers
+LGetBattlerMagic:
+	ldy #1
+	bne LSetStatPointers
+LGetBattlerSpeed:
+	ldy #2
+LSetStatPointers:
+	lda LLowAllyStatPointers,y
+	sta tempPointer3
+	lda LHighAllyStatPointers,y
+	sta tempPointer3+1
+	lda LLowEnemyStatPointers,y
+	sta temp4
+	lda LHighEnemyStatPointers,y
+	sta tempPointer4
+.LGetStat:
 	cpx #4
-	bcs .LEnemyDied
-.LFriendlyDied:
-	lda #0
-	sta hp1,x
-	rts
-.LEnemyDied:
-	dex
-	dex
-	dex
-	dex
-	lda #0
-	sta enemyHP,x
-	rts
-
-LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.
-	rts
-
-LCheckBattlerDied: SUBROUTINE ;Applies the binary damage in A to the battler ID of startingCursorIndexAndTargetID, and checks for death
-	sta tempPointer1
-	ldy startingCursorIndexAndTargetID
-	cpy #4
-	bcs .LEnemy
-.LAlly:
-	jsr LBinaryToDecimal
-	sta tempPointer1
-	lda hp1,y
-	sec
-	sed
-	sbc tempPointer1
-	cld
-	beq .LAllyDied
-	bcc .LAllyDied
-	sta hp1,y ;Ally did not die
-	lda #$0
-	rts
-.LAllyDied:
-	lda #0
-	sta hp1,y
-	lda #$FF
-	rts
-.LEnemy:
-	dey
-	dey
-	dey
-	dey
-	lda enemyHP,y
-	sec
-	sbc tempPointer1
-	beq .LEnemyDied
-	bcc .LEnemyDied
-	sta enemyHP,y ;Enemy did not die
-	lda #$0
-	rts
-.LEnemyDied
-	lda #0
-	sta enemyHP,y
-	lda #$FF
-	rts
-
-LFindAoETarget: SUBROUTINE ;Finds the next target for AoE spells, returning the correct id in A. Returns $FF if there are no more targets.
-	ldx aoeTargetID
-	cpx #4
-	bcs .LLookingForEnemyID
-.LLookingForAllyID:
-	inx
-	lda hp1,x
-.LLookingForEnemyID:
-	
-	rts
-
-LGetBattlerMagic: SUBROUTINE ;Returns the magic power of the currentBattler in A
-	ldx currentBattler
-	cpx #4
-	bcs .LFindEnemyMagic
-.LFindAllyMagic:
+	bcs .LCheckEnemyStat
+.LCheckAllyStat:
+	lda char1,x
+	and #$0F
+	tay
+	lda (tempPointer3),y
+	sta tempPointer3
+	lda #(LStat1PerLevel >> 8 & $FF)
+	sta tempPointer3+1
 	lda mazeAndPartyLevel
 	and #$0F
-	tay ;Y now contains the level of the party
-	lda char1,x
-	and #$0F ;Get just the class of this battler
-	tax
-	lda LClassMagicLookup,x
-	sta tempPointer1
-	lda #(LStat1PerLevel >> 8 & $FF)
-	sta tempPointer1+1
-	lda (tempPointer1),y
+	tay
+	lda (tempPointer3),y
 	rts
-.LFindEnemyMagic:
+.LCheckEnemyStat:
+	dex
+	dex
+	dex
+	dex
 	lda enemyID,x
-	and #$3F ;Get this enemy's id
-	tax
-	lda LEnemyMagic,x
+	tay
+	lda (temp4),y
+	inx
+	inx
+	inx
+	inx
 	rts
 
 ;Interprets X as the cursorPosition
@@ -559,7 +545,7 @@ LCursorIndexToBattlerIndex: SUBROUTINE ;Converts the position of a menu cursor i
 
 
 
-LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to convert to decimal.
+LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to convert to decimal. Returns the result in A.
 .LRemove10s:
 	sec
 	sbc #10
@@ -608,14 +594,20 @@ LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to conve
 	ora tempPointer2
 	rts
 
-LGetEnemyResistances: SUBROUTINE ;Will interpret Y as the enemy targetID to return the resistances of (in A). Format is LPFIGEP0
-	dey
-	dey
-	dey
-	dey
-	lda enemyID,y
-	tay
-	lda LEnemyResistances,y
+LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return the resistances of (in A). Format is LPFIDEP0
+									;L: Legendary resist (Banish/Sleep), P: Physical, F: Fire, I:Ice, D: Divine, E: Electric, P: Poison
+	cpx #4
+	bcs .LHasResistanceByte
+	lda #0
+	rts
+.LHasResistanceByte:
+	dex
+	dex
+	dex
+	dex
+	lda enemyID,x
+	tax
+	lda LEnemyResistances,x
 	rts
 
 LRandom: SUBROUTINE ;Ticks the random number generator when called
@@ -798,6 +790,11 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	sta menuSize
 	rts
 .LCheckSpellLogic:
+	ldy highlightedLine
+	bpl .LConfirmSpell
+	;Not enough mana to select this spell. Play an error sound effect
+	rts
+.LConfirmSpell:	
 	;Need to determine what the targeting of this spell is in order to advance to none or correct targeting
 	ldx currentBattler
 	ora battleActions,x
@@ -1243,6 +1240,7 @@ LUpdateAvatars: SUBROUTINE
 	
 	dec charIndex
 	bpl .LUpdateAvatarLoop
+	inc charIndex
 	rts
 
 LOverrideAvatar: SUBROUTINE ;Sets party member Y's mood to X.
@@ -1259,6 +1257,7 @@ LOverrideAvatar: SUBROUTINE ;Sets party member Y's mood to X.
 	rts
 
 LUpdateCompassPointerNormal: SUBROUTINE ;Updates tempPointer1 to point to the letter N, S, E, or W based on which direction the player is facing
+										;There is a good chance this will be removed in the final version
 	ldy playerFacing
 	beq .LCompassEast
 	dey
@@ -1282,7 +1281,8 @@ LUpdateCompassPointerNormal: SUBROUTINE ;Updates tempPointer1 to point to the le
 	sta tempPointer1+1
 	rts
 
-LUpdateCompassPointerBoss: SUBROUTINE
+LUpdateCompassPointerBoss: SUBROUTINE ;Updates tempPointer1 in order to render an arrow at the top of the screen pointing towards this floor's exit
+	;This is a good candidate for relocation to bank S
 	lda exitLocation
 	and #$0F
 	sta temp2 ;Y location of boss

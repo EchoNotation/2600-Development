@@ -349,22 +349,42 @@
 	-Selecting BACK option in spell list works properly
 
 	-All spell targeting menu logic looks good
+2/14/23
+	-Cannot select spells that the battler doesn't have the mana for
+	-Fixed characterinfo graphics glitch when advancing battle
+	-Changed lots of functions to be party member/enemy agnostic
+	-Rewrote LDetermineNextBattler to be far more space efficient
+	-Refactored some high level battle logic, seemingly maintaining the correct behavior
 
 TODO:
 
 	-Battle system rewrite
 		-High/low battle logic? Would be preferable if possible
+
+	-Add inBattle cases for dealing with sleep and blight, and make sure to stop infinite loops
 		
+	-How exactly do GUARD and PARRY work again?
+
+	-Allocate RAM for maze related things (campfire used yet, steps since last encounter, etc...)
+
+	-Battle transitions?
+
+	-INTO THE DEPTHS, INTO THE DARK, DEEPER AND DEEPER, THE MAZE AWAITS message after beating a boss?
+	-CONGRA TULATI ONS!!!, GAME OVER messages after winning or losing?
+	-FLOOR CLEAR!
+
 	-Campfire rendering
 		-Give campfire battle-like scene?
 
 	-Title on actual title screen?
 	-Decouple button presses and position indicator from RDrawCharacterInfo, allowing it to be used on the title screen?
+		-Alternatively, make simpler version of RDrawCharacterInfo for kernel usage
 
 	Overarching questions:	
 		-Should there be some sort of rangefinder to the exit? I think so.
 			-Hear a "roar" when getting near the boss?
 		-Rendering exit and campfire? Rendering campfire should be possible, but I don't know about the exit
+			-Exit will not be rendered, campfire will exist as an enemy in a special battle type
 
 	-Invalid text color  + associated logic?
 		-Mana implementation
@@ -421,6 +441,7 @@ TODO:
 		-Create all encounter tables?
 		-Create all visual effects
 		-Create all sound effects
+			-Add sound effects in all the relevant places
 		-Try to balance everything
 
 	Version 1.1 considerations:
