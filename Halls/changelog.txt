@@ -355,13 +355,30 @@
 	-Changed lots of functions to be party member/enemy agnostic
 	-Rewrote LDetermineNextBattler to be far more space efficient
 	-Refactored some high level battle logic, seemingly maintaining the correct behavior
+2/15/23
+	-Added LCheckBattlerStatus, along with seemingly sound logic for sleep and blight
+	-LApply damage now returns 0 if the battler survived the damage, and FF if they died
+	-Implemented MOVE action
+	
+	-Wrote some not-very-thoughtful running code that needs to be tested
+		-Some sort of scanline issue when running (takes too long??)
+2/16/23
+	-Relocated menuing logic to happen during VBlank instead of overscan to account for some worst cases in battle logic runtime
+		-Causes a single frame issue after inputting all actions
+	-The party information is now shown in the exact same place in both maze and battle views
+2/18/23
+	-Relocated menuing routines to Overscan and battle related logic to VBlank
+		-There is a 1-frame graphical glitch with the maze pointers when running
+		-Interestingly, this bug does not occur when setting inBattle directly to 0
+	-Added some functions for shifting a large number of times, which probably saved some space
+	-Started work on FIGHT action
+
+	-Guard and Parry are rather obnoxious abilities to implement
+		-Guard is worse (maybe make it a priority ability that just grants defense for the turn?)
 
 TODO:
-
 	-Battle system rewrite
 		-High/low battle logic? Would be preferable if possible
-
-	-Add inBattle cases for dealing with sleep and blight, and make sure to stop infinite loops
 		
 	-How exactly do GUARD and PARRY work again?
 
@@ -378,7 +395,7 @@ TODO:
 
 	-Title on actual title screen?
 	-Decouple button presses and position indicator from RDrawCharacterInfo, allowing it to be used on the title screen?
-		-Alternatively, make simpler version of RDrawCharacterInfo for kernel usage
+		-Alternatively, make simpler version of RDrawCharacterInfo for main menu kernel usage
 
 	Overarching questions:	
 		-Should there be some sort of rangefinder to the exit? I think so.
@@ -407,13 +424,13 @@ TODO:
 				-Increased data complexity, decreased code complexity, better game design, lower encounter variety
 
 	Requirements for functional game loop:
-		-Functional combat - 10%
-			-Control Flow/Battler Selection - 75%
+		-Functional combat - 20%
+			-Control Flow/Battler Selection - 100%
 			-Fighting - 0%
 			-Spellcasting - 0%
 			-Moving - 0%
 			-Running - 0%
-			-Functional status effects - 0%
+			-Functional status effects - 50%
 			-Enemy AI
 		-Additional maze logic: moving between floors, random generation for encounters, transitioning between maze and battles
 		-Mana implementation

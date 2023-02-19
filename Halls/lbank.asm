@@ -24,7 +24,6 @@ LClear:
 	sta playerY
 	sta playerFacing
 
-	;lda #$1 ;Force a seed for the rng
 	lda INTIM ;Seed the random number generator
 	bne LSkipSeeding
 	lda #$6B ;Extremely random random number generator here
@@ -108,10 +107,12 @@ LSkipSeeding:
 	lda #$04
 	sta mp4
 
-	lda #$80
-	sta battlerStatus+1
-	lda #$18
-	sta battlerStatus+2
+	lda #$09
+	sta battlerStatus
+
+	lda #$F8
+	sta currentInput
+	sta previousInput
 
 	jsr LUpdateAvatars
 
@@ -155,8 +156,9 @@ LStartOfFrame:
 	sta TIM64T ;Set timer to complete at the end of VBLANK.
 
 	lda inBattle
-	bne LWaitForVblankTimer ;Skip this logic if we are not in maze mode...
+	bne LBattleLogicVBlank ;Skip this logic if we are not in maze mode...
 
+LMazeLogicVBlank:
 	ldy #2; Subroutine ID for SUpdatePlayerMovement
 	jsr LRunFunctionInSBank
 
@@ -165,6 +167,28 @@ LStartOfFrame:
 
 	jsr LUpdateCompassPointerBoss
 	jmp LGoToUpdateEffects
+
+LBattleLogicVBlank:
+	lda currentMenu
+	bmi LWaitForVblankTimer
+	lda currentInput
+	eor previousInput
+	and #$08
+	beq LWaitForVblankTimer ;Must be different from previousInput
+	lda #$08
+	bit currentInput
+	bne LWaitForVblankTimer ;Button must be pressed in
+	lda inBattle
+	cmp #$81
+	bne LDontNeedANewBattler
+	jsr LDetermineNextBattler
+	lda inBattle
+	cmp #$80
+	beq LWaitForVblankTimer ;Don't advance if we just entered the menu
+LDontNeedANewBattler:
+	jsr LUpdateAvatars
+	jsr LDoBattle
+	jmp LWaitForVblankTimer
 
 LGoToReset:
 	jmp LReset
@@ -181,40 +205,7 @@ LOverscan:
 	lda #OVERSCAN_TIMER_DURATION
 	sta TIM64T
 
-	lda inBattle
-	beq LMazeLogic ;Skip the following logic if we are in maze mode...
-
-LBattleLogic:
-	lda currentMenu
-	bpl LAfterMenuLogic
-	lda currentInput
-	eor previousInput
-	and #$F8
-	beq LAfterMenuLogic
-	jsr LUpdateMenuCursorPos
-	jsr LUpdateMenuAdvancement
-LAfterMenuLogic:
-	lda currentInput
-	eor previousInput
-	and #$08
-	beq LSkipBattleLogic
-	lda inBattle
-	cmp #$81
-	bne LDontNeedANewBattler
-	jsr LDetermineNextBattler
-LDontNeedANewBattler:
-	jsr LUpdateAvatars
-	jsr LDoBattle
-LSkipBattleLogic:
-	jsr LUpdateMenuRendering
-	jmp LDoneWithSeparateLogic
-
-LMazeLogic:
-	;Need to check for the maze exit and campfire location
-	;Need to determine if a random encounter occurs	
-
-LDoneWithSeparateLogic:
-	;Update the previousInput variable, since both maze and battle logic use this.
+	;Update the currentInput variable
 	lda currentInput
 	sta previousInput
 	lda SWCHA
@@ -222,12 +213,30 @@ LDoneWithSeparateLogic:
 	sta temp1
 	lda INPT4
 	and #$80
-	lsr
-	lsr
-	lsr
-	lsr
+	jsr L4Lsr
 	ora temp1
 	sta currentInput
+
+	lda inBattle
+	beq LMazeLogicOverscan ;Skip the following logic if we are in maze mode...
+
+LBattleLogicOverscan:
+	lda currentMenu
+	bpl LAfterMenuLogic
+	lda currentInput
+	eor previousInput
+	and #$F8
+	beq LNoMenuAdvancement
+	jsr LUpdateMenuCursorPos
+	jsr LUpdateMenuAdvancement
+LNoMenuAdvancement:
+	jsr LUpdateMenuRendering
+LAfterMenuLogic:
+	jmp LWaitForOverscanTimer
+
+LMazeLogicOverscan:
+	;Need to check for the maze exit and campfire location
+	;Need to determine if a random encounter occurs	
 
 LWaitForOverscanTimer:
 	lda INTIM
@@ -249,7 +258,7 @@ LBattleProcessHighBytes:
 	.byte (LProcessGuarding >> 8 & $FF)
 	.byte (LProcessParrying >> 8 & $FF)
 
-LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.
+LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.	
 	ldx currentBattler
 	cpx #4
 	bcs .LNeedEnemyAction
@@ -259,6 +268,18 @@ LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages 
 	lda enemyAction
 .LGotCurrentAction:
 	sta temp1 ;temp1 will contain the current battler's action
+	lda inBattle
+	cmp #$81
+	beq LAdvanceBattlerStatus
+	cmp #$83
+	beq LAdvanceBattlerStatus
+	cmp #$84
+	beq LAdvanceBattlerStatus
+	cmp #$85
+	beq LAdvanceBattlerStatus
+
+.LProcessAction:
+	lda temp1
 	bmi LProcessCasting
 	and #$07
 	tay
@@ -267,17 +288,199 @@ LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages 
 	lda LBattleProcessHighBytes,y
 	sta tempPointer1+1
 	jmp (tempPointer1)
+LAdvanceBattlerStatus:
+	jsr LCheckBattlerStatus
+	bne .LProcessAction
+	rts
 LProcessCasting:
+	lda #$81
+	sta inBattle
+	lda #0
+	sta currentMessage
 	rts
+
 LProcessFighting:
+	lda inBattle
+	cmp #$90
+	beq .LCalculateFightDamage
+	cmp #$91
+	beq .LDamageWasAKill
+.LSetFightWindup:
+	cpx #4
+	bcs .LGetEnemyFightMessage
+	lda char1,x
+	and #$0F
+	tay
+	lda LClassFightMessages,y
+	jmp .LStoreFightMessage	
+.LGetEnemyFightMessage:
+	dex
+	dex
+	dex
+	dex
+	lda enemyID,x
+	tax
+	lda LEnemyFightMessages,x
+.LStoreFightMessage:
+	sta currentMessage
+	lda temp1
+	and #$60
+	jsr L6Lsr
+	tay
+	ldx currentBattler
+	cpx #4
+	bcs .LIsEnemyFight
+	iny
+	iny
+	iny
+	iny
+.LIsEnemyFight:
+	sty startingCursorIndexAndTargetID
+	lda #$90
+	sta inBattle
 	rts
+.LDamageWasAKill:
+	lda #$81
+	sta inBattle
+	lda #$09 ;X DOWN
+	sta currentMessage
+	;Target ID should already be set from previous message
+	rts
+.LCalculateFightDamage:
+	jsr LGetBattlerAttack
+	sta temp2 ;Contains the raw damage number, that only needs to be modified by frontline or backline
+	ldx currentBattler
+	cpx #4
+	bcs .LDoDamage ;Enemies do not have frontline/backline, so disregard the following checks
+
+	
+	lda LPartyPositionMasks,x
+	and partyBattlePos
+	
+.LHalfDamage:
+	lsr temp2
+
+.LDoDamage:
+	jsr LGetTargetFromActionOffensive ;Returns the target in X
+	ldy #PHYSICAL_RESIST_MASK
+	lda temp2
+	jsr LApplyDamage
+	beq .LBattlerSurvived
+.LBattlerDied:
+	lda #$91
+	beq .LSaveNewBattleState
+.LBattlerSurvived:
+	lda #$81
+.LSaveNewBattleState:
+	sta inBattle
+	rts
+
 LProcessMoving:
+	lda #$81
+	sta inBattle
+	ldx currentBattler
+	lda partyBattlePos
+	eor LPartyPositionMasks,x
+	sta partyBattlePos
+	lda #$0C
+	sta temp2
+	lda partyBattlePos
+	and LPartyPositionMasks,x
+	beq .LBackline
+	bne .LSetMoveMessage
+.LBackline:
+	inc temp2
+.LSetMoveMessage:
+	lda temp2
+	sta currentMessage
 	rts
+
 LProcessRunning:
+	;Only enemies are allowed to run away
+	lda inBattle
+	cmp #$E0
+	beq .LFailedToRun
+	cmp #$E1
+	beq .LRanAway
+	cmp #$E2
+	beq .LExitBattleViaRun
+.LInitiateRun:
+	lda #$14 ;X TRIES TO RUN
+	sta currentMessage
+	ldx #4
+.LFindMaxEnemySpeed:
+	jsr LGetBattlerSpeed
+	cmp temp1
+	bcc .LNextIteration
+	sta temp1
+.LNextIteration:
+	inx
+	cpx #8
+	bcc .LFindMaxEnemySpeed
+	;temp1 should now contain the maximum speed of any alive enemy
+	ldx currentBattler
+	jsr LGetBattlerSpeed
+	sta tempPointer1 ;tempPointer1 now contains the speed of the party member that is trying to flee
+	sec
+	sbc temp1
+	sta temp1
+	beq .LSameSpeed
+	bmi .LEnemyIsFaster
+.LAllyIsFaster:
+	lda rand8
+	and #$07
+	cmp temp1
+	bcc .LRunAway
+	bcs .LCannotRunAway	
+.LSameSpeed:
+	lda rand8
+	bpl .LRunAway
+	bmi .LCannotRunAway
+.LEnemyIsFaster:
+	lda rand8
+	and #$07
+	cmp temp1
+	bcs .LRunAway
+	bcc .LCannotRunAway
+.LRunAway:
+	lda #$E1
+	sta inBattle
 	rts
+.LCannotRunAway:
+	lda #$E0
+	sta inBattle
+	rts
+.LFailedToRun:
+	lda #$81
+	sta inBattle
+	lda #$16 ;X CANNOT ESCAPE
+	sta currentMessage
+	rts
+.LRanAway:
+	lda #$E2
+	sta inBattle
+	lda #$12 ;PARTY FLEES
+	sta currentMessage
+	rts
+.LExitBattleViaRun:
+	lda #0
+	sta inBattle
+	sta currentEffect
+	sta currentBattler ;Needed for maze mode menuing
+	rts
+
 LProcessGuarding:
+	lda #$81
+	sta inBattle
+	lda #0
+	sta currentMessage
 	rts
+
 LProcessParrying:
+	lda #$81
+	sta inBattle
+	lda #0
+	sta currentMessage
 	rts
 
 LHasActionMasks:
@@ -289,6 +492,21 @@ LHasActionMasks:
 	.byte #$04
 	.byte #$02
 	.byte #$01
+
+LGetTargetFromActionOffensive: SUBROUTINE ;Returns the absolute battlerID of the target from this action in X
+	lda temp1 ;Should only be called from LDoBattle, so that this contains the currentBattler's action
+	and #$60
+	jsr L6Lsr
+	tax
+	ldy currentBattler
+	cpy #4
+	bcs .LIsEnemy
+	inx
+	inx
+	inx
+	inx
+.LIsEnemy:
+	rts
 
 LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the next battler to take their action
 	;TODO make the speed checking routine less awful-space wise
@@ -401,7 +619,109 @@ LSetEnemyAction: SUBROUTINE ;Choose what action this enemy will perform and set 
 	sta enemyAction
 	rts
 
-LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X
+LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes control flow logic to do with SLEEP and BLIGHT
+	lda inBattle
+	cmp #$81
+	beq .LCheckIfBlighted
+	cmp #$83
+	beq .LSetBlightDamage
+	cmp #$84
+	beq .LDiedToBlight
+	cmp #$85
+	beq .LCheckIfSleeping
+	rts
+.LCheckIfSleeping:
+	lda battlerStatus,x
+	and #ASLEEP_MASK
+	bne .LIsAsleep
+	lda #$FF ;Continue in LDoBattle
+	rts
+.LIsAsleep:
+	;This person is currently asleep
+	lsr
+	lsr
+	lsr
+	sec
+	sbc #1
+	sta temp2
+	beq .LWakeUpBattler
+	;Still asleep
+	lda #$81
+	sta inBattle
+	lda #$1C ;X IS ASLEEP
+	bne .LStoreNewSleepValue
+.LWakeUpBattler:
+	lda #$82
+	sta inBattle
+	lda #$18 ;X WAKES UP
+.LStoreNewSleepValue:
+	sta currentMessage
+	lda temp2
+	asl
+	asl
+	asl
+	sta temp2
+	lda battlerStatus,x
+	and #$E7
+	ora temp2
+	sta battlerStatus,x
+	ldy #0 ;Return in LDoBattle
+	stx startingCursorIndexAndTargetID
+	rts
+.LCheckIfBlighted:
+	lda battlerStatus,x
+	and #BLIGHTED_MASK
+	beq .LCheckIfSleeping
+	;This battler has blight
+	lda #$83
+	sta inBattle
+	lda #$0E ;X WASTES AWAY
+	sta currentMessage
+	lda #0 ;Return in LDoBattle
+	stx startingCursorIndexAndTargetID
+	rts
+.LDiedToBlight:
+	lda #$09
+	sta currentMessage
+	lda #$81
+	sta inBattle
+	ldx currentBattler
+	stx startingCursorIndexAndTargetID
+	rts
+.LSetBlightDamage:
+	jsr LGetBattlerMaxHP
+	lsr
+	lsr
+	lsr
+	beq .LAtLeast1Damage
+	sta temp2 ;Damage to deal in binary
+	bne .LNoDamageClampNeeded
+.LAtLeast1Damage:
+	inc temp2
+.LNoDamageClampNeeded:
+	lda temp2
+	jsr LBinaryToDecimal
+	sta cursorIndexAndMessageY
+	lda #$07 ;X LOSES Y HP
+	sta currentMessage
+
+	lda temp2 ;Damage to deal in binary
+	ldx currentBattler
+	stx startingCursorIndexAndTargetID
+	ldy #POISON_RESIST_MASK
+	jsr LApplyDamage
+	bne .LDied
+	lda #$85
+	sta inBattle
+	lda #0
+	rts
+.LDied:
+	lda #$84
+	sta inBattle
+	lda #0
+	rts
+
+LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
 	sta temp2
 	stx temp3
 	sty temp4
@@ -424,7 +744,7 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X
 	ldx temp3
 	lda battlerHP,x
 	sed
-	clc
+	sec
 	sbc temp2
 	cld
 	beq .LDied
@@ -438,6 +758,7 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X
 	bcc .LDied
 .LSurvived:
 	sta battlerHP,x
+	lda #0
 	rts
 .LDied:
 	lda LHasActionMasks,x
@@ -446,6 +767,8 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X
 	sta hasAction ;Make sure this battler loses their action on death
 	lda #0
 	sta battlerHP,x
+	sta battlerStatus,x
+	lda #$FF
 	rts
 
 LApplyStatus: SUBROUTINE ;Applies additional status A to target X
@@ -466,18 +789,22 @@ LLowAllyStatPointers:
 	.byte (LClassAttackLookup & $FF)
 	.byte (LClassMagicLookup & $FF)
 	.byte (LClassSpeedLookup & $FF)
+	.byte (LClassHPLookup & $FF)
 LHighAllyStatPointers:
 	.byte (LClassAttackLookup >> 8 & $FF)
 	.byte (LClassMagicLookup >> 8 & $FF)
 	.byte (LClassSpeedLookup >> 8 & $FF)
+	.byte (LClassHPLookup >> 8 & $FF)
 LLowEnemyStatPointers:
 	.byte (LEnemyAttack & $FF)
 	.byte (LEnemyMagic & $FF)
 	.byte (LEnemySpeed & $FF)
+	.byte (LEnemyHP & $FF)
 LHighEnemyStatPointers:
 	.byte (LEnemyAttack >> 8 & $FF)
 	.byte (LEnemyMagic >> 8 & $FF)
 	.byte (LEnemySpeed >> 8 & $FF)
+	.byte (LEnemyHP >> 8 & $FF)
 
 LGetBattlerStat: SUBROUTINE ;Returns the appropriate stat of battlerID X in A
 LGetBattlerAttack:
@@ -488,6 +815,9 @@ LGetBattlerMagic:
 	bne LSetStatPointers
 LGetBattlerSpeed:
 	ldy #2
+	bne LSetStatPointers
+LGetBattlerMaxHP:
+	ldy #3
 LSetStatPointers:
 	lda LLowAllyStatPointers,y
 	sta tempPointer3
@@ -511,6 +841,7 @@ LSetStatPointers:
 	lda mazeAndPartyLevel
 	and #$0F
 	tay
+	dey
 	lda (tempPointer3),y
 	rts
 .LCheckEnemyStat:
@@ -557,10 +888,7 @@ LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to conver
 	adc #10
 	sta temp4
 	txa
-	asl
-	asl
-	asl
-	asl
+	jsr L4Asl
 	ora temp4
 	rts
 
@@ -587,10 +915,7 @@ LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to conve
 	sta tempPointer2
 .LCombine:
 	txa
-	asl
-	asl
-	asl
-	asl
+	jsr L4Asl
 	ora tempPointer2
 	rts
 
@@ -671,11 +996,7 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	ldy cursorIndexAndMessageY
 .LSaveAllyTargeting:
 	tya
-	asl
-	asl
-	asl
-	asl
-	asl
+	jsr L5Asl
 	ldx currentBattler
 	ora battleActions,x
 	sta battleActions,x
@@ -725,11 +1046,7 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	;Only one enemy, so auto-target this fight
 	ldx currentBattler ;Changed by LCheckEnemies
 	tya
-	asl
-	asl
-	asl
-	asl
-	asl
+	jsr L5Asl
 	ora battleActions,x
 	sta battleActions,x
 	jmp .LCheckNextBattler
@@ -852,11 +1169,7 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	ldx cursorIndexAndMessageY
 	jsr LCursorIndexToBattlerIndex
 	tya
-	asl
-	asl
-	asl
-	asl
-	asl
+	jsr L5Asl
 	ora battleActions,x
 	sta battleActions,x
 .LCheckNextBattler:
@@ -1248,10 +1561,7 @@ LOverrideAvatar: SUBROUTINE ;Sets party member Y's mood to X.
 	and #$0F ;Get just the class
 	sta temp6
 	txa
-	asl
-	asl
-	asl
-	asl
+	jsr L4Asl
 	ora temp6
 	sta char1,y
 	rts
@@ -1288,10 +1598,7 @@ LUpdateCompassPointerBoss: SUBROUTINE ;Updates tempPointer1 in order to render a
 	sta temp2 ;Y location of boss
 	lda exitLocation
 	and #$F0
-	lsr
-	lsr
-	lsr
-	lsr
+	jsr L4Lsr
 	sta temp1 ;X location of boss
 	sec
 	sbc playerX
@@ -1368,6 +1675,26 @@ LUpdateCompassPointerBoss: SUBROUTINE ;Updates tempPointer1 in order to render a
 
 	rts
 
+L6Lsr:
+	lsr
+L5Lsr
+	lsr
+L4Lsr:
+	lsr
+	lsr
+	lsr
+	lsr
+	rts
+
+L5Asl:
+	asl
+L4Asl:
+	asl
+	asl
+	asl
+	asl
+	rts
+
 	ORG $DC40 ;Used to hold enemy stats and related data
 	RORG $FC40
 
@@ -1383,6 +1710,10 @@ LEnemyMagic:
 	.byte 0 ;Zombie
 	.byte 0 ;Giant
 	.byte 20 ;Dragon
+LEnemyHP:
+	.byte #1 ;Zombie
+	.byte #10 ;Giant
+	.byte #150 ;Dragon
  
 ;Format is LPFIHEP0
 ;L : Legendary (bosses), P : Physical, F : Fire, I : Ice, H : Holy, E : Electric, P : Poison

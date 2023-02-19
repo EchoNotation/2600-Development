@@ -139,6 +139,12 @@ RDrawPartyInfoMaze:
 	nop
 	sta RESP0
 	sta RESP1
+
+	ldy #4
+.LWaitToDrawCharacterInfoLoop:
+	sta WSYNC
+	dey
+	bne .LWaitToDrawCharacterInfoLoop
 	sta WSYNC
 	sta HMOVE
 
@@ -160,7 +166,7 @@ RDrawPartyInfoMaze:
 	stx VDELP1
 	stx charIndex
 
-	ldx #6 ;This number is extremely arbitrary-- Because I don't really understand exactly how long the rendering of party info takes.
+	ldx #2 ;This number is extremely arbitrary-- Because I don't really understand exactly how long the rendering of party info takes.
 
 RFinishMazePicture:
 	sta WSYNC

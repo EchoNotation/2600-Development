@@ -37,14 +37,14 @@ inBattle states:
 $80 currently getting player actions, goes to $81 when complete
 $81 needs to determine next action to take, and set currentBattler appropriately.
 
-$82 Basic attack windup
-$83 Basic attack result
-$84 Basic attack kill
+$82 Bypass status check
+$83 Determine blight damage
+$84 Blight damage was a kill
+$85 Check if battler was sleeping
 
-$90 Party Wins
-$91 Party Down
-$92 Party levels up
-$93 Party member learns spell
+$90 Need to calculate and deal attack's damage
+$91 Basic attack was a kill
+$92 Basic attack was parried (not yet implemented)
 
 $A0 Casting spell windup
 $A1 Doing damage to one target
@@ -53,19 +53,25 @@ $A3 Healing one target
 $A4 Killing one target 
 
 $B0 AoE Damage
-$B1 AoE Debuff
-$B2 AoE Healing
-$B3 AoE Banish
-$B4 AoE Buff
-$B5 AoE Kill
+$B1 AoE Healing
+$B2 AoE Banish
+$B3 AoE Kill
 
-$C0 Moving result
+$E0 Failed to run
+$E1 Succeeded run
+$E2 Exit battle via running
 
-$E0 Running windup
-$E1 Running result
+$E3 Guard initiate
+$E4 Parry initiate
+$E5 Riposte
+$E6 Riposte damage
 
-Reserved for something to do with battles ending.
-$FF
+$F0 Party wins
+$F1 Party down
+$F2 Party levels up
+$F3 Party member learns spell
+$F4 Proceed to next floor message? (Go to this instead of FF for bosses)
+$FF (next button press ends the battle)
 
 --- MENU IDs ---
 $80 Showing battle options to select (in battle) | Changing party positions (in maze)
