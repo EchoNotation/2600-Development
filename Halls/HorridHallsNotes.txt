@@ -33,7 +33,7 @@ Maybe spell effects can be updated every other frame, or every 4 frames, to crea
 	-Would need to store effect frequency information as well (not necessarily)
 	-Ended up storing effect frequency information as part of the advanced effect system
 
-inBattle states:
+--- inBattle STATES ---
 $80 currently getting player actions, goes to $81 when complete
 $81 needs to determine next action to take, and set currentBattler appropriately.
 
@@ -66,12 +66,17 @@ $E4 Parry initiate
 $E5 Riposte
 $E6 Riposte damage
 
-$F0 Party wins
-$F1 Party down
-$F2 Party levels up
-$F3 Party member learns spell
-$F4 Proceed to next floor message? (Go to this instead of FF for bosses)
+$F0 Party wins, check to see if party leveled up (F2 if yes), else check which type of positive conclusion this was (go to FD, FE, or FF)
+$F1 Party down, go to FC
+$F2 Party leveled up, check to see if member learned spell, else go to F3
+$F3 Check which type of positive conclusion this was (go to FD, FE, or FF)
+$F4 Party member learned spell, check to see if member learned spell, else go to F3
+$FC Game over! (player must reset)
+$FD THE MAZE AWAITS (next button press ends the battle, and moves to the next floor)
+$FE Game completed! (player must reset)
 $FF (next button press ends the battle)
+
+
 
 --- MENU IDs ---
 $80 Showing battle options to select (in battle) | Changing party positions (in maze)
@@ -218,6 +223,12 @@ MESSAGE COMPONENTS:
 28: EVADES
 29: FADES
 2A: EXILED
+2B: GAME
+2C: CLEAR!
+2D: OVER!
+2E: THE
+2F: MAZE
+30: AWAITS
 
 Messages:
 00: X STABS Y
@@ -230,7 +241,7 @@ Messages:
 07: X LOSES Y HP
 08: X MISSES
 09: X DOWN
-0A: X LEVELS UP
+0A: PARTY LEVELS UP
 0B: X LEARNS Y
 0C: X MOVES UP
 0D: X BACKS AWAY
@@ -251,15 +262,18 @@ Messages:
 1C: X IS ASLEEP
 1D: X EVADES
 1E: X SHIELD FADES
+1F: GAME OVER!
+20: GAME CLEAR!
+21: THE MAZE AWAITS
 
-X STATUS CLEAR?
+
 
 Status Effects:
 Pos:
 -Sharpened : Target's attack power is doubled
 -Shielded : Magic attacks are negated twice
 Neg:
--Asleep : Target is unable to attack, move, or run ---With a probability of waking up before each turn
+-Asleep : Target is unable to attack, move, or run for a random number of turns (1-3)
 -Poisoned : Target receives half healing, and takes damage per turn, either %MAX HP or %CURRENT HP
 
 SPELL LISTING

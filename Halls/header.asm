@@ -59,6 +59,7 @@ NUMBER6=33
 NUMBER7=34
 NUMBER8=35
 NUMBER9=36
+EXCLAMATIONMARK=37
 
 ;Memory related --- This is actually a bad idea and should maybe be changed
 MAZE_POINTER_PAGE_1 = $FE
@@ -69,6 +70,7 @@ SOUTH = $04
 EAST = $02
 WEST = $01
 MAZE_WIDTH = 8
+MAX_MAZE_LEVEL = 3
 
 ;Battle related
 TIMER_MASK = $80

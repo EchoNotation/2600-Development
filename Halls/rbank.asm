@@ -512,8 +512,8 @@ RXDown:
 	.byte $1
 	.byte $12
 	.byte $FF
-RXLevelsUp:
-	.byte $0
+RPartyLevelsUp:
+	.byte $1A
 	.byte $D
 	.byte $E
 RXLearnsY:
@@ -596,6 +596,18 @@ RXShieldFades:
 	.byte $0
 	.byte $19
 	.byte $29
+RGameOver:
+	.byte $2B
+	.byte $2D
+	.byte $FF
+RGameClear:
+	.byte $2B
+	.byte $2C
+	.byte $FF
+RTheMazeAwaits:
+	.byte $2E
+	.byte $2F
+	.byte $30
 
 RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 values correctly. Interprets A as the line of the message to set.
 	ldy #TEXT_HIGHLIGHTED_COLOR
@@ -1603,6 +1615,48 @@ RKnownText:
 	.byte #W
 	.byte #N
 	.byte #EMPTY
+RGameText:
+	.byte #G
+	.byte #A
+	.byte #M
+	.byte #E
+	.byte #EMPTY
+	.byte #EMPTY
+ROverText:
+	.byte #O
+	.byte #V
+	.byte #E
+	.byte #R
+	.byte #EXCLAMATIONMARK
+	.byte #EMPTY
+RClearText:
+	.byte #C
+	.byte #L
+	.byte #E
+	.byte #A
+	.byte #R
+	.byte #EXCLAMATIONMARK
+RTheText:
+	.byte #T
+	.byte #H
+	.byte #E
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+RMazeText:
+	.byte #M
+	.byte #A
+	.byte #Z
+	.byte #E
+	.byte #EMPTY
+	.byte #EMPTY
+RAwaitsText:
+	.byte #A
+	.byte #W
+	.byte #A
+	.byte #I
+	.byte #T
+	.byte #S
 
 RClassColors:
 	.byte $8A ;Knight
@@ -1716,6 +1770,12 @@ RMessagesLowLookup:
 	.byte (REvadesText & $FF)
 	.byte (RFadesText & $FF)
 	.byte (RExiledText & $FF)
+	.byte (RGameText & $FF)
+	.byte (RClearText & $FF)
+	.byte (ROverText & $FF)
+	.byte (RTheText & $FF)
+	.byte (RMazeText & $FF)
+	.byte (RAwaitsText & $FF)
 
 RSpellTextLookupTable:
 	.byte (RBackText & $FF)
@@ -1864,6 +1924,8 @@ RCharacterLowLookupTable: ;Contains the low bytes of the pointers to all the cha
 	.byte (RNumber8 & $FF)
 	.byte (RNumber9 & $FF)
 
+	.byte (RExclamationMark & $FF)
+
 RCharacterHighLookupTable: ;Contains the high bytes of the pointers to all the character graphics.
 	.byte (RNoCharacter >> 8 & $FF)
 	.byte (RLetterA >> 8 & $FF)
@@ -1903,6 +1965,8 @@ RCharacterHighLookupTable: ;Contains the high bytes of the pointers to all the c
 	.byte (RNumber7 >> 8 & $FF)
 	.byte (RNumber8 >> 8 & $FF)
 	.byte (RNumber9 >> 8 & $FF)
+
+	.byte (RExclamationMark >> 8 & $FF)
 
 RSpecialLines:
 	.byte (REmptyText & $FF)
@@ -2076,6 +2140,15 @@ RNumber9:
 	.byte #%01100110
 	.byte #%01100110
 	.byte #%01111110
+RExclamationMark:
+	.byte #%00011000
+	.byte #%00011000
+	.byte #%00000000
+	.byte #%00011000
+	.byte #%00011000
+	.byte #%00011000
+	.byte #%00011000
+	.byte #%00011000
 
 RNumberLookup:
 	.byte 27

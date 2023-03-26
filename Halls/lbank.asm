@@ -170,7 +170,7 @@ LMazeLogicVBlank:
 
 LBattleLogicVBlank:
 	lda currentMenu
-	bmi LWaitForVblankTimer
+	bmi LUpdateMenuRenderingVBlank
 	lda currentInput
 	eor previousInput
 	and #$08
@@ -184,7 +184,7 @@ LBattleLogicVBlank:
 	jsr LDetermineNextBattler
 	lda inBattle
 	cmp #$80
-	beq LWaitForVblankTimer ;Don't advance if we just entered the menu
+	beq LUpdateMenuRenderingVBlank ;Don't advance if we just entered the menu
 LDontNeedANewBattler:
 	jsr LUpdateAvatars
 	jsr LDoBattle
@@ -192,6 +192,9 @@ LDontNeedANewBattler:
 
 LGoToReset:
 	jmp LReset
+
+LUpdateMenuRenderingVBlank:
+	jsr LUpdateMenuRendering
 
 LAfterEffectUpdate:
 LWaitForVblankTimer:
@@ -230,7 +233,6 @@ LBattleLogicOverscan:
 	jsr LUpdateMenuCursorPos
 	jsr LUpdateMenuAdvancement
 LNoMenuAdvancement:
-	jsr LUpdateMenuRendering
 LAfterMenuLogic:
 	jmp LWaitForOverscanTimer
 
@@ -264,19 +266,167 @@ LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages 
 	bcs .LNeedEnemyAction
 	lda battleActions,x
 	jmp .LGotCurrentAction
+
+.LGoToAdvanceBattlerStatus:
+	jmp LAdvanceBattlerStatus
+.LGoToProcessAction:
+	jmp .LProcessAction
+
 .LNeedEnemyAction
 	lda enemyAction
 .LGotCurrentAction:
 	sta temp1 ;temp1 will contain the current battler's action
 	lda inBattle
 	cmp #$81
-	beq LAdvanceBattlerStatus
+	beq .LGoToAdvanceBattlerStatus
 	cmp #$83
-	beq LAdvanceBattlerStatus
+	beq .LGoToAdvanceBattlerStatus
 	cmp #$84
-	beq LAdvanceBattlerStatus
+	beq .LGoToAdvanceBattlerStatus
 	cmp #$85
-	beq LAdvanceBattlerStatus
+	beq .LGoToAdvanceBattlerStatus
+	cmp #$F0
+	bmi .LGoToProcessAction
+
+LProcessCharacterAdvancement:
+	cmp #$F0
+	beq .LCheckPartyXP
+	cmp #$F1
+	beq .LPartyDown
+	cmp #$F2
+	beq .LGoToPartyLeveledUp
+	cmp #$F3
+	beq .LGoToCheckTypeOfConclusion
+	cmp #$F4
+	beq .LGoToCheckForNewSpells
+	cmp #$FC
+	beq .LGameOver
+	cmp #$FD
+	beq .LGoToNextFloor
+	cmp #$FE
+	beq .LGameCompleted
+	cmp #$FF
+	beq .LExitBattleViaVictory
+	rts
+
+.LGoToPartyLeveledUp:
+	jmp .LPartyLeveledUp
+.LGoToCheckTypeOfConclusion:
+	jmp .LCheckTypeOfConclusion
+.LGoToCheckForNewSpells:
+	jmp .LCheckForNewSpells
+
+.LGoToNextFloor:
+	;Exit battle, generate new maze, position player within maze. Probably shouldn't happen from within this function, so just set a flag?
+	rts
+.LPartyDown:
+	lda #$FC
+	sta inBattle
+	lda #$11
+	sta currentMessage ;PARTY DOWN
+	rts
+.LGameOver:
+.LGameCompleted:
+	rts
+.LExitBattleViaVictory:
+	lda #0
+	sta inBattle
+	sta currentEffect
+	sta currentBattler ;Needed for maze mode menuing
+	rts
+
+.LCheckPartyXP:
+	lda #$13 ;PARTY WINS
+	sta currentMessage
+	lda mazeAndPartyLevel
+	and #$0F
+	sta temp4 ;The current party level
+	cmp #$9
+	bcs .LDidntLevelUp ;Party is already at max level
+	lda #0
+	sta temp1 ;temp1 will contain the experience earned during this battle
+	ldx #0
+.LGetTotalXPLoop:
+	lda enemyID,x
+	bmi .LCheckNextEnemy
+	tay
+	lda LEnemyExperience,y
+	clc
+	adc temp1
+	sta temp1
+.LCheckNextEnemy:
+	inx
+	cpx #4
+	bcc .LGetTotalXPLoop
+.LGotTotalXP:
+	;A now contains the total amount of experience gained from this battle
+	sta temp1
+	lda experienceToNextLevel
+	sec
+	sbc temp1 
+	bvs .LLeveledUp ;This might be the wrong branch type
+	sta experienceToNextLevel
+.LDidntLevelUp:
+	lda #$F3
+	sta inBattle
+	rts
+.LLeveledUp: ;THIS WHOLE SECTION NEEDS TO BE TESTED
+	sta experienceToNextLevel
+	lda mazeAndPartyLevel
+	and #$F0
+	sta temp3 ;Maze level
+	inc temp4
+	ldx temp4 ;New party level
+	lda LXPToNextLevel,x
+	clc
+	adc experienceToNextLevel
+	sta experienceToNextLevel
+	lda temp4
+	ora temp3
+	sta mazeAndPartyLevel
+
+	lda #$F2
+	sta inBattle
+	rts
+
+.LPartyLeveledUp:
+	lda #$0A ;PARTY LEVELS UP
+	sta currentMessage
+	lda #$F4
+	sta inBattle
+	lda #0
+	sta aoeTargetID
+	rts
+
+.LCheckForNewSpells:
+	rts
+
+.LCheckTypeOfConclusion:
+	lda playerX
+	jsr L4Asl
+	ora playerY
+	cmp exitLocation
+	beq .LWasBoss
+	lda #$FF
+	sta inBattle
+	rts
+.LWasBoss:
+	lda mazeAndPartyLevel
+	jsr L4Lsr
+	and #$0F
+	cmp #MAX_MAZE_LEVEL
+	bcs .LGameWon
+	lda #$21 ;THE MAZE AWAITS
+	sta currentMessage
+	lda #$FD
+	sta inBattle
+	rts
+.LGameWon:
+	lda #$20 ;GAME CLEAR!
+	sta currentMessage
+	lda #$FE
+	sta inBattle
+	rts
 
 .LProcessAction:
 	lda temp1
@@ -306,6 +456,21 @@ LProcessFighting:
 	cmp #$91
 	beq .LDamageWasAKill
 .LSetFightWindup:
+	jsr LGetTargetFromActionOffensive ;Returns the absolute target ID from the currentBattler's action in X 
+	lda battlerHP,x
+	beq .LAttackMissed 
+	lda rand8
+	and #$0F
+	beq .LAttackHit
+.LAttackMissed:
+	lda #$81
+	sta inBattle
+	lda #$08 ;X MISSES
+	sta currentMessage
+	rts
+.LAttackHit:
+	stx startingCursorIndexAndTargetID
+	ldx currentBattler
 	cpx #4
 	bcs .LGetEnemyFightMessage
 	lda char1,x
@@ -323,19 +488,6 @@ LProcessFighting:
 	lda LEnemyFightMessages,x
 .LStoreFightMessage:
 	sta currentMessage
-	lda temp1
-	and #$60
-	jsr L6Lsr
-	tay
-	ldx currentBattler
-	cpx #4
-	bcs .LIsEnemyFight
-	iny
-	iny
-	iny
-	iny
-.LIsEnemyFight:
-	sty startingCursorIndexAndTargetID
 	lda #$90
 	sta inBattle
 	rts
@@ -344,36 +496,50 @@ LProcessFighting:
 	sta inBattle
 	lda #$09 ;X DOWN
 	sta currentMessage
+	ldx startingCursorIndexAndTargetID
+	jsr LDeathCleanup
 	;Target ID should already be set from previous message
 	rts
 .LCalculateFightDamage:
 	jsr LGetBattlerAttack
-	sta temp2 ;Contains the raw damage number, that only needs to be modified by frontline or backline
-	ldx currentBattler
-	cpx #4
-	bcs .LDoDamage ;Enemies do not have frontline/backline, so disregard the following checks
+	sta temp2 ;Contains the raw damage number
 
-	
-	lda LPartyPositionMasks,x
-	and partyBattlePos
-	
-.LHalfDamage:
-	lsr temp2
-
-.LDoDamage:
 	jsr LGetTargetFromActionOffensive ;Returns the target in X
+	stx startingCursorIndexAndTargetID
+
 	ldy #PHYSICAL_RESIST_MASK
 	lda temp2
 	jsr LApplyDamage
 	beq .LBattlerSurvived
 .LBattlerDied:
 	lda #$91
-	beq .LSaveNewBattleState
+	bne .LSaveNewBattleState
 .LBattlerSurvived:
 	lda #$81
 .LSaveNewBattleState:
 	sta inBattle
+	lda #$07 ;X LOSES Y HP
+	sta currentMessage
+	lda temp2
+	jsr LBinaryToDecimal
+	sta cursorIndexAndMessageY
 	rts
+
+
+LFrontlineModifiers:
+	.byte $0 ;Knight
+	.byte $0 ;Rogue
+	.byte $0 ;Cleric
+	.byte $1 ;Wizard
+	.byte $1 ;Ranger
+	.byte $0 ;Paladin
+LBacklineModifiers:
+	.byte $1 ;Knight
+	.byte $1 ;Rogue
+	.byte $1 ;Cleric
+	.byte $0 ;Wizard
+	.byte $0 ;Ranger
+	.byte $1 ;Paladin
 
 LProcessMoving:
 	lda #$81
@@ -396,7 +562,7 @@ LProcessMoving:
 	rts
 
 LProcessRunning:
-	;Only enemies are allowed to run away
+	;Only party members are allowed to run away
 	lda inBattle
 	cmp #$E0
 	beq .LFailedToRun
@@ -420,28 +586,9 @@ LProcessRunning:
 	;temp1 should now contain the maximum speed of any alive enemy
 	ldx currentBattler
 	jsr LGetBattlerSpeed
-	sta tempPointer1 ;tempPointer1 now contains the speed of the party member that is trying to flee
 	sec
 	sbc temp1
-	sta temp1
-	beq .LSameSpeed
-	bmi .LEnemyIsFaster
-.LAllyIsFaster:
-	lda rand8
-	and #$07
-	cmp temp1
-	bcc .LRunAway
-	bcs .LCannotRunAway	
-.LSameSpeed:
-	lda rand8
-	bpl .LRunAway
-	bmi .LCannotRunAway
-.LEnemyIsFaster:
-	lda rand8
-	and #$07
-	cmp temp1
-	bcs .LRunAway
-	bcc .LCannotRunAway
+	bmi .LCannotRunAway ;Can only run away if this battler's speed is equal or greater to the speed of the fastest living enemy
 .LRunAway:
 	lda #$E1
 	sta inBattle
@@ -496,7 +643,7 @@ LHasActionMasks:
 LGetTargetFromActionOffensive: SUBROUTINE ;Returns the absolute battlerID of the target from this action in X
 	lda temp1 ;Should only be called from LDoBattle, so that this contains the currentBattler's action
 	and #$60
-	jsr L6Lsr
+	jsr L5Lsr
 	tax
 	ldy currentBattler
 	cpy #4
@@ -535,11 +682,11 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	;If here, that means that all actions have been taken, so need to take new actions
 	beq .LUpdateHasAction
 .LPartyDead:
-	lda #$91
+	lda #$F1
 	sta inBattle
 	rts
 .LEnemiesDefeated:
-	lda #$90
+	lda #$F0
 	sta inBattle
 	rts
 .LUpdateHasAction:
@@ -614,7 +761,7 @@ LFindFirstLivingAlly: SUBROUTINE ;Returns the id of first party member with posi
 
 LSetEnemyAction: SUBROUTINE ;Choose what action this enemy will perform and set enemyAction accordingly.
 	;Will have to be way more complicated in the future, but this works for the moment. RIP Whomever is in front of the party
-	;This is a likely candidate for relocation into the S bank if more space is necessary
+	;This is a likely candidate for relocation into the S bank
 	lda #$00
 	sta enemyAction
 	rts
@@ -730,22 +877,60 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 	beq .LDamageNotResisted
 	lda temp2
 	lsr
-	jmp .LDealDamage
+	jmp .LCheckDamageModifiers
 .LDamageNotResisted:
 	lda temp2
-.LDealDamage:
+.LCheckDamageModifiers:
+	ldx currentBattler
+	lda battlerStatus,x
+	and #SHARPENED_MASK
+	beq .LSharpInactive
+.LSharpActive:
+	asl temp2
+.LSharpInactive:
+.LCheckIfGuarded:
 	ldx temp3
-	;A now contains binary damage that should be dealt to target X after accounting for resistances
+	lda battlerStatus,x
+	and #GUARDED_MASK
+	beq .LNotGuarded
+	lsr temp2
+	lsr temp2
+.LNotGuarded:
+.LCheckBattlerPos:
+	ldx currentBattler
+	cpx #4
+	bcs .LDoDamage ;Enemies do not have frontline/backline, so disregard the following checks
+
+	lda char1,x
+	and #$0F
+	tay ;Save the class of this battler for later
+
+	lda LPartyPositionMasks,x
+	and partyBattlePos
+	bne .LBattlerInFrontline
+.LBattlerInBackline:
+	lda LBacklineModifiers,y ;0 means normal damage, anything else means half
+	bne .LHalfDamage
+	beq .LDoDamage
+.LBattlerInFrontline:
+	lda LFrontlineModifiers,y
+	beq .LDoDamage
+.LHalfDamage:
+	lsr temp2
+
+.LDoDamage:
+	lda temp2 ;A now contains the final binary damage that should be dealt to target X
+	ldx temp3
 	cpx #4
 	bcs .LDealDamageToEnemy
 .LDealDamageToAlly:
 	jsr LBinaryToDecimal
-	sta temp2
+	sta temp4
 	ldx temp3
 	lda battlerHP,x
 	sed
 	sec
-	sbc temp2
+	sbc temp4
 	cld
 	beq .LDied
 	bcc .LDied
@@ -761,6 +946,10 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 	lda #0
 	rts
 .LDied:
+	lda #$FF
+	rts
+
+LDeathCleanup: SUBROUTINE ;Performs death housekeeping for target X
 	lda LHasActionMasks,x
 	eor #$FF
 	and hasAction
@@ -768,7 +957,6 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 	lda #0
 	sta battlerHP,x
 	sta battlerStatus,x
-	lda #$FF
 	rts
 
 LApplyStatus: SUBROUTINE ;Applies additional status A to target X
@@ -877,6 +1065,7 @@ LCursorIndexToBattlerIndex: SUBROUTINE ;Converts the position of a menu cursor i
 
 
 LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to convert to decimal. Returns the result in A.
+	ldx #0
 .LRemove10s:
 	sec
 	sbc #10
@@ -1170,6 +1359,7 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	jsr LCursorIndexToBattlerIndex
 	tya
 	jsr L5Asl
+	ldx currentBattler
 	ora battleActions,x
 	sta battleActions,x
 .LCheckNextBattler:
@@ -1474,7 +1664,8 @@ LCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in X, a
 	ldy tempPointer6
 	rts
 
-LUpdateAvatars: SUBROUTINE
+LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their status and health
+							;This is a candidate for relocation to S bank
 	lda inBattle
 	bpl .LContinue
 	lda #$08
@@ -1695,8 +1886,24 @@ L4Asl:
 	asl
 	rts
 
-	ORG $DC40 ;Used to hold enemy stats and related data
+	ORG $DC40 ;Used to hold enemy stats and related data)
 	RORG $FC40
+
+LXPToNextLevel: ;TODO balance this
+	.byte #0 ;Shouldn't be used, xp for level 0 -> 1
+	.byte #8 ; 1 -> 2
+	.byte #16 ; 2 -> 3
+	.byte #26
+	.byte #36
+	.byte #51
+	.byte #66
+	.byte #86
+	.byte #106 ; 8 -> 9
+
+LEnemyExperience:
+	.byte #1 ;Zombie
+	.byte #5 ;Giant
+	.byte #20 ;Dragon
 
 LEnemyAttack:
 	.byte 2 ;Zombie
