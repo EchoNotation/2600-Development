@@ -46,16 +46,12 @@ $90 Need to calculate and deal attack's damage
 $91 Basic attack was a kill
 $92 Basic attack was parried (not yet implemented)
 
-$A0 Casting spell windup
-$A1 Doing damage to one target
-$A2 Status one target
-$A3 Healing one target
-$A4 Killing one target 
+$A0 Need to check if spell hit, and process its effect if it did
+$A1 Spell damage was a kill
+$A2 Need to give donation health
 
-$B0 AoE Damage
-$B1 AoE Healing
-$B2 AoE Banish
-$B3 AoE Kill
+$B0 Need to check if AoE spell hit, and process its effect if it did
+$B1 AoE spell kill
 
 $E0 Failed to run
 $E1 Succeeded run
@@ -97,12 +93,12 @@ $01 - SUpdateMazeRenderingPointers
 $02 - SUpdatePlayerMovement
 $03 - SClearMazeData
 
---- BATTLE ACTIONS --- (STTIIIII) S: is Spell, TT: target ID, I: index
-0TT00000 : FIGHT
-00000001 : MOVE
-00000010 : RUN
-0TT00011 : GUARD
-00000100 : PARRY
+--- BATTLE ACTIONS --- (STTIIIII) S: is Spell, TT: target ID, I: index.
+0TT00000 : FIGHT --- Targeted basic physical attack using battler's Attack stat.
+00000001 : MOVE --- Battler swaps from frontline to backline or vice versa. (party only)
+00000010 : RUN --- Party will escape if the currentBattler's speed is greater than the highest speed enemy.
+0TT00011 : GUARD --- User and targeted ally gain the guarded status, which grants 3/4 damage reduction from all sources for the remainder of the round. This move has priority when used by party members.
+00000100 : PARRY --- User will evade all physical attacks for the remainder of the round, and retort against any attackers with a basic attack of their own.
 1TTIIIII : Casting a spell
 
 --- SPELL TARGETING LOOKUP ---
@@ -295,7 +291,7 @@ D: BLIGHT : Attempts to apply poisoned status to enemy
 E: TRIAGE : Heals all allies
 F: WITHER : Deals poison damage to a single target
 10: BANISH : Attempts to banish all enemies
-11: TRANCE : Self sleep 1, regain some mana, shield self? self heal?
+11: TRANCE : Self sleep 1, regain mana (1/4 of max?)
 12: DONATE : Deal damage to self, heal target for some formula based on damage dealt
 
 ENEMY ONLY?

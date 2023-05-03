@@ -138,7 +138,9 @@ currentMenu ds 1
 
 cursorIndexAndMessageY ds 1
 startingCursorIndexAndTargetID ds 1
+aoeValue ds 1
 aoeTargetID ds 1
+aoeTargetsRemaining ds 1
 menuSize ds 1
 inBattle ds 1
 currentBattler ds 1
@@ -160,6 +162,7 @@ currentEffect ds 1
 effectCounter ds 1
 effectCountdown ds 1
 mazeAndPartyLevel ds 1
+flags ds 1
 returnValue ds 1
 
 	SEG CODE 

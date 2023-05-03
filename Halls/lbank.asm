@@ -30,7 +30,7 @@ LClear:
 LSkipSeeding:
 	sta rand8
 
-	lda #$09 ;Maze level 0, party level 9
+	lda #$02 ;Maze level 0, party level 1
 	sta mazeAndPartyLevel
 
 	ldy #3; Subroutine ID for SClearMazeData
@@ -40,7 +40,7 @@ LSkipSeeding:
 	jsr LRunFunctionInSBank
 
 	;Temp testing code that will be removed much, much later
-	lda #$33
+	lda #$30
 	sta char1
 	lda #F
 	sta name1
@@ -57,7 +57,7 @@ LSkipSeeding:
 	lda #$23
 	sta mp1
 
-	lda #$35
+	lda #$31
 	sta char2
 	lda #D
 	sta name1+1
@@ -122,15 +122,19 @@ LSkipSeeding:
 	lda #$80
 	sta inBattle
 	sta currentMenu
-	lda #$FF
+	lda #$F8
 	sta hasAction
+	lda #$FF
+	sta enemyID+1
+	sta enemyID+2
+	sta enemyID+3
 	lda #$03
 	sta menuSize
 	lda #1
 	sta enemyHP
-	sta enemyHP+1
-	sta enemyHP+2
-	sta enemyHP+3
+	; sta enemyHP+1
+	; sta enemyHP+2
+	; sta enemyHP+3
 	sta highlightedLine
 	sta currentEffect
 	sta enemyAction
@@ -359,12 +363,11 @@ LProcessCharacterAdvancement:
 	cpx #4
 	bcc .LGetTotalXPLoop
 .LGotTotalXP:
-	;A now contains the total amount of experience gained from this battle
-	sta temp1
+	;temp1 now contains the total amount of experience gained from this battle
 	lda experienceToNextLevel
 	sec
 	sbc temp1 
-	bvs .LLeveledUp ;This might be the wrong branch type
+	bcc .LLeveledUp
 	sta experienceToNextLevel
 .LDidntLevelUp:
 	lda #$F3
@@ -399,6 +402,35 @@ LProcessCharacterAdvancement:
 	rts
 
 .LCheckForNewSpells:
+	lda mazeAndPartyLevel
+	and #$0F
+	tay
+	ldx aoeTargetID
+.LCheckSpellLoop:
+	lda char1,x
+	and #$0F
+	tax
+	lda LSpellListLookup,x
+	sta tempPointer1
+	lda #(LWizardSpellList >> 8 & $FF)
+	sta tempPointer1+1
+	lda (tempPointer1),y
+	bpl .LLearnedNewSpell
+	inc aoeTargetID
+	ldx aoeTargetID
+	cpx #4
+	bcs .LCheckTypeOfConclusion
+	bcc .LCheckSpellLoop
+.LLearnedNewSpell:
+	ldx aoeTargetID
+	stx currentBattler
+	inc aoeTargetID
+	sta cursorIndexAndMessageY
+	lda #$0B ;X LEARNS Y
+	sta currentMessage
+	ldx aoeTargetID
+	cpx #4
+	bcs .LCheckTypeOfConclusion
 	rts
 
 .LCheckTypeOfConclusion:
@@ -443,10 +475,74 @@ LAdvanceBattlerStatus:
 	bne .LProcessAction
 	rts
 LProcessCasting:
+	lda inBattle
+	cmp #$A0
+	beq .LCheckIfSpellHit
+	cmp #$A1
+	beq .LSpellKill
+	cmp #$A2
+	beq .LGiveDonationHealth
+	cmp #$B0
+	beq .LCheckIfAoESpellHit
+	cmp #$B1
+	beq .LAoESpellKill
+.LCastingInitialization:
+	lda temp1
+	and #$1F ;Spell ID
+	tax
+	sta cursorIndexAndMessageY
+	lda #$05 ;X CASTS Y
+	sta currentMessage
+
+	ldy currentBattler
+	cpy #4
+	bcs .LDontRemoveMana
+	lda mp1,y
+	sec
+	sbc LSpellManaLookup,x
+	sta mp1,y
+.LDontRemoveMana:
+	lda LSpellTargetingLookup,x
+	tax
+	lda LSpellAoELookup,x
+	bne .LIsAoE
+.LSingleTarget:
+	lda #$A0
+	sta inBattle
+	rts
+.LIsAoE:
+	lda #$B0
+	sta inBattle
+	lda #4
+	sta aoeTargetsRemaining
+	lda LSpellTargetingLookup,x
+	
+	rts
+.LGiveDonationHealth:
 	lda #$81
 	sta inBattle
-	lda #0
+	rts
+.LSpellKill:
+	lda #$81
+	sta inBattle
+	lda #$09 ;X DOWN
 	sta currentMessage
+	ldx startingCursorIndexAndTargetID
+	;Target ID should already be set from previous message
+	jsr LDeathCleanup
+	rts
+.LAoESpellKill:
+	lda #$B0
+	sta inBattle
+	lda #$09 ;X DOWN
+	sta currentMessage
+	ldx startingCursorIndexAndTargetID
+	;Target ID should already be set from previous message
+	jsr LDeathCleanup
+	rts
+.LCheckIfSpellHit:
+	rts
+.LCheckIfAoESpellHit:
 	rts
 
 LProcessFighting:
@@ -461,7 +557,7 @@ LProcessFighting:
 	beq .LAttackMissed 
 	lda rand8
 	and #$0F
-	beq .LAttackHit
+	bne .LAttackHit
 .LAttackMissed:
 	lda #$81
 	sta inBattle
@@ -619,8 +715,13 @@ LProcessRunning:
 LProcessGuarding:
 	lda #$81
 	sta inBattle
-	lda #0
+	lda #$19 ;X GUARDS Y
 	sta currentMessage
+
+	jsr LGetTargetFromActionDefensive
+	stx startingCursorIndexAndTargetID
+	lda #GUARDED_MASK
+	jsr LApplyStatus
 	rts
 
 LProcessParrying:
@@ -628,6 +729,36 @@ LProcessParrying:
 	sta inBattle
 	lda #0
 	sta currentMessage
+	rts
+
+LGetTargetFromAction: SUBROUTINE
+LGetTargetFromActionOffensive: ;Returns the absolute battlerID of the offensive target from the currentBattler's action in X
+	ldy #$FF
+	bne .LGetRelativeTargetID
+LGetTargetFromActionDefensive: ;Returns the absolute battlerID of the defensive target from the currentBattler's action in X
+	ldy #$0
+.LGetRelativeTargetID:
+	lda temp1 ;Should only be called from LDoBattle, so that this contains the currentBattler's action
+	and #$60
+	jsr L5Lsr
+	tax ;X now contains the relative targetID stored with the current action
+	iny
+	beq .LIsOffensive
+.LIsDefensive:
+	ldy currentBattler
+	cpy #4
+	bcs .LTargetEnemies
+	rts
+.LIsOffensive:
+	ldy currentBattler
+	cpy #4
+	bcc .LTargetEnemies
+	rts
+.LTargetEnemies:
+	inx
+	inx
+	inx
+	inx
 	rts
 
 LHasActionMasks:
@@ -640,23 +771,7 @@ LHasActionMasks:
 	.byte #$02
 	.byte #$01
 
-LGetTargetFromActionOffensive: SUBROUTINE ;Returns the absolute battlerID of the target from this action in X
-	lda temp1 ;Should only be called from LDoBattle, so that this contains the currentBattler's action
-	and #$60
-	jsr L5Lsr
-	tax
-	ldy currentBattler
-	cpy #4
-	bcs .LIsEnemy
-	inx
-	inx
-	inx
-	inx
-.LIsEnemy:
-	rts
-
 LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the next battler to take their action
-	;TODO make the speed checking routine less awful-space wise
 	lda inBattle
 	cmp #$81
 	bne .LNotSeekingNewBattler
@@ -692,6 +807,9 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 .LUpdateHasAction:
 	ldx #7
 .LSetHasActionLoop:
+	lda battlerStatus,x
+	and #$BB ;Unset the guard and parry flags from all battlers
+	sta battlerStatus,x
 	lda battlerHP,x
 	beq .NoActionThisTurn
 	lda LHasActionMasks,x
@@ -723,11 +841,20 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	sta temp5 ;Will be used to hold the currentBattler value of the battler with the current max speed
 	sta temp6 ;Will be used to hold the current max speed
 	ldx #7
-.LFindMaxSpeed
+.LFindMaxSpeed:
 	lda hasAction
 	and LHasActionMasks,x 
 	beq .LNextIteration ;Go check the next person if this battler has already acted this turn
 
+	;Check to see if this is a guard action... If so, give it priority
+	cpx #4
+	bcs .LCheckSpeed ;Don't check enemy actions for priority status
+	lda battleActions,x
+	and #$9F ;Ignore the target of this action
+	cmp #%00000011 ;GUARD
+	beq .LFoundFastestBattler
+
+.LCheckSpeed:
 	jsr LGetBattlerSpeed
 	cmp temp6
 	bcc .LNextIteration
@@ -738,6 +865,7 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	dex
 	bpl .LFindMaxSpeed
 	ldx temp5
+.LFoundFastestBattler:
 	stx currentBattler ;The next action to be taken is the one now in currentBattler
 	lda LHasActionMasks,x
 	eor hasAction
@@ -1322,9 +1450,19 @@ LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	beq .LAllAllies
 	rts
 .LTargetEnemy:
+	jsr LCheckEnemies
+	cpx #2
+	bcs .LNeedToTargetSpell
+	;Only one enemy, so auto-target this spell
+	ldx currentBattler ;Changed by LCheckEnemies
+	tya
+	jsr L5Asl
+	ora battleActions,x
+	sta battleActions,x
+	jmp .LCheckNextBattler
+.LNeedToTargetSpell:
 	lda #$81
 	sta currentMenu
-	jsr LCheckEnemies
 	dex
 	stx menuSize
 	lda #0
@@ -2110,6 +2248,8 @@ LMP5PerLevel:
 	.byte 45
 	.byte 50
 
+	;103 bytes here
+
 	ORG $DE00 ;Used to hold miscellaneous data/lookup tables
 	RORG $FE00
 
@@ -2156,8 +2296,8 @@ LPartyPositionMasks:
 	.byte $08
 
 LSpellListLookup:
-	.byte #0
-	.byte #0
+	.byte (LEmptySpellList & $FF)
+	.byte (LEmptySpellList & $FF)
 	.byte (LClericSpellList & $FF)
 	.byte (LWizardSpellList & $FF)
 	.byte (LRangerSpellList & $FF)
@@ -2203,6 +2343,16 @@ LRangerSpellList:
 	.byte #$2 ;SLEEP
 	.byte #$FF
 	.byte #$D ;BLIGHT
+LEmptySpellList:
+	.byte #0
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
 
 LSpellTargetingLookup:
 	.byte 0 ;BACK
@@ -2246,6 +2396,27 @@ LSpellManaLookup:
 	.byte 1
 	.byte 1
 
+LSpellAoELookup:
+	.byte 0 ;BACK
+	.byte 0 ;FIRE
+	.byte 0 ;SLEEP
+	.byte 1 ;BLIZRD
+	.byte 0 ;DRAIN
+	.byte 0 ;THUNDR
+	.byte 0 ;SHIELD
+	.byte 1 ;METEOR
+	.byte 1 ;CHAOS
+	.byte 0 ;HEAL
+	.byte 0 ;SMITE
+	.byte 0 ;POISON
+	.byte 0 ;SHARP
+	.byte 0 ;BLIGHT
+	.byte 1 ;TRIAGE
+	.byte 0 ;WITHER
+	.byte 1 ;BANISH
+	.byte 0 ;TRANCE
+	.byte 0 ;DONATE
+
 LCasterType:
 	.byte 0
 	.byte 0
@@ -2288,7 +2459,7 @@ LArrowReflectionLookup:
 	.byte #%00001000
 	.byte #%00001000
 
-	;~300 bytes in here
+	;~280 bytes in here
 
 	ORG $DFB0
 	RORG $FFB0

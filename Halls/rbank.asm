@@ -1660,11 +1660,11 @@ RAwaitsText:
 
 RClassColors:
 	.byte $8A ;Knight
-	.byte $06 ;Rogue
-	.byte $EC ;Cleric
-	.byte $56 ;Wizard
+	.byte $46 ;Rogue
+	.byte $1A ;Cleric
+	.byte $66 ;Wizard
 	.byte $C8 ;Ranger
-	.byte $36 ;Paladin
+	.byte $5F ;Paladin
 
 RCasterType: ;0 is no casting, 1 is full caster, FF is half-caster
 	.byte $0 ;Knight

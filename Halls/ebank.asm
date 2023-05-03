@@ -15,24 +15,55 @@ ETestEffect:
 	.byte $60
 	.byte $70
 	.byte $80
+EFireEffect:
+	.byte $26
+	.byte $26
+	.byte $26
+	.byte $28
+	.byte $28
+	.byte $2A
+	.byte $2C
+	.byte $2A
+	.byte $2C
+	.byte $2A
+	.byte $2C
+	.byte $2E
+	.byte $2C
+	.byte $2E
+	.byte $0E
+	.byte $0E
+EBasicEffect:
+	.byte $0E
+	.byte $00
+	.byte $0E
+	.byte $00
+	.byte $0E
 
 EEffectLowLookup:
 	.byte 0 ;No effect
 	.byte 0 ;Party member highlighting
 	.byte (ETestEffect & $FF)
+	.byte (EFireEffect & $FF)
+	.byte (EBasicEffect & $FF)
 
 EEffectHighLookup:
 	.byte 0 ;No effect
 	.byte 0 ;Party member highlighting
 	.byte (ETestEffect >> 8 & $FF)
+	.byte (EFireEffect >> 8 & $FF)
+	.byte (EBasicEffect >> 8 & $FF)
 
 EEffectLength:
 	.byte #0
 	.byte #0
 	.byte #8
+	.byte #16
+	.byte #5
 EEffectFrequency:
 	.byte #0
 	.byte #32
+	.byte #30
+	.byte #4
 	.byte #30
 
 ERenderEffects:
