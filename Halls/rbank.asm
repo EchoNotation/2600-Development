@@ -588,10 +588,10 @@ RXIsAsleep:
 	.byte $0
 	.byte $27
 	.byte $26
-RXEvades:
+RXIsOnGuard:
 	.byte $0
 	.byte $28
-	.byte $FF
+	.byte $31
 RXShieldFades:
 	.byte $0
 	.byte $19
@@ -608,6 +608,14 @@ RTheMazeAwaits:
 	.byte $2E
 	.byte $2F
 	.byte $30
+RXStabsYParry:
+	.byte $1
+	.byte $4
+	.byte $0
+RXBlocks:
+	.byte $1
+	.byte $32
+	.byte $FF
 
 RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 values correctly. Interprets A as the line of the message to set.
 	ldy #TEXT_HIGHLIGHTED_COLOR
@@ -1556,13 +1564,13 @@ RFadesText:
 	.byte #E
 	.byte #S
 	.byte #EMPTY
-REvadesText:
-	.byte #E
-	.byte #V
-	.byte #A
-	.byte #D
-	.byte #E
+RIsOnText:
+	.byte #I
 	.byte #S
+	.byte #EMPTY
+	.byte #O
+	.byte #N
+	.byte #EMPTY
 RIsText:
 	.byte #I
 	.byte #S
@@ -1656,6 +1664,20 @@ RAwaitsText:
 	.byte #A
 	.byte #I
 	.byte #T
+	.byte #S
+RGuardMessageText:
+	.byte #G
+	.byte #U
+	.byte #A
+	.byte #R
+	.byte #D
+	.byte #EMPTY
+RBlocksText:
+	.byte #B
+	.byte #L
+	.byte #O
+	.byte #C
+	.byte #K
 	.byte #S
 
 RClassColors:
@@ -1767,7 +1789,7 @@ RMessagesLowLookup:
 	.byte (RFellText & $FF)
 	.byte (RAsleepText & $FF)
 	.byte (RIsText & $FF)
-	.byte (REvadesText & $FF)
+	.byte (RIsOnText & $FF)
 	.byte (RFadesText & $FF)
 	.byte (RExiledText & $FF)
 	.byte (RGameText & $FF)
@@ -1776,6 +1798,8 @@ RMessagesLowLookup:
 	.byte (RTheText & $FF)
 	.byte (RMazeText & $FF)
 	.byte (RAwaitsText & $FF)
+	.byte (RGuardMessageText & $FF)
+	.byte (RBlocksText & $FF)
 
 RSpellTextLookupTable:
 	.byte (RBackText & $FF)

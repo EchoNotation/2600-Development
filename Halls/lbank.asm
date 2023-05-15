@@ -40,7 +40,7 @@ LSkipSeeding:
 	jsr LRunFunctionInSBank
 
 	;Temp testing code that will be removed much, much later
-	lda #$30
+	lda #$31
 	sta char1
 	lda #F
 	sta name1
@@ -57,7 +57,7 @@ LSkipSeeding:
 	lda #$23
 	sta mp1
 
-	lda #$31
+	lda #$30
 	sta char2
 	lda #D
 	sta name1+1
@@ -163,13 +163,14 @@ LStartOfFrame:
 	bne LBattleLogicVBlank ;Skip this logic if we are not in maze mode...
 
 LMazeLogicVBlank:
-	ldy #2; Subroutine ID for SUpdatePlayerMovement
+	ldy #2 ;Subroutine ID for SUpdatePlayerMovement
 	jsr LRunFunctionInSBank
 
-	ldy #1; Subroutine ID for SUpdateMazeRenderingPointers
+	ldy #1 ;Subroutine ID for SUpdateMazeRenderingPointers
 	jsr LRunFunctionInSBank
 
-	jsr LUpdateCompassPointerBoss
+	ldy #4 ;Subroutine ID for SUpdateCompassPointerBoss
+	jsr LRunFunctionInSBank
 	jmp LGoToUpdateEffects
 
 LBattleLogicVBlank:
@@ -504,7 +505,7 @@ LProcessCasting:
 .LDontRemoveMana:
 	lda LSpellTargetingLookup,x
 	tax
-	lda LSpellAoELookup,x
+	lda LSpellLogicLookup,x
 	bne .LIsAoE
 .LSingleTarget:
 	lda #$A0
@@ -545,12 +546,23 @@ LProcessCasting:
 .LCheckIfAoESpellHit:
 	rts
 
+.LGoToCalculateFightDamage:
+	jmp .LCalculateFightDamage
+.LGoToDamageWasAKill:
+	jmp .LDamageWasAKill
+
 LProcessFighting:
 	lda inBattle
 	cmp #$90
-	beq .LCalculateFightDamage
+	beq .LGoToCalculateFightDamage
 	cmp #$91
-	beq .LDamageWasAKill
+	beq .LGoToDamageWasAKill
+	cmp #$92
+	beq .LTargetWasParrying
+	cmp #$93
+	beq .LRetortDescription
+	cmp #$94
+	beq .LRetortDamage
 .LSetFightWindup:
 	jsr LGetTargetFromActionOffensive ;Returns the absolute target ID from the currentBattler's action in X 
 	lda battlerHP,x
@@ -584,9 +596,51 @@ LProcessFighting:
 	lda LEnemyFightMessages,x
 .LStoreFightMessage:
 	sta currentMessage
+
+	;Check if this battler is parrying
+	lda #PARRYING_MASK
+	ldx startingCursorIndexAndTargetID
+	and battlerStatus,x
+	beq .LNotParrying
+	lda #$92
+	sta inBattle
+	rts
+.LNotParrying:
 	lda #$90
 	sta inBattle
 	rts
+.LTargetWasParrying:
+	lda #$23 ;X BLOCKS
+	sta currentMessage
+	ldx currentBattler
+	jsr LGetBattlerResistances
+	and #RANGED_MASK
+	beq .LIsMelee
+	lda #$81 ;Can't riposte against ranged attackers
+	sta inBattle
+	rts
+.LIsMelee:
+	lda #$93
+	sta inBattle
+	rts
+.LRetortDescription:
+	lda #$22 ;X STABS Y (parry version)
+	sta currentMessage
+	lda #$94
+	sta inBattle
+	rts
+.LRetortDamage:
+	ldx startingCursorIndexAndTargetID ;The person who was parrying
+	jsr LGetBattlerAttack
+	sta temp2 ;The raw damage number
+
+	ldx startingCursorIndexAndTargetID
+	jsr LApplyPositionalDamageModifier
+
+	ldx currentBattler
+	stx startingCursorIndexAndTargetID ;The person who initiated the attack
+
+	jmp .LApplyFightDamage
 .LDamageWasAKill:
 	lda #$81
 	sta inBattle
@@ -600,9 +654,12 @@ LProcessFighting:
 	jsr LGetBattlerAttack
 	sta temp2 ;Contains the raw damage number
 
+	ldx currentBattler
+	jsr LApplyPositionalDamageModifier
+
 	jsr LGetTargetFromActionOffensive ;Returns the target in X
 	stx startingCursorIndexAndTargetID
-
+.LApplyFightDamage:
 	ldy #PHYSICAL_RESIST_MASK
 	lda temp2
 	jsr LApplyDamage
@@ -620,22 +677,6 @@ LProcessFighting:
 	jsr LBinaryToDecimal
 	sta cursorIndexAndMessageY
 	rts
-
-
-LFrontlineModifiers:
-	.byte $0 ;Knight
-	.byte $0 ;Rogue
-	.byte $0 ;Cleric
-	.byte $1 ;Wizard
-	.byte $1 ;Ranger
-	.byte $0 ;Paladin
-LBacklineModifiers:
-	.byte $1 ;Knight
-	.byte $1 ;Rogue
-	.byte $1 ;Cleric
-	.byte $0 ;Wizard
-	.byte $0 ;Ranger
-	.byte $1 ;Paladin
 
 LProcessMoving:
 	lda #$81
@@ -727,8 +768,11 @@ LProcessGuarding:
 LProcessParrying:
 	lda #$81
 	sta inBattle
-	lda #0
+	lda #$1D ;X IS ON GUARD
 	sta currentMessage
+	lda #PARRYING_MASK
+	ldx currentBattler
+	jsr LApplyStatus
 	rts
 
 LGetTargetFromAction: SUBROUTINE
@@ -760,16 +804,6 @@ LGetTargetFromActionDefensive: ;Returns the absolute battlerID of the defensive 
 	inx
 	inx
 	rts
-
-LHasActionMasks:
-	.byte #$80
-	.byte #$40
-	.byte #$20
-	.byte #$10
-	.byte #$08
-	.byte #$04
-	.byte #$02
-	.byte #$01
 
 LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the next battler to take their action
 	lda inBattle
@@ -974,17 +1008,20 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 .LAtLeast1Damage:
 	inc temp2
 .LNoDamageClampNeeded:
-	lda temp2
-	jsr LBinaryToDecimal
-	sta cursorIndexAndMessageY
-	lda #$07 ;X LOSES Y HP
-	sta currentMessage
-
 	lda temp2 ;Damage to deal in binary
 	ldx currentBattler
 	stx startingCursorIndexAndTargetID
 	ldy #POISON_RESIST_MASK
 	jsr LApplyDamage
+	sta temp3
+
+	lda temp2 ;Actual damage dealt by LApplyDamage
+	jsr LBinaryToDecimal
+	sta cursorIndexAndMessageY
+	lda #$07 ;X LOSES Y HP
+	sta currentMessage
+
+	lda temp3
 	bne .LDied
 	lda #$85
 	sta inBattle
@@ -996,6 +1033,29 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 	lda #0
 	rts
 
+LApplyPositionalDamageModifier: SUBROUTINE ;Treats X as the absolute ID of the attacker, and modifies the binary damage in temp2 accordingly
+	cpx #4
+	bcs .LFullDamage ;Enemies do not have frontline/backline, so disregard the following checks
+
+	lda char1,x
+	and #$0F
+	tay ;Save the class of this battler for later
+
+	lda LPartyPositionMasks,x
+	and partyBattlePos
+	bne .LBattlerInFrontline
+.LBattlerInBackline:
+	lda LBacklineModifiers,y ;0 means normal damage, anything else means half
+	bne .LHalfDamage
+	beq .LFullDamage
+.LBattlerInFrontline:
+	lda LFrontlineModifiers,y
+	beq .LFullDamage
+.LHalfDamage:
+	lsr temp2
+.LFullDamage
+	rts
+
 LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
 	sta temp2
 	stx temp3
@@ -1003,8 +1063,7 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 	jsr LGetBattlerResistances
 	and temp4
 	beq .LDamageNotResisted
-	lda temp2
-	lsr
+	lsr temp2
 	jmp .LCheckDamageModifiers
 .LDamageNotResisted:
 	lda temp2
@@ -1024,29 +1083,7 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 	lsr temp2
 	lsr temp2
 .LNotGuarded:
-.LCheckBattlerPos:
-	ldx currentBattler
-	cpx #4
-	bcs .LDoDamage ;Enemies do not have frontline/backline, so disregard the following checks
 
-	lda char1,x
-	and #$0F
-	tay ;Save the class of this battler for later
-
-	lda LPartyPositionMasks,x
-	and partyBattlePos
-	bne .LBattlerInFrontline
-.LBattlerInBackline:
-	lda LBacklineModifiers,y ;0 means normal damage, anything else means half
-	bne .LHalfDamage
-	beq .LDoDamage
-.LBattlerInFrontline:
-	lda LFrontlineModifiers,y
-	beq .LDoDamage
-.LHalfDamage:
-	lsr temp2
-
-.LDoDamage:
 	lda temp2 ;A now contains the final binary damage that should be dealt to target X
 	ldx temp3
 	cpx #4
@@ -1090,7 +1127,7 @@ LDeathCleanup: SUBROUTINE ;Performs death housekeeping for target X
 LApplyStatus: SUBROUTINE ;Applies additional status A to target X
 	sta temp4
 	cmp #$18
-	bne .LPuttingTargetToSleep
+	beq .LPuttingTargetToSleep
 	eor #$FF
 	bne .LAddNewStatus
 .LPuttingTargetToSleep:
@@ -1101,26 +1138,165 @@ LApplyStatus: SUBROUTINE ;Applies additional status A to target X
 	sta battlerStatus,x
 	rts
 
-LLowAllyStatPointers:
-	.byte (LClassAttackLookup & $FF)
-	.byte (LClassMagicLookup & $FF)
-	.byte (LClassSpeedLookup & $FF)
-	.byte (LClassHPLookup & $FF)
-LHighAllyStatPointers:
-	.byte (LClassAttackLookup >> 8 & $FF)
-	.byte (LClassMagicLookup >> 8 & $FF)
-	.byte (LClassSpeedLookup >> 8 & $FF)
-	.byte (LClassHPLookup >> 8 & $FF)
-LLowEnemyStatPointers:
-	.byte (LEnemyAttack & $FF)
-	.byte (LEnemyMagic & $FF)
-	.byte (LEnemySpeed & $FF)
-	.byte (LEnemyHP & $FF)
-LHighEnemyStatPointers:
-	.byte (LEnemyAttack >> 8 & $FF)
-	.byte (LEnemyMagic >> 8 & $FF)
-	.byte (LEnemySpeed >> 8 & $FF)
-	.byte (LEnemyHP >> 8 & $FF)
+LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if healing was denied by blight, otherwise the amount that was actually healed
+	stx temp4 ;target index
+	sta temp2 ;binary amount to regain
+	lda #BLIGHTED_MASK
+	and battlerStatus,x
+	beq .LNoBlight
+	;Need to clear the blight
+	lda #(BLIGHTED_MASK ^ $FF)
+	and battlerStatus,x
+	sta battlerStatus,x ;Clear the blight status
+	lda #$FF ;Healing was denied by blight
+	rts
+.LNoBlight:
+	cpx #4
+	bcs .LHealEnemy
+	;healing an ally
+	lda temp2 ;binary health to heal
+	jsr LBinaryToDecimal
+	sta temp2 ;decimal health to heal
+	ldx temp4
+	lda battlerHP,x
+	sed
+	clc
+	adc temp2
+	cld
+	sta temp3 ;current health + heal amount
+	jsr LGetBattlerMaxHP
+	ldx temp4 ;targetID
+	cmp temp3
+	bcs .LMaxedOutHP
+	lda temp3 ;Didn't max out, so load the current health + heal amount
+	sta battlerHP,x
+	lda temp2 ;the decimal amount that was healed
+	rts
+.LMaxedOutHP:
+	sta battlerHP,x
+
+	rts
+
+.LHealEnemy:
+
+	rts
+
+LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Returns the amount of mana that was actually recovered (0 for enemies)
+	cpx #4
+	bcc .LIsAlly
+	lda #0 ;Enemies don't track or recover mana
+	rts
+.LIsAlly:
+	stx temp4 ;target index
+	jsr LBinaryToDecimal
+	sta temp3 ;decimal amount to regain
+	ldx temp4
+	lda mp1,x
+	sta temp5 ;current mana
+	clc
+	sed
+	adc temp3
+	cld
+	sta temp2 ;Total mana after regaining, but before clamping
+	jsr LGetBattlerMaxMP
+	ldx temp4
+	cmp temp2
+	bcc .LOverRestored
+	lda temp2 ;Didn't hit max mana, so just store the amount after addition
+	sta mp1,x
+	lda temp3
+	;A now contains the amount of mana that was restored
+	rts
+.LOverRestored:
+	sed
+	sbc mp1,x ;Max MP - Current MP
+	cld
+	;A now contains the amount of mana that was restored
+	rts
+
+LFindAoETgtOffensive: SUBROUTINE ;Updates the aoeTargetID to the next relevant battler for offensive casts (make sure to check that aoeTargetsRemaining > 0 before use!)
+	ldx aoeTargetID
+.LSearchForTarget:
+	inx
+	lda battlerHP,x
+	beq .LSearchForTarget
+.LFoundTarget:
+	stx aoeTargetID
+	rts
+
+LFindAoETgtDefensive: SUBROUTINE ;Updates the aoeTargetID to the next relevant battler for defensive casts (make sure to check that aoeTargetsRemaining > 0 before use!)
+	ldx currentBattler
+	cpx #4
+	bcs .LIsEnemy
+	;If this is an ally, just increment it, since friendly AoE always affects allies
+	inc aoeTargetID
+	rts
+.LIsEnemy:
+	ldx aoeTargetID
+.LSearchForTarget:
+	inx
+	lda battlerHP,x
+	beq .LSearchForTarget
+.LFoundTarget:
+	stx aoeTargetID
+	rts
+
+LSetTotalAoETgtsOffensive: SUBROUTINE ;Sets the aoeTargetsRemaining byte to the number of battlers to affect with the AoE spell (on the opposite side of the currentBattler)
+									  ;Also initializes the aoeTargetID to the appropriate value
+	ldy #0
+	ldx currentBattler
+	cpx #4
+	bcs .LTargetingAllies
+.LTargetingEnemies:
+	ldx #3
+	stx aoeTargetID
+	inx
+	lda #8
+	bne .LSaveLoopLimit
+.LTargetingAllies:
+	ldx #$FF
+	stx aoeTargetID
+	inx
+	lda #4
+.LSaveLoopLimit:
+	sta temp3
+.LTargetingLoop:
+	lda battlerHP,x
+	beq .LBattlerDead
+	iny
+.LBattlerDead:
+	inx
+	cpx #8
+	bcc .LTargetingLoop
+	sty aoeTargetsRemaining
+	rts
+
+LSetTotalAoETgtsDefensive: SUBROUTINE ;Sets the aoeTargetsRemaining byte to the number of battlers to affect with the AoE spell (on the same side as the currentBattler)
+									  ;Also initializes the aoeTargetID to the appropriate value
+	ldx currentBattler
+	cpx #4
+	bcs .LIsEnemy
+.LIsAlly:
+	lda #4
+	sta aoeTargetsRemaining
+	lda #$FF
+	sta aoeTargetID
+	rts
+.LIsEnemy:
+	ldy #0
+	ldx #3
+	stx aoeTargetID
+	inx
+.LCheckEnemiesLoop:
+	lda battlerHP,x
+	beq .LEnemyDead
+	iny
+.LEnemyDead:
+	inx
+	cpx #8
+	bcc .LCheckEnemiesLoop
+	sty aoeTargetsRemaining
+	rts
 
 LGetBattlerStat: SUBROUTINE ;Returns the appropriate stat of battlerID X in A
 LGetBattlerAttack:
@@ -1134,6 +1310,9 @@ LGetBattlerSpeed:
 	bne LSetStatPointers
 LGetBattlerMaxHP:
 	ldy #3
+	bne LSetStatPointers
+LGetBattlerMaxMP:
+	ldy #4
 LSetStatPointers:
 	lda LLowAllyStatPointers,y
 	sta tempPointer3
@@ -1173,6 +1352,8 @@ LSetStatPointers:
 	inx
 	inx
 	rts
+
+
 
 ;Interprets X as the cursorPosition
 LCursorIndexToBattlerIndex: SUBROUTINE ;Converts the position of a menu cursor into the correct location in the array of the target (based on tempPointer1)
@@ -1236,11 +1417,14 @@ LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to conve
 	ora tempPointer2
 	rts
 
-LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return the resistances of (in A). Format is LPFIDEP0
-									;L: Legendary resist (Banish/Sleep), P: Physical, F: Fire, I:Ice, D: Divine, E: Electric, P: Poison
+LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return the resistances of (in A). Format is LPFIDEPR
+									;L: Legendary resist (Banish/Sleep), P: Physical, F: Fire, I:Ice, D: Divine, E: Electric, P: Poison, R: isRanged
 	cpx #4
 	bcs .LHasResistanceByte
-	lda #0
+	lda char1,x
+	and #$0f
+	tax
+	lda LIsClassRanged,x
 	rts
 .LHasResistanceByte:
 	dex
@@ -1895,115 +2079,6 @@ LOverrideAvatar: SUBROUTINE ;Sets party member Y's mood to X.
 	sta char1,y
 	rts
 
-LUpdateCompassPointerNormal: SUBROUTINE ;Updates tempPointer1 to point to the letter N, S, E, or W based on which direction the player is facing
-										;There is a good chance this will be removed in the final version
-	ldy playerFacing
-	beq .LCompassEast
-	dey
-	beq .LCompassSouth
-	dey
-	beq .LCompassWest
-.LCompassNorth:
-	lda #(RLetterN & $FF)
-	jmp .LStoreCompassPointer
-.LCompassSouth:
-	lda #(RLetterS & $FF)
-	jmp .LStoreCompassPointer
-.LCompassWest:
-	lda #(RLetterW & $FF)
-	jmp .LStoreCompassPointer
-.LCompassEast:
-	lda #(RLetterE & $FF)
-.LStoreCompassPointer:
-	sta tempPointer1
-	lda #(RLetterN >> 8 & $FF)
-	sta tempPointer1+1
-	rts
-
-LUpdateCompassPointerBoss: SUBROUTINE ;Updates tempPointer1 in order to render an arrow at the top of the screen pointing towards this floor's exit
-	;This is a good candidate for relocation to bank S
-	lda exitLocation
-	and #$0F
-	sta temp2 ;Y location of boss
-	lda exitLocation
-	and #$F0
-	jsr L4Lsr
-	sta temp1 ;X location of boss
-	sec
-	sbc playerX
-	sta temp1 ;X offset
-	lda temp2
-	sec
-	sbc playerY
-	sta temp2 ;Y offset
-
-	lda temp1
-	beq .LNoDeltaX
-	bpl .LDeltaXPositive
-.LDeltaXNegative:
-	lda #$04
-	sta temp3
-	bne .LEncodeDeltaY
-.LNoDeltaX:
-	sta temp3
-	beq .LEncodeDeltaY
-.LDeltaXPositive
-	lda #$08
-	sta temp3
-.LEncodeDeltaY:
-	lda temp2
-	beq .LNoDeltaY
-	bpl .LDeltaYPositive
-.LDeltaYNegative:
-	lda #$01
-	ora temp3
-	bne .LGetArrowID
-.LNoDeltaY:
-	ora temp3
-	bpl .LGetArrowID
-.LDeltaYPositive:
-	lda #$02
-	ora temp3
-.LGetArrowID:
-	tax
-	lda LArrows,x ;Get the correct arrowID if facing east
-	cmp #$FF
-	bne .LNotOnExit
-	lda #(RLetterX & $FF)
-	sta tempPointer1
-	lda #(RLetterX >> 8 & $FF)
-	sta tempPointer1+1
-	rts
-
-.LNotOnExit:
-	;Get proper arrow ID according to facing bias
-	ldy playerFacing
-	iny
-.LRotateLoop:
-	dey
-	beq .LDoneRotating
-	sec
-	sbc #2
-	jmp .LRotateLoop
-.LDoneRotating:
-	cmp #0
-	bpl .LNoUnderflow
-	clc
-	adc #8
-
-.LNoUnderflow:
-	;Set compass pointer and reflection state
-	tax
-	lda LArrowGraphicsLookup,X
-	sta tempPointer1
-	lda #(RArrowUp >> 8 & $FF)
-	sta tempPointer1+1
-
-	lda LArrowReflectionLookup,X
-	sta REFP0
-
-	rts
-
 L6Lsr:
 	lsr
 L5Lsr
@@ -2024,8 +2099,8 @@ L4Asl:
 	asl
 	rts
 
-	ORG $DC40 ;Used to hold enemy stats and related data)
-	RORG $FC40
+	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
+	RORG $FD00
 
 LXPToNextLevel: ;TODO balance this
 	.byte #0 ;Shouldn't be used, xp for level 0 -> 1
@@ -2060,15 +2135,15 @@ LEnemyHP:
 	.byte #10 ;Giant
 	.byte #150 ;Dragon
  
-;Format is LPFIHEP0
-;L : Legendary (bosses), P : Physical, F : Fire, I : Ice, H : Holy, E : Electric, P : Poison
+;Format is LPFIHEPR
+;L : Legendary (bosses), P : Physical, F : Fire, I : Ice, H : Holy, E : Electric, P : Poison, R : isRanged (prevents riposte)
 LEnemyResistances:
-	.byte #%01011001 ;Zombie
+	.byte #%01011010 ;Zombie
 	.byte #%00000000 ;Giant
 	.byte #%10000010 ;Dragon
 
-	ORG $DD00 ;Used to hold battle-related data.
-	RORG $FD00
+	ORG $DE00 ;Used to hold miscellaneous data/lookup tables
+	RORG $FE00
 
 LClassFightMessages:
 	.byte $4 ;Knight
@@ -2248,11 +2323,6 @@ LMP5PerLevel:
 	.byte 45
 	.byte 50
 
-	;103 bytes here
-
-	ORG $DE00 ;Used to hold miscellaneous data/lookup tables
-	RORG $FE00
-
 LClassAttackLookup:
 	.byte (LStat3PerLevel & $FF) ;Knight
 	.byte (LStat5PerLevel & $FF) ;Rogue
@@ -2396,7 +2466,7 @@ LSpellManaLookup:
 	.byte 1
 	.byte 1
 
-LSpellAoELookup:
+LSpellLogicLookup:
 	.byte 0 ;BACK
 	.byte 0 ;FIRE
 	.byte 0 ;SLEEP
@@ -2425,41 +2495,63 @@ LCasterType:
 	.byte $FF
 	.byte $FF
 
-	;Arrow IDs start with 0 at straight east, then increasing moving clockwise
-LArrows:
-	.byte $FF
-	.byte 6
-	.byte 2
-	.byte $FF ;Unused
-	.byte 4
-	.byte 5
-	.byte 3
-	.byte $FF ;Unused
-	.byte 0
-	.byte 7
-	.byte 1 ;Values for LArrows,11-15 should never be accessed
+LLowAllyStatPointers:
+	.byte (LClassAttackLookup & $FF)
+	.byte (LClassMagicLookup & $FF)
+	.byte (LClassSpeedLookup & $FF)
+	.byte (LClassHPLookup & $FF)
+	.byte (LClassMPLookup & $FF)
+LHighAllyStatPointers:
+	.byte (LClassAttackLookup >> 8 & $FF)
+	.byte (LClassMagicLookup >> 8 & $FF)
+	.byte (LClassSpeedLookup >> 8 & $FF)
+	.byte (LClassHPLookup >> 8 & $FF)
+	.byte (LClassMPLookup >> 8 & $FF)
+LLowEnemyStatPointers:
+	.byte (LEnemyAttack & $FF)
+	.byte (LEnemyMagic & $FF)
+	.byte (LEnemySpeed & $FF)
+	.byte (LEnemyHP & $FF)
+	.byte 0 ;This should never be referenced
+LHighEnemyStatPointers:
+	.byte (LEnemyAttack >> 8 & $FF)
+	.byte (LEnemyMagic >> 8 & $FF)
+	.byte (LEnemySpeed >> 8 & $FF)
+	.byte (LEnemyHP >> 8 & $FF)
+	.byte 0 ;This should never be referenced
 
-LArrowGraphicsLookup:
-	.byte (RArrowUp & $FF)
-	.byte (RArrowDiagonalUp & $FF)
-	.byte (RArrowRight & $FF)
-	.byte (RArrowDiagonalDown & $FF)
-	.byte (RArrowDown & $FF)
-	.byte (RArrowDiagonalDown & $FF)
-	.byte (RArrowRight & $FF)
-	.byte (RArrowDiagonalUp & $FF)
+LHasActionMasks:
+	.byte #$80
+	.byte #$40
+	.byte #$20
+	.byte #$10
+	.byte #$08
+	.byte #$04
+	.byte #$02
+	.byte #$01
 
-LArrowReflectionLookup:
-	.byte #0
-	.byte #0
-	.byte #0
-	.byte #0
-	.byte #0
-	.byte #%00001000
-	.byte #%00001000
-	.byte #%00001000
+LFrontlineModifiers:
+	.byte $0 ;Knight
+	.byte $0 ;Rogue
+	.byte $0 ;Cleric
+	.byte $1 ;Wizard
+	.byte $1 ;Ranger
+	.byte $0 ;Paladin
+LBacklineModifiers:
+	.byte $1 ;Knight
+	.byte $1 ;Rogue
+	.byte $1 ;Cleric
+	.byte $0 ;Wizard
+	.byte $0 ;Ranger
+	.byte $1 ;Paladin
 
-	;~280 bytes in here
+LIsClassRanged:
+	.byte $0 ;Knight
+	.byte $0 ;Rogue
+	.byte $0 ;Cleric
+	.byte $1 ;Wizard
+	.byte $1 ;Ranger
+	.byte $0 ;Paladin
 
 	ORG $DFB0
 	RORG $FFB0

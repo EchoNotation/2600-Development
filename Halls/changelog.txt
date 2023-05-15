@@ -414,46 +414,54 @@
 	-Changed ROGUE color to be reddish salmon instead of grey because it happened to exactly match TEXT_COLOR
 	-Changed some other class colors around to have more favorable contrast
 	-Guarded and parrying statuses are cleared after each combat round
+	-PARRY ability is implemented for enemies and allies
+	-Relocated LUpdateCompassPointerBoss into the S bank, and moved some stuff around to create more space for spellcasting code
+5/3/23
+	-Attacks from ranged classes or ranged enemies can no longer be riposted
+		-Last bit of EnemyResistances, rangedness can be checked from LGetBattlerResistances
+	-Blight and spell damage is no longer affected by party position
+	-Enemy resistances actually reduce damage now
+	-Changed parry related messages to X IS ON GUARD and X BLOCKS
+5/14/23
+	-Added some new untested subroutines for managing AoE effects
+	-Started work on subroutines LApplyHealing and LApplyRestoration
+		-Still incomplete
+	-Added max MP extension to LGetBattlerStat
+	-Did some enemy planning/design work
 
 Known Bugs:
 	-Exiting battle shows glitchy maze for 1 frame. SUpdateMazeRenderingPointers isn't called when exiting battle
+		-Probably going to wait to fix this until battle transitions are better defined
+
 	-If the last party member doesn't learn a spell, it takes an extra input to end the battle
-		-Probably going to wait to fix these until battle transitions are better defined
+		-This is actually a problem that will need to be addressed for all AoE effects
 
 TODO:
-	-Battle system rewrite
-		-High/low battle logic? Would be preferable if possible
-	
-	-Implement PARRY
-		-PARRY causes the user to negate incoming basic attacks while retorting with a basic attack of their own.
+	-Make party members gain delta HP, delta MP when leveling up
 
-	-Should party members gain delta HP, delta MP when leveling up?
-
-	-Allocate RAM for maze related things (campfire used yet, steps since last encounter, etc...)
+	-Change DONATE to WISH
 
 	-Battle transitions?
+
+	-Move LUpdateMenuAdvancement and LUpdateMenuRendering to S bank if more room is needed for battle logic
 
 	-Campfire rendering
 		-Give campfire battle-like scene? Yes
 
 	-Title on actual title screen?
-	-Decouple button presses and position indicator from RDrawCharacterInfo, allowing it to be used on the title screen?
-		-Alternatively, make simpler version of RDrawCharacterInfo for main menu kernel usage
+	-Make simpler version of RDrawCharacterInfo for main menu kernel usage
 
 	Overarching questions:	
 		-Hear a "roar" when getting near the boss?
-		-Rendering exit and campfire? Rendering campfire should be possible, but I don't know about the exit
-			-Exit will not be rendered, campfire will exist as an enemy in a special battle type
+		-Exit will not be rendered, campfire will exist as an enemy in a special battle type
 
 	-How is enemy AI going to be stored?
-		-Number of action slots, list of actual enemyAction bytes right after --Seems that this is not going to be a viable option anymore
-			-This is very simplistic, but as a result is space-efficient
 		-Number of action slots, list of meta-enemyActions
 			-Meta-enemyActions might be along the lines of "attack", "heal ally", "paralyze enemy", etc.
 			-These meta-actions are then converted into actual enemyAction by LDetermineEnemyAI routine
 			-More sophisticated, less data space, more code space. Seems like a good idea
-			-How smart should this be? Does it prefer to paralyze heavy physical attackers, for instance?
-				-Probably not that smart
+		-Make enemy AI dependent on health for some enemies
+			
 	-How is encounter data going to be stored?
 		-Depends on whether or not certain groups of enemies should appear together
 			-If not, then just have a list of which enemies can appear on which floors
@@ -469,7 +477,7 @@ TODO:
 			-Spellcasting - 5%
 			-Moving - 100%
 			-Running - 100%
-			-Functional status effects - 70% (SLEEP, BLIGHT, SHARP, and GUARD implemented: need to implement PARRY and SHIELD)
+			-Functional status effects - 85% (SLEEP, BLIGHT, SHARP, GUARD, and PARRY implemented: need to implement SHIELD)
 			-Enemy AI - 0%
 			-Character advancement - 85%
 			-Mana implementation - 95%
@@ -506,3 +514,4 @@ TODO:
 			-Make back button move you backwards while maintaining facing direction
 		-Not all enemies are centered, create more of a "group skirmish" appearance
 		-Potentially try to center enemies more precisely?
+		-Being guarded reduces blight damage.

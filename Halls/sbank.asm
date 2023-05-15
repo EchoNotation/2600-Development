@@ -576,17 +576,143 @@ SRandom: SUBROUTINE ;Ticks the random number generator when called
 	sta rand8
 	rts
 
+SUpdateCompassPointerBoss: SUBROUTINE ;Updates tempPointer1 in order to render an arrow at the top of the screen pointing towards this floor's exit
+	;This is a good candidate for relocation to bank S
+	lda exitLocation
+	and #$0F
+	sta temp2 ;Y location of boss
+	lda exitLocation
+	and #$F0
+	jsr S4Lsr
+	sta temp1 ;X location of boss
+	sec
+	sbc playerX
+	sta temp1 ;X offset
+	lda temp2
+	sec
+	sbc playerY
+	sta temp2 ;Y offset
+
+	lda temp1
+	beq .SNoDeltaX
+	bpl .SDeltaXPositive
+.SDeltaXNegative:
+	lda #$04
+	sta temp3
+	bne .SEncodeDeltaY
+.SNoDeltaX:
+	sta temp3
+	beq .SEncodeDeltaY
+.SDeltaXPositive
+	lda #$08
+	sta temp3
+.SEncodeDeltaY:
+	lda temp2
+	beq .SNoDeltaY
+	bpl .SDeltaYPositive
+.SDeltaYNegative:
+	lda #$01
+	ora temp3
+	bne .SGetArrowID
+.SNoDeltaY:
+	ora temp3
+	bpl .SGetArrowID
+.SDeltaYPositive:
+	lda #$02
+	ora temp3
+.SGetArrowID:
+	tax
+	lda SArrows,x ;Get the correct arrowID if facing east
+	cmp #$FF
+	bne .SNotOnExit
+	lda #(RLetterX & $FF)
+	sta tempPointer1
+	lda #(RLetterX >> 8 & $FF)
+	sta tempPointer1+1
+	rts
+
+.SNotOnExit:
+	;Get proper arrow ID according to facing bias
+	ldy playerFacing
+	iny
+.SRotateLoop:
+	dey
+	beq .SDoneRotating
+	sec
+	sbc #2
+	jmp .SRotateLoop
+.SDoneRotating:
+	cmp #0
+	bpl .SNoUnderflow
+	clc
+	adc #8
+
+.SNoUnderflow:
+	;Set compass pointer and reflection state
+	tax
+	lda SArrowGraphicsLookup,X
+	sta tempPointer1
+	lda #(RArrowUp >> 8 & $FF)
+	sta tempPointer1+1
+
+	lda SArrowReflectionLookup,X
+	sta REFP0
+	rts
+
+S4Lsr: SUBROUTINE
+	lsr
+	lsr
+	lsr
+	lsr
+	rts
+
+	;Arrow IDs start with 0 at straight east, then increasing moving clockwise
+SArrows:
+	.byte $FF
+	.byte 6
+	.byte 2
+	.byte $FF ;Unused
+	.byte 4
+	.byte 5
+	.byte 3
+	.byte $FF ;Unused
+	.byte 0
+	.byte 7
+	.byte 1 ;Values for LArrows,11-15 should never be accessed
+
+SArrowGraphicsLookup:
+	.byte (RArrowUp & $FF)
+	.byte (RArrowDiagonalUp & $FF)
+	.byte (RArrowRight & $FF)
+	.byte (RArrowDiagonalDown & $FF)
+	.byte (RArrowDown & $FF)
+	.byte (RArrowDiagonalDown & $FF)
+	.byte (RArrowRight & $FF)
+	.byte (RArrowDiagonalUp & $FF)
+
+SArrowReflectionLookup:
+	.byte #0
+	.byte #0
+	.byte #0
+	.byte #0
+	.byte #0
+	.byte #%00001000
+	.byte #%00001000
+	.byte #%00001000
+
 SHighLabelBytes:
 	.byte (SGenerateMazeData >> 8 & $FF)
 	.byte (SUpdateMazeRenderingPointers >> 8 & $FF)
 	.byte (SUpdatePlayerMovement >> 8 & $FF)
 	.byte (SClearMazeData >> 8 & $FF)
+	.byte (SUpdateCompassPointerBoss >> 8 & $FF)
 
 SLowLabelBytes:
 	.byte (SGenerateMazeData & $FF)
 	.byte (SUpdateMazeRenderingPointers & $FF)
 	.byte (SUpdatePlayerMovement & $FF)
 	.byte (SClearMazeData & $FF)
+	.byte (SUpdateCompassPointerBoss & $FF)
 
 	ORG $FFB0 ;Bankswitching nonsense
 	RORG $FFB0

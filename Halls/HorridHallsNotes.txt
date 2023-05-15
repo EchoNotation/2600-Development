@@ -45,6 +45,8 @@ $85 Check if battler was sleeping
 $90 Need to calculate and deal attack's damage
 $91 Basic attack was a kill
 $92 Basic attack was parried (not yet implemented)
+$93 Retort
+$94 Need to calculate and deal retort's damage
 
 $A0 Need to check if spell hit, and process its effect if it did
 $A1 Spell damage was a kill
@@ -56,11 +58,6 @@ $B1 AoE spell kill
 $E0 Failed to run
 $E1 Succeeded run
 $E2 Exit battle via running
-
-$E3 Guard initiate
-$E4 Parry initiate
-$E5 Riposte
-$E6 Riposte damage
 
 $F0 Party wins, check to see if party leveled up (F2 if yes), else check which type of positive conclusion this was (go to FD, FE, or FF)
 $F1 Party down, go to FC
@@ -82,16 +79,21 @@ $83 Target other ally (GUARD, DONATE)
 $84 Show spells to select
 $85 No spells known
 
---- EFFECTS ---
+--- VISUAL EFFECTS ---
 $00 - No effect
 $01 - Party member highlighting (also highlighting enemies if current menu = $81. Set enemyAction to be the absolute enemy index in this mode)
 $02 - Test effect
+$03 - Firey test effect
+
+--- SOUND EFFECTS ---
+$00 - No sound
 
 --- SUBROUTINE IDs ---
 $00 - SGenerateMazeData
 $01 - SUpdateMazeRenderingPointers
 $02 - SUpdatePlayerMovement
 $03 - SClearMazeData
+$04 - SUpdateCompassPointerBoss
 
 --- BATTLE ACTIONS --- (STTIIIII) S: is Spell, TT: target ID, I: index.
 0TT00000 : FIGHT --- Targeted basic physical attack using battler's Attack stat.
@@ -101,6 +103,15 @@ $03 - SClearMazeData
 00000100 : PARRY --- User will evade all physical attacks for the remainder of the round, and retort against any attackers with a basic attack of their own.
 1TTIIIII : Casting a spell
 
+--- ENEMY AI ---
+-Attack
+-Cast
+-Guard
+-Parry
+-Summon
+-Summon & Damage (do damage to self equal to magic)
+-Imitate?
+
 --- SPELL TARGETING LOOKUP ---
 0: No targeting (THUNDR, TRANCE)
 1: Target enemy (FIRE, SLEEP, DRAIN, METEOR, SMITE, POISON, BLIGHT, WITHER)
@@ -109,7 +120,7 @@ $03 - SClearMazeData
 4: Target other ally (DONATE)
 5: Target all allies (TRIAGE)
 
-Current system allows for 40 enemies.
+Current system allows for 40 enemies. (May end up cutting down to 32 or 36 to make room for effects)
 Each enemy has 1 byte for its resistances
 	Format is LPFIDEP0 (Legendary, physical, fire, ice, divine, electric, poison)
 
@@ -216,7 +227,7 @@ MESSAGE COMPONENTS:
 25: FELL
 26: ASLEEP
 27: IS
-28: EVADES
+28: IS ON
 29: FADES
 2A: EXILED
 2B: GAME
@@ -225,6 +236,8 @@ MESSAGE COMPONENTS:
 2E: THE
 2F: MAZE
 30: AWAITS
+31: GUARD
+32: BLOCKS
 
 Messages:
 00: X STABS Y
@@ -256,13 +269,13 @@ Messages:
 1A: X ATTACK UP
 1B: X FELL ASLEEP
 1C: X IS ASLEEP
-1D: X EVADES
+1D: X iS ON GUARD
 1E: X SHIELD FADES
 1F: GAME OVER!
 20: GAME CLEAR!
 21: THE MAZE AWAITS
-
-
+22: X (target) STABS Y (currentBattler)
+23: X BLOCKS
 
 Status Effects:
 Pos:
