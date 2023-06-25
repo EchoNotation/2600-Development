@@ -30,7 +30,7 @@ LClear:
 LSkipSeeding:
 	sta rand8
 
-	lda #$02 ;Maze level 0, party level 1
+	lda #$09 ;Maze level 0, party level 9
 	sta mazeAndPartyLevel
 
 	ldy #3; Subroutine ID for SClearMazeData
@@ -40,7 +40,7 @@ LSkipSeeding:
 	jsr LRunFunctionInSBank
 
 	;Temp testing code that will be removed much, much later
-	lda #$31
+	lda #$33
 	sta char1
 	lda #F
 	sta name1
@@ -57,7 +57,7 @@ LSkipSeeding:
 	lda #$23
 	sta mp1
 
-	lda #$30
+	lda #$35
 	sta char2
 	lda #D
 	sta name1+1
@@ -126,14 +126,13 @@ LSkipSeeding:
 	sta hasAction
 	lda #$FF
 	sta enemyID+1
-	sta enemyID+2
 	sta enemyID+3
 	lda #$03
 	sta menuSize
 	lda #1
 	sta enemyHP
 	; sta enemyHP+1
-	; sta enemyHP+2
+	sta enemyHP+2
 	; sta enemyHP+3
 	sta highlightedLine
 	sta currentEffect
@@ -199,7 +198,8 @@ LGoToReset:
 	jmp LReset
 
 LUpdateMenuRenderingVBlank:
-	jsr LUpdateMenuRendering
+	ldy #6 ;Subroutine ID for SUpdateMenuRendering
+	jsr LRunFunctionInSBank
 
 LAfterEffectUpdate:
 LWaitForVblankTimer:
@@ -236,7 +236,9 @@ LBattleLogicOverscan:
 	and #$F8
 	beq LNoMenuAdvancement
 	jsr LUpdateMenuCursorPos
-	jsr LUpdateMenuAdvancement
+	
+	ldy #5 ;Subroutine ID for SUpdateMenuAdvancement
+	jsr LRunFunctionInSBank
 LNoMenuAdvancement:
 LAfterMenuLogic:
 	jmp LWaitForOverscanTimer
@@ -461,6 +463,9 @@ LProcessCharacterAdvancement:
 	sta inBattle
 	rts
 
+.LGoToHandleAoEEffect:
+	jmp .LHandleAoEEffect
+
 .LProcessAction:
 	lda temp1
 	bmi LProcessCasting
@@ -478,13 +483,11 @@ LAdvanceBattlerStatus:
 LProcessCasting:
 	lda inBattle
 	cmp #$A0
-	beq .LCheckIfSpellHit
+	beq .LHandleSingleTgtEffect
 	cmp #$A1
-	beq .LSpellKill
-	cmp #$A2
-	beq .LGiveDonationHealth
+	beq .LSingleTgtSpellKill
 	cmp #$B0
-	beq .LCheckIfAoESpellHit
+	beq .LGoToHandleAoEEffect
 	cmp #$B1
 	beq .LAoESpellKill
 .LCastingInitialization:
@@ -504,26 +507,24 @@ LProcessCasting:
 	sta mp1,y
 .LDontRemoveMana:
 	lda LSpellTargetingLookup,x
-	tax
-	lda LSpellLogicLookup,x
-	bne .LIsAoE
+	bmi .LIsAoE
 .LSingleTarget:
 	lda #$A0
 	sta inBattle
 	rts
 .LIsAoE:
+	cmp #$82
+	beq .LIsOffensive
+	jsr LSetTotalAoETgtsDefensive
+	jmp .LTotalTgtsSet
+.LIsOffensive:
+	jsr LSetTotalAoETgtsOffensive
+.LTotalTgtsSet:
 	lda #$B0
 	sta inBattle
-	lda #4
-	sta aoeTargetsRemaining
-	lda LSpellTargetingLookup,x
-	
 	rts
-.LGiveDonationHealth:
-	lda #$81
-	sta inBattle
-	rts
-.LSpellKill:
+
+.LSingleTgtSpellKill:
 	lda #$81
 	sta inBattle
 	lda #$09 ;X DOWN
@@ -532,6 +533,7 @@ LProcessCasting:
 	;Target ID should already be set from previous message
 	jsr LDeathCleanup
 	rts
+
 .LAoESpellKill:
 	lda #$B0
 	sta inBattle
@@ -541,10 +543,247 @@ LProcessCasting:
 	;Target ID should already be set from previous message
 	jsr LDeathCleanup
 	rts
-.LCheckIfSpellHit:
+
+.LGoToNormalTgtedExit:
+	jmp .LNormalTgtedExit
+
+.LHandleSingleTgtEffect:
+	lda temp1
+	and #$1F ;Spell ID
+	tax
+	lda LSpellTargetingLookup,x
+	cmp #$05
+	beq .LHighestHPTargetingEnemy
+	cmp #$03
+	beq .LBasicTargetingAlly
+	cmp #$01
+	beq .LBasicTargetingEnemy
+	rts ;Unknown targeting mode!
+.LBasicTargetingEnemy:
+	jsr LGetTargetFromActionOffensive
+	jmp .LTargetAcquired
+
+.LBasicTargetingAlly:
+	jsr LGetTargetFromActionDefensive
+	jmp .LTargetAcquired
+
+.LHighestHPTargetingEnemy:
+	ldx currentBattler
+	cpx #4
+	bcs .LFindMaxHPEnemy
+	ldy #0
+	bne .LFindMaxHP
+.LFindMaxHPEnemy:
+	ldy #4
+.LFindMaxHP:
+	ldx #4
+	lda #0
+	sta temp2 ;The current max HP
+.LFindMaxHPLoop:
+	lda battlerHP,y
+	cmp temp2
+	bcc .LCheckNextHP
+	sta temp2
+	sty temp3
+.LCheckNextHP:
+	iny
+	dex
+	bne .LFindMaxHPLoop
+	lda temp3 ;Index of the opposing side's battler with the most HP
+	jsr L5Asl 
+	ora temp1 ;Hacky technique in order to reuse this function
+	sta temp1
+	jsr LGetTargetFromActionOffensive
+
+.LTargetAcquired:
+	stx startingCursorIndexAndTargetID
+	lda temp1
+	and #$1F ;Spell ID
+	tax
+	stx temp6
+
+	;Need to check if this spell should miss or not
+	jsr LCheckSpellHit
+	bpl .LSpellConnects
+	lda #$15 ;NO EFFECT
+	sta currentMessage
+	bne .LGoToNormalTgtedExit
+
+.LSpellConnects:
+	;Need to check if this spell will be shielded or not
+	jsr LCheckSpellShield
+	beq .LNoShield
+	bmi .LShieldDestroyed
+.LShieldWeakened:
+	lda #$10 ;X HAS A SHIELD
+	sta currentMessage
+	bne .LGoToNormalTgtedExit
+.LShieldDestroyed:
+	lda #$1E ;X SHIELD FADES
+	sta currentMessage
+	bne .LGoToNormalTgtedExit
+
+.LGoToTgtDamageKilled:
+	jmp .LTgtDamageKilled
+.LGoToTgtDamageSurvived:
+	jmp .LTgtDamageSurvived
+
+.LNoShield:
+	ldx temp6
+	lda LHighSpellLogicLocations,x
+	sta tempPointer1+1
+	lda LLowSpellLogicLocations,x
+	sta tempPointer1
+	jmp (tempPointer1)
+.LFire:
+	ldy #FULL_MAGIC
+	jsr LDetermineSpellPower
+	ldy #FIRE_RESIST_MASK
+	bne .LTgtDamage
+.LSleep:
+	ldx startingCursorIndexAndTargetID
+	lda #ASLEEP_MASK
+	jsr LApplyStatus
+	lda #$1B ;X FELL ASLEEP
+	sta currentMessage
+	bne .LNormalTgtedExit
+.LDrain:
+	;this is a 2-stage maneuver
 	rts
-.LCheckIfAoESpellHit:
+.LThundr:
+	ldy #THREE_HALVES_MAGIC
+	jsr LDetermineSpellPower
+	ldy #ELECTRIC_RESIST_MASK
+	bne .LTgtDamage
+.LShield:
+	ldx startingCursorIndexAndTargetID
+	lda #SHIELDED_MASK
+	jsr LApplyStatus
+	lda #TIMER_MASK
+	jsr LApplyStatus
+	lda #$10 ;X HAS A SHIELD
+	sta currentMessage
+	bne .LNormalTgtedExit
+.LHeal:
 	rts
+.LSmite:
+	ldy #ATTACK_AND_HALF_MAGIC
+	jsr LDetermineSpellPower
+	ldy #HOLY_RESIST_MASK
+	bne .LTgtDamage
+.LPoison:
+	ldy #ATTACK_AND_HALF_MAGIC
+	jsr LDetermineSpellPower
+	ldy #POISON_RESIST_MASK
+	bne .LTgtDamage
+.LSharp:
+	ldx startingCursorIndexAndTargetID
+	lda #SHARPENED_MASK
+	jsr LApplyStatus
+	lda #$1A ;X ATTACK UP
+	sta currentMessage
+	bne .LNormalTgtedExit
+.LBlight:
+	ldx startingCursorIndexAndTargetID
+	lda #BLIGHTED_MASK
+	jsr LApplyStatus
+	lda #$0E ;X WASTES AWAY
+	sta currentMessage
+	bne .LNormalTgtedExit
+.LWither:
+	ldy #THREE_HALVES_MAGIC
+	jsr LDetermineSpellPower
+	ldy #POISON_RESIST_MASK
+	bne .LTgtDamage
+.LTrance:
+	;TODO this spell is a pain in the ass that needs more special messages, not as bad as wish though
+	rts
+.LShift:
+	lda partyBattlePos
+	eor #$0F
+	sta partyBattlePos
+	;lda need a message for this
+	;sta currentMessage 
+.LNormalTgtedExit:
+	lda #$81
+	sta inBattle
+	rts
+.LTgtDamage:
+	ldx startingCursorIndexAndTargetID
+	jsr LApplyDamage
+	bmi .LTgtDamageKilled
+.LTgtDamageSurvived:
+	lda #$81
+	bne .LSetDamageMessage
+.LTgtDamageKilled:
+	lda #$A1
+.LSetDamageMessage:
+	sta inBattle
+	lda #07 ;X LOSES Y HP
+	sta currentMessage
+	lda temp2
+	jsr LBinaryToDecimal
+	sta cursorIndexAndMessageY
+	rts
+
+.LHandleAoEEffect:
+
+.LBlizrd:
+	rts
+.LMeteor:
+	rts
+.LChaos:
+	rts
+.LTriage:
+	rts
+.LBanish:
+	rts
+.LWish:
+	rts
+
+LHighSpellLogicLocations:
+	.byte $FF ;Back
+	.byte (.LFire >> 8 & $FF)
+	.byte (.LSleep >> 8 & $FF)
+	.byte (.LBlizrd >> 8 & $FF)
+	.byte (.LDrain >> 8 & $FF)
+	.byte (.LThundr >> 8 & $FF)
+	.byte (.LShield >> 8 & $FF)
+	.byte (.LMeteor >> 8 & $FF)
+	.byte (.LChaos >> 8 & $FF)
+	.byte (.LHeal >> 8 & $FF)
+	.byte (.LSmite >> 8 & $FF)
+	.byte (.LPoison >> 8 & $FF)
+	.byte (.LSharp >> 8 & $FF)
+	.byte (.LBlight >> 8 & $FF)
+	.byte (.LTriage >> 8 & $FF)
+	.byte (.LWither >> 8 & $FF)
+	.byte (.LBanish >> 8 & $FF)
+	.byte (.LTrance >> 8 & $FF)
+	.byte (.LWither >> 8 & $FF)
+	.byte (.LShift >> 8 & $FF)
+	
+LLowSpellLogicLocations:
+	.byte $FF ;Back
+	.byte (.LFire & $FF)
+	.byte (.LSleep & $FF)
+	.byte (.LBlizrd & $FF)
+	.byte (.LDrain & $FF)
+	.byte (.LThundr & $FF)
+	.byte (.LShield & $FF)
+	.byte (.LMeteor & $FF)
+	.byte (.LChaos & $FF)
+	.byte (.LHeal & $FF)
+	.byte (.LSmite & $FF)
+	.byte (.LPoison & $FF)
+	.byte (.LSharp & $FF)
+	.byte (.LBlight & $FF)
+	.byte (.LTriage & $FF)
+	.byte (.LWither & $FF)
+	.byte (.LBanish & $FF)
+	.byte (.LTrance & $FF)
+	.byte (.LWither & $FF)
+	.byte (.LShift & $FF)
 
 .LGoToCalculateFightDamage:
 	jmp .LCalculateFightDamage
@@ -775,6 +1014,38 @@ LProcessParrying:
 	jsr LApplyStatus
 	rts
 
+LDetermineSpellPower: SUBROUTINE ;Interprets Y as the damage formula to follow, and returns the appropriate value based on the battler's Attack & Magic
+	ldx currentBattler
+	dey
+	bmi .LFullMagic
+	beq .LHalfMagic
+	dey
+	beq .LThreeHalvesMagic
+	dey
+	beq .LAttackAndHalfMagic
+	lda #0 ;Invalid power formula!
+	rts
+.LFullMagic:
+	jsr LGetBattlerMagic
+	rts
+.LHalfMagic:
+	jsr LGetBattlerMagic
+	lsr
+	rts
+.LThreeHalvesMagic:
+	jsr LGetBattlerMagic
+	sta temp6
+	bne .LHalveAndAdd
+.LAttackAndHalfMagic:
+	jsr LGetBattlerAttack
+	sta temp6
+	jsr LGetBattlerMagic
+.LHalveAndAdd
+	lsr
+	clc
+	adc temp6
+	rts
+
 LGetTargetFromAction: SUBROUTINE
 LGetTargetFromActionOffensive: ;Returns the absolute battlerID of the offensive target from the currentBattler's action in X
 	ldy #$FF
@@ -909,6 +1180,48 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	rts
 .LDetermineEnemyAI
 	jsr LSetEnemyAction
+	rts
+
+LCheckSpellHit: SUBROUTINE ;Determines if the spell corresponding to ID X should miss (because the target battler is unconscious or dead). Returns FF if the spell misses
+	ldy startingCursorIndexAndTargetID
+	lda battlerHP,y
+	bne .LSpellHits ;Any spell on a conscious target hits
+	cpy #4
+	bcs .LSpellMisses ;Enemies cease to exist after reaching 0 hp
+	cpx #$09 ;HEAL
+	beq .LSpellHits
+	cpx #$0E ;TRIAGE
+	beq .LSpellHits
+	cpx #$12 ;WISH
+	beq .LSpellHits
+.LSpellMisses:
+	lda #$FF
+	rts
+.LSpellHits:
+	lda #0
+	rts
+
+LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated by a shield. Returns 0 if no shield, 1 if shield blocks the spell, FF if the shield is destroyed
+	ldx startingCursorIndexAndTargetID
+	lda battlerStatus,x
+	and #SHIELDED_MASK
+	bne .LHasShield
+	lda #0
+	rts
+.LHasShield:
+	lda battlerStatus,x
+	and #TIMER_MASK
+	beq .LShieldBreaks
+	lda battlerStatus,x
+	and #(~TIMER_MASK) ;The shield only has 1 more hit left
+	sta battlerStatus,x
+	lda #1
+	rts
+.LShieldBreaks:
+	lda battlerStatus,x
+	and #(~SHIELDED_MASK) ;Destroy the shield
+	sta battlerStatus,x
+	lda #$FF
 	rts
 
 LFindFirstLivingAlly: SUBROUTINE ;Returns the id of first party member with positive HP in X.
@@ -1353,26 +1666,6 @@ LSetStatPointers:
 	inx
 	rts
 
-
-
-;Interprets X as the cursorPosition
-LCursorIndexToBattlerIndex: SUBROUTINE ;Converts the position of a menu cursor into the correct location in the array of the target (based on tempPointer1)
-	ldy #0
-	inx
-.LIndexConversionLoop
-	lda (tempPointer1),y
-	cmp #0
-	beq .LNoHit
-	dex
-	beq .LDone
-.LNoHit:
-	iny
-	bpl .LIndexConversionLoop ;Saves byte over jmp
-.LDone:
-	rts ;Y is the correct offset into the enemyID array
-
-
-
 LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to convert to decimal. Returns the result in A.
 	ldx #0
 .LRemove10s:
@@ -1445,506 +1738,6 @@ LRandom: SUBROUTINE ;Ticks the random number generator when called
 	sta rand8
 	rts
 
-LUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advances with the selected options if so.
-	lda #$08
-	bit currentInput
-	beq .LContinue ;Return if the button is not pressed
-.LReturn:
-	rts
-.LContinue:
-	lda currentMenu
-	beq .LReturn
-	ldx currentBattler
-	cmp #$80
-	beq .LBattleOptionsMenu
-	cmp #$81
-	beq .LGoToSelectEnemyMenu
-	cmp #$82
-	beq .LSelectAllyMenu
-	cmp #$83
-	beq .LSelectOtherAllyMenu
-	cmp #$84
-	beq .LGoToSelectSpellMenu
-	cmp #$85
-	beq .LNoSpellsKnownMenu
-	rts
-
-.LGoToSelectEnemyMenu:
-	jmp .LSelectEnemyMenu
-.LGoToSelectSpellMenu:
-	jmp .LSelectSpellMenu
-
-.LNoSpellsKnownMenu
-	lda #$80
-	sta currentMenu
-	rts
-
-.LSelectOtherAllyMenu:
-	ldx cursorIndexAndMessageY
-	inx
-	ldy #0
-.LIndexConversionLoop
-	cpy currentBattler
-	beq .LIsCurrent
-	dex
-	beq .LSaveAllyTargeting
-.LIsCurrent:
-	iny
-	bpl .LIndexConversionLoop ;Saves byte over jmp
-
-
-.LSelectAllyMenu:
-	ldy cursorIndexAndMessageY
-.LSaveAllyTargeting:
-	tya
-	jsr L5Asl
-	ldx currentBattler
-	ora battleActions,x
-	sta battleActions,x
-	jmp .LCheckNextBattler
-.LBattleOptionsMenu:
-	ldy highlightedLine
-	lda menuLines,y
-	cmp #$80
-	beq .LSetFightAction
-	cmp #$81
-	beq .LEnterSpellMenu
-	cmp #$82
-	beq .LSetMoveAction
-	cmp #$83
-	beq .LSetRunAction
-	cmp #$84
-	beq .LSetGuardAction
-.LSetParryAction:
-	lda #$04
-	sta battleActions,x
-	jmp .LCheckNextBattler
-.LSetGuardAction:
-	lda #$03
-	sta battleActions,x
-	lda #$83
-	sta currentMenu
-	lda #0
-	sta cursorIndexAndMessageY
-	lda #2
-	sta menuSize
-	rts
-.LSetRunAction:
-	lda #$02
-	sta battleActions,x
-	jmp .LCheckNextBattler
-.LSetMoveAction:
-	lda #$01
-	sta battleActions,x
-	jmp .LCheckNextBattler
-.LSetFightAction:
-	lda #$00
-	sta battleActions,x
-	;Check how many enemies are alive, proceeding to $81 if more than 1 is alive
-	jsr LCheckEnemies
-	cpx #2
-	bcs .LNeedToTargetFight
-	;Only one enemy, so auto-target this fight
-	ldx currentBattler ;Changed by LCheckEnemies
-	tya
-	jsr L5Asl
-	ora battleActions,x
-	sta battleActions,x
-	jmp .LCheckNextBattler
-.LNeedToTargetFight
-	lda #$81
-	sta currentMenu
-	dex
-	stx menuSize
-	lda #0
-	sta cursorIndexAndMessageY
-	rts
-.LEnterSpellMenu:
-	;Check how many spells this party member has
-	ldx currentBattler
-	lda char1,x
-	and #$0F ;Get just the class of this battler
-	tay
-	lda mazeAndPartyLevel
-	and #$0F ;Get the level of the party
-	tax
-	cpy #4
-	bcs .LIsHalfCaster
-	cpx #8
-	bcs .LClampLevel
-	bcc .LDontClampLevel
-.LClampLevel:
-	dex
-.LDontClampLevel:
-	stx menuSize
-	ldy #0
-	sty cursorIndexAndMessageY
-	lda #$84
-	sta currentMenu
-	rts
-.LIsHalfCaster:
-	txa
-	lsr
-	beq .LLevel1HalfCaster
-	tax
-	bne .LDontClampLevel
-.LLevel1HalfCaster
-	lda #$85 ;Show a special message if this party member knows no spells (only possible for level 1 Paladin and Ranger)
-	sta currentMenu
-	rts
-.LSelectSpellMenu:
-	lda highlightedLine
-	and #$7F
-	tay
-	lda menuLines,y
-	and #$1F ;Get just the spell ID
-	bne .LCheckSpellLogic
-	;Back button was selected
-	lda #$80
-	sta currentMenu
-	lda #1 ;Put the cursor on CAST
-	sta cursorIndexAndMessageY
-	lda #3
-	sta menuSize
-	rts
-.LCheckSpellLogic:
-	ldy highlightedLine
-	bpl .LConfirmSpell
-	;Not enough mana to select this spell. Play an error sound effect
-	rts
-.LConfirmSpell:	
-	;Need to determine what the targeting of this spell is in order to advance to none or correct targeting
-	ldx currentBattler
-	ora battleActions,x
-	ora #$80 ;Set the spell flag of the action
-	sta battleActions,x
-	and #$1F ;Get just the spell ID again
-	tax
-	lda LSpellTargetingLookup,x
-	beq .LNoSpellTargeting
-	cmp #1
-	beq .LTargetEnemy
-	cmp #2
-	beq .LAllEnemies
-	cmp #3
-	beq .LTargetAlly
-	cmp #4
-	beq .LOtherAlly
-	cmp #5
-	beq .LAllAllies
-	rts
-.LTargetEnemy:
-	jsr LCheckEnemies
-	cpx #2
-	bcs .LNeedToTargetSpell
-	;Only one enemy, so auto-target this spell
-	ldx currentBattler ;Changed by LCheckEnemies
-	tya
-	jsr L5Asl
-	ora battleActions,x
-	sta battleActions,x
-	jmp .LCheckNextBattler
-.LNeedToTargetSpell:
-	lda #$81
-	sta currentMenu
-	dex
-	stx menuSize
-	lda #0
-	sta cursorIndexAndMessageY
-	rts
-.LTargetAlly:
-	lda #$82
-	sta currentMenu
-	lda #$03
-	sta menuSize
-	lda #0
-	sta cursorIndexAndMessageY
-	rts
-.LOtherAlly:
-	lda #$83
-	sta currentMenu
-	lda #$02
-	sta menuSize
-	lda #0
-	sta cursorIndexAndMessageY
-	rts
-.LAllEnemies:
-.LAllAllies:
-.LNoSpellTargeting:
-	jmp .LCheckNextBattler
-.LSelectEnemyMenu:
-	lda #enemyHP
-	sta tempPointer1
-	lda #0
-	sta tempPointer1+1
-	ldx cursorIndexAndMessageY
-	jsr LCursorIndexToBattlerIndex
-	tya
-	jsr L5Asl
-	ldx currentBattler
-	ora battleActions,x
-	sta battleActions,x
-.LCheckNextBattler:
-	ldx currentBattler
-	cpx #3
-	bcs .LNoMoreActions
-.LFindNextBattler:
-	inx
-	cpx #4
-	bcs .LNoMoreActions ;Make sure to avoid checking enemyHP!
-	lda hp1,x
-	beq .LFindNextBattler
-	stx currentBattler ;Found another party member, keep getting actions!
-	lda #$80
-	sta currentMenu
-	lda #3
-	sta menuSize
-	lda #0
-	sta cursorIndexAndMessageY
-	rts
-.LNoMoreActions:
-	lda #$81 ;No more party member actions to collect.
-	sta inBattle
-	lda #0
-	sta currentMenu
-	rts
-
-LUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine according to the current menu state
-	lda currentMenu
-	cmp #$80
-	beq .LSetupBattleOptions
-	cmp #$81
-	beq .LGoToEnemyTargeting
-	cmp #$82
-	beq .LSetupAllyTargeting
-	cmp #$83
-	beq .LSetupOtherAllyTargeting
-	cmp #$84
-	beq .LGoToSpellOptions
-	cmp #$85
-	beq .LGoToNoSpellsKnown
-.LReturn
-	rts
-.LGoToEnemyTargeting:
-	jmp .LSetupEnemyTargeting
-.LGoToSpellOptions:
-	jmp .LSetupSpellOptions
-.LGoToNoSpellsKnown:
-	jmp .LSetupNoSpellsKnown
-
-.LSetupBattleOptions:
-	ldx currentBattler
-	lda char1,x
-	and #$0F ;Get just the class of this party member
-	tay
-	lda LBattleTables,y
-	sta tempPointer1
-	lda #(LKnightBattleTable >> 8 & $FF)
-	sta tempPointer1+1
-
-	jsr LSetMenuActiveLine
-
-	ldx #0
-	ldy startingCursorIndexAndTargetID
-.LOptionLinesLoop:
-	lda (tempPointer1),y
-	sta menuLines,x
-	inx
-	iny
-	cpx #3
-	bcs .LReturn
-	bne .LOptionLinesLoop 
-
-.LSetupOtherAllyTargeting:
-	ldy cursorIndexAndMessageY
-	sty highlightedLine
-	ldx #0
-	ldy #0
-.LOtherAllyLinesLoop:
-	cpx #3
-	bcs .LReturn
-	cpy currentBattler
-	beq .LIsSelf
-	sty menuLines,x
-	inx
-.LIsSelf:
-	iny
-	bne .LOtherAllyLinesLoop
-
-.LSetupAllyTargeting:
-	jsr LSetMenuActiveLine
-
-	ldx #0
-	ldy startingCursorIndexAndTargetID
-.LAllyLoop:
-	sty menuLines,x
-	iny
-	inx
-	cpx #3
-	bcc .LAllyLoop
-	rts
-
-.LSetupEnemyTargeting:
-	lda #$FF
-	sta menuLines+2 ;Make sure that the last line is cleared if there are only two enemies
-	lda menuSize
-	cmp #3
-	bcs .LFourEnemies
-	ldy cursorIndexAndMessageY
-	sty highlightedLine
-	bpl .LSetEnemyLines
-.LFourEnemies:
-	jsr LSetMenuActiveLine
-
-.LSetEnemyLines:
-	lda menuSize
-	cmp #2
-	bcs .LMoreThanTwo
-	lda #2
-	bne .LAfterLoadingCorrectSize
-.LMoreThanTwo:
-	lda #3
-.LAfterLoadingCorrectSize:
-	sta temp1
-	ldx #0
-	ldy startingCursorIndexAndTargetID
-	iny
-	iny
-	iny
-	iny
-.LEnemyLineLoop:
-	lda battlerHP,y
-	beq .LNoEnemyHere
-	sty menuLines,x
-	inx
-.LNoEnemyHere:
-	iny
-	cpx temp1
-	bcc .LEnemyLineLoop
-
-	lda #enemyHP
-	sta tempPointer1
-	lda #0
-	sta tempPointer1+1
-	ldx cursorIndexAndMessageY
-	jsr LCursorIndexToBattlerIndex
-	sty enemyAction
-.LDone:
-	rts
-
-.LSetupNoSpellsKnown:
-	ldx #$E1
-	stx menuLines
-	inx
-	stx menuLines+1
-	inx
-	stx menuLines+2
-	rts
-
-.LSetupSpellOptions:
-	lda #$FF
-	sta menuLines+2 ;Set the third line to not show in case there are only two options
-	ldx currentBattler
-	lda char1,x
-	and #$0F ;Get just the class of this party member
-	sta temp2
-	tax
-	lda LSpellListLookup,x
-	sta tempPointer1
-	lda #(LWizardSpellList >> 8 & $FF)
-	sta tempPointer1+1 ;tempPointer1 now points to the spell list for this class
-
-	lda menuSize
-	cmp #2
-	bcs .LMoreThanTwoSpellOptions
-	lda #2
-	bne .LAfterLoadingCorrectSpellSize
-.LMoreThanTwoSpellOptions:
-	lda #3
-.LAfterLoadingCorrectSpellSize:
-	sta temp1
-
-	jsr LSetMenuActiveLine
-
-	ldx temp2
-	lda LCasterType,x
-	bmi .LIsHalfCaster
-	ldy startingCursorIndexAndTargetID
-	jmp .LSetSpells
-.LIsHalfCaster:
-	lda startingCursorIndexAndTargetID
-	asl
-	tay
-.LSetSpells:
-	ldx #0
-.LSetSpellLoop:
-	lda (tempPointer1),y
-	cmp #$FF
-	beq .LSkipThisSpell
-	sta menuLines,x
-	inx
-	cpx temp1
-	bcs .LCheckMana
-.LSkipThisSpell:
-	iny
-	bne .LSetSpellLoop
-
-.LCheckMana:
-	ldy highlightedLine
-	lda menuLines,y
-	tay
-	lda LSpellManaLookup,y
-	sta temp1
-	ldx currentBattler
-	lda mp1,x
-	cmp temp1
-	bcs .LEnoughMana
-	lda highlightedLine
-	ora #$80
-	sta highlightedLine
-.LEnoughMana:
-.LSpellIDsSet:
-	ldx #2
-.LEnforceSpellLoop:
-	lda menuLines,x
-	ora #$C0
-	sta menuLines,x
-	dex
-	bpl .LEnforceSpellLoop
-	rts
-
-LSetMenuActiveLine: SUBROUTINE
-	lda menuSize
-	cmp #3
-	bcs .LAtLeastThree
-	lda cursorIndexAndMessageY
-	sta highlightedLine
-	lda #0
-	sta startingCursorIndexAndTargetID
-	rts
-.LAtLeastThree:
-	ldy cursorIndexAndMessageY
-	beq .LTopOfMenu
-	cpy menuSize
-	bcc .LMiddleOfMenu
-.LBottomOfMenu:
-	dey
-	dey
-	sty startingCursorIndexAndTargetID
-	ldy #2
-	sty highlightedLine
-	rts
-.LMiddleOfMenu:
-	dey
-	sty startingCursorIndexAndTargetID
-	ldy #1
-	sty highlightedLine
-	rts
-.LTopOfMenu:
-	sty startingCursorIndexAndTargetID
-	sty highlightedLine
-	rts
-
 LUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick presses
 	ldy cursorIndexAndMessageY
 	lda #DOWN_MASK
@@ -1969,21 +1762,6 @@ LUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick press
 .LNotAtFirstPosition
 	dey
 	sty cursorIndexAndMessageY
-	rts
-
-LCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in X, and the last index of an alive enemy in Y
-	ldx #0
-	ldy #0
-.LCheckEnemyLoop:
-	lda enemyHP,y
-	beq .LEnemyDead
-	sty tempPointer6
-	inx
-.LEnemyDead
-	iny
-	cpy #4
-	bcc .LCheckEnemyLoop
-	ldy tempPointer6
 	rts
 
 LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their status and health
@@ -2157,30 +1935,6 @@ LEnemyFightMessages:
 	.byte $3 ;Zombie
 	.byte $2 ;Giant
 	.byte $4 ;Dragon
-
-LNormalBattleTable:
-	.byte $80
-	.byte $81
-	.byte $82
-	.byte $83
-LKnightBattleTable:
-	.byte $80
-	.byte $84
-	.byte $82
-	.byte $83
-LRogueBattleTable:
-	.byte $80
-	.byte $85
-	.byte $82
-	.byte $83
-
-LBattleTables:
-	.byte (LKnightBattleTable & $FF)
-	.byte (LRogueBattleTable & $FF)
-	.byte (LNormalBattleTable & $FF)
-	.byte (LNormalBattleTable & $FF)
-	.byte (LNormalBattleTable & $FF)
-	.byte (LNormalBattleTable & $FF)
 
 LAllZeroes:
 	.byte 0
@@ -2425,75 +2179,48 @@ LEmptySpellList:
 	.byte #$FF
 
 LSpellTargetingLookup:
+	.byte $0 ;BACK
+	.byte $1 ;FIRE
+	.byte $1 ;SLEEP
+	.byte $82 ;BLIZRD
+	.byte $1 ;DRAIN
+	.byte $5 ;THUNDR
+	.byte $3 ;SHIELD
+	.byte $86 ;METEOR
+	.byte $82 ;CHAOS
+	.byte $3 ;HEAL
+	.byte $1 ;SMITE
+	.byte $1 ;POISON
+	.byte $3 ;SHARP
+	.byte $1 ;BLIGHT
+	.byte $84 ;TRIAGE
+	.byte $1 ;WITHER
+	.byte $82 ;BANISH
+	.byte $0 ;TRANCE
+	.byte $84 ;WISH
+	.byte $82 ;SHIFT
+
+LSpellManaLookup:
 	.byte 0 ;BACK
 	.byte 1 ;FIRE
 	.byte 1 ;SLEEP
-	.byte 2 ;BLIZRD
-	.byte 1 ;DRAIN
-	.byte 0 ;THUNDR
-	.byte 3 ;SHIELD
-	.byte 1 ;METEOR
-	.byte 2 ;CHAOS
-	.byte 3 ;HEAL
-	.byte 1 ;SMITE
-	.byte 1 ;POISON
-	.byte 3 ;SHARP
-	.byte 1 ;BLIGHT
-	.byte 5 ;TRIAGE
-	.byte 1 ;WITHER
-	.byte 2 ;BANISH
-	.byte 0 ;TRANCE
-	.byte 4 ;DONATE
-
-LSpellManaLookup:
-	.byte 0
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-
-LSpellLogicLookup:
-	.byte 0 ;BACK
-	.byte 0 ;FIRE
-	.byte 0 ;SLEEP
 	.byte 1 ;BLIZRD
-	.byte 0 ;DRAIN
-	.byte 0 ;THUNDR
-	.byte 0 ;SHIELD
+	.byte 1 ;DRAIN
+	.byte 1 ;THUNDR
+	.byte 1 ;SHIELD
 	.byte 1 ;METEOR
 	.byte 1 ;CHAOS
-	.byte 0 ;HEAL
-	.byte 0 ;SMITE
-	.byte 0 ;POISON
-	.byte 0 ;SHARP
-	.byte 0 ;BLIGHT
+	.byte 1 ;HEAL
+	.byte 1 ;SMITE
+	.byte 1 ;POISON
+	.byte 1 ;SHARP
+	.byte 1 ;BLIGHT
 	.byte 1 ;TRIAGE
-	.byte 0 ;WITHER
+	.byte 1 ;WITHER
 	.byte 1 ;BANISH
-	.byte 0 ;TRANCE
-	.byte 0 ;DONATE
-
-LCasterType:
-	.byte 0
-	.byte 0
-	.byte 1
-	.byte 1
-	.byte $FF
-	.byte $FF
+	.byte 1 ;TRANCE
+	.byte 1 ;WISH
+	.byte 0 ;SHIFT
 
 LLowAllyStatPointers:
 	.byte (LClassAttackLookup & $FF)

@@ -428,6 +428,21 @@
 		-Still incomplete
 	-Added max MP extension to LGetBattlerStat
 	-Did some enemy planning/design work
+6/22/23
+	-Fixed bug with spell rendering where 8th level spells were not selectable until 9th level.
+	-Continuing work on spellcasting logic
+	-Relocated LUpdateMenuAdvancement and LUpdateMenuRendering to the S bank.
+6/23/23
+	-Fixed bug where the enemy targeting menu would be drawn incorrectly.
+	-Some of the most basic spells actually work now!
+	-Modified text to support the WISH and SHIFT spells, need to add appropriate messages for WISH, TRANCE, and SHIFT though.
+
+	-Implemented LCheckSpellHit & LCheckSpellShield for more complete spellcasting logic.
+		-Shielding single target spells seems to work well!
+6/24/23
+	-Added LDetermineSpellPower subroutine, which continues to abstract/simplify/reduce size of spellcasting logic
+		-Currently supports 1*Magic, 0.5*Magic, 1.5*Magic, and 1*Attack+0.5*Magic
+	-Changed Paladin color again
 
 Known Bugs:
 	-Exiting battle shows glitchy maze for 1 frame. SUpdateMazeRenderingPointers isn't called when exiting battle
@@ -439,11 +454,7 @@ Known Bugs:
 TODO:
 	-Make party members gain delta HP, delta MP when leveling up
 
-	-Change DONATE to WISH
-
 	-Battle transitions?
-
-	-Move LUpdateMenuAdvancement and LUpdateMenuRendering to S bank if more room is needed for battle logic
 
 	-Campfire rendering
 		-Give campfire battle-like scene? Yes
@@ -460,7 +471,7 @@ TODO:
 			-Meta-enemyActions might be along the lines of "attack", "heal ally", "paralyze enemy", etc.
 			-These meta-actions are then converted into actual enemyAction by LDetermineEnemyAI routine
 			-More sophisticated, less data space, more code space. Seems like a good idea
-		-Make enemy AI dependent on health for some enemies
+		-Make AI dependent on health for bosses
 			
 	-How is encounter data going to be stored?
 		-Depends on whether or not certain groups of enemies should appear together
@@ -471,16 +482,16 @@ TODO:
 				-Increased data complexity, decreased code complexity, better game design, lower encounter variety
 
 	Requirements for functional game loop:
-		-Functional combat - 55%
+		-Functional combat - 60%
 			-Control Flow/Battler Selection - 100%
 			-Fighting - 100%
-			-Spellcasting - 5%
+			-Spellcasting - 40%
 			-Moving - 100%
 			-Running - 100%
-			-Functional status effects - 85% (SLEEP, BLIGHT, SHARP, GUARD, and PARRY implemented: need to implement SHIELD)
+			-Functional status effects - 95% (SLEEP, BLIGHT, SHARP, GUARD, and PARRY implemented: need to implement SHIELD for AoE)
 			-Enemy AI - 0%
-			-Character advancement - 85%
-			-Mana implementation - 95%
+			-Character advancement - 85% (Slight refactor required to fix bug with (last position) party members who didn't learn a spell)
+			-Mana implementation - 90% (TRANCE and WISH)
 		-Additional maze logic
 			-Moving between floors
 			-Encounter generation
@@ -515,3 +526,8 @@ TODO:
 		-Not all enemies are centered, create more of a "group skirmish" appearance
 		-Potentially try to center enemies more precisely?
 		-Being guarded reduces blight damage.
+		-Add resistances to party members
+		-Should elemental-flavors be resistances or vulnerabilities?
+		-Add damage types to basic attacks
+		-Introduce random value offsets based on party level (attack and healing amounts)
+		-Consider refactoring X LOSES Y HP to X TAKES Y DMG

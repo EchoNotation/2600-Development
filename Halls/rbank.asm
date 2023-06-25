@@ -593,7 +593,7 @@ RXIsOnGuard:
 	.byte $28
 	.byte $31
 RXShieldFades:
-	.byte $0
+	.byte $1
 	.byte $19
 	.byte $29
 RGameOver:
@@ -1324,14 +1324,27 @@ RTranceText:
 	.byte #N
 	.byte #C
 	.byte #E
-RDonateText:
-	.byte #D
-	.byte #O
-	.byte #N
-	.byte #A
+RWishText:
+	.byte #W
+	.byte #I
+	.byte #S
+	.byte #H
+	.byte #EMPTY
+	.byte #EMPTY
+RShiftText:
+	.byte #S
+	.byte #H
+	.byte #I
+	.byte #F
 	.byte #T
-	.byte #E
+	.byte #EMPTY
 
+RWastesText:
+	.byte #W
+	.byte #A
+	.byte #S
+	.byte #T
+	.byte #E ;Shared, saving 1 byte
 RStabsText:
 	.byte #S
 	.byte #T
@@ -1346,19 +1359,13 @@ RShootsText:
 	.byte #O
 	.byte #T
 	.byte #S
-RWastesText:
-	.byte #W
+RBashesText:
+	.byte #B 
 	.byte #A
 	.byte #S
-	.byte #T
+	.byte #H
 	.byte #E
-RSlamsText:
-	.byte #S ;Shared, saving 1 byte
-	.byte #L
-	.byte #A
-	.byte #M
 	.byte #S
-	.byte #EMPTY
 RBitesText:
 	.byte #B
 	.byte #I
@@ -1635,7 +1642,7 @@ ROverText:
 	.byte #V
 	.byte #E
 	.byte #R
-	.byte #EXCLAMATIONMARK
+	.byte #EMPTY
 	.byte #EMPTY
 RClearText:
 	.byte #C
@@ -1643,7 +1650,7 @@ RClearText:
 	.byte #E
 	.byte #A
 	.byte #R
-	.byte #EXCLAMATIONMARK
+	.byte #EMPTY
 RTheText:
 	.byte #T
 	.byte #H
@@ -1679,6 +1686,27 @@ RBlocksText:
 	.byte #C
 	.byte #K
 	.byte #S
+RHPUpText:
+	.byte #H
+	.byte #P
+	.byte #EMPTY
+	.byte #U
+	.byte #P
+	.byte #EMPTY
+RMPUpText:
+	.byte #M
+	.byte #P
+	.byte #EMPTY
+	.byte #U
+	.byte #P
+	.byte #EMPTY
+RFullyText:
+	.byte #F
+	.byte #U
+	.byte #L
+	.byte #L
+	.byte #Y
+	.byte #EMPTY
 
 RClassColors:
 	.byte $8A ;Knight
@@ -1686,7 +1714,7 @@ RClassColors:
 	.byte $1A ;Cleric
 	.byte $66 ;Wizard
 	.byte $C8 ;Ranger
-	.byte $5F ;Paladin
+	.byte $24 ;Paladin
 
 RCasterType: ;0 is no casting, 1 is full caster, FF is half-caster
 	.byte $0 ;Knight
@@ -1721,7 +1749,8 @@ RSpellColors:
 	.byte $BC ;WITHER
 	.byte $48 ;BANISH
 	.byte $56 ;TRANCE
-	.byte $3A ;DONATE
+	.byte $2E ;WISH
+	.byte $4C ;SHIFT
 
 RClassNameLookupTable:
 	.byte (RKnightText & $FF)
@@ -1755,7 +1784,7 @@ REnemyColorLookup:
 RMessagesLowLookup:
 	.byte (RStabsText & $FF) ;Rogue/Paladin
 	.byte (RShootsText & $FF) ;Wizard/Ranger
-	.byte (RSlamsText & $FF) ;Cleric
+	.byte (RBashesText & $FF) ;Cleric
 	.byte (RBitesText & $FF)
 	.byte (RRushesText & $FF) ;Knight 
 	.byte (RCastsText & $FF)
@@ -1800,6 +1829,9 @@ RMessagesLowLookup:
 	.byte (RAwaitsText & $FF)
 	.byte (RGuardMessageText & $FF)
 	.byte (RBlocksText & $FF)
+	.byte (RHPUpText & $FF)
+	.byte (RMPUpText & $FF)
+	.byte (RFullyText & $FF)
 
 RSpellTextLookupTable:
 	.byte (RBackText & $FF)
@@ -1820,7 +1852,8 @@ RSpellTextLookupTable:
 	.byte (RWitherText & $FF)
 	.byte (RBanishText & $FF)
 	.byte (RTranceText & $FF)
-	.byte (RDonateText & $FF)
+	.byte (RWishText & $FF)
+	.byte (RShiftText & $FF)
 
 RKnightText:
 	.byte #K
@@ -1948,8 +1981,6 @@ RCharacterLowLookupTable: ;Contains the low bytes of the pointers to all the cha
 	.byte (RNumber8 & $FF)
 	.byte (RNumber9 & $FF)
 
-	.byte (RExclamationMark & $FF)
-
 RCharacterHighLookupTable: ;Contains the high bytes of the pointers to all the character graphics.
 	.byte (RNoCharacter >> 8 & $FF)
 	.byte (RLetterA >> 8 & $FF)
@@ -1989,8 +2020,6 @@ RCharacterHighLookupTable: ;Contains the high bytes of the pointers to all the c
 	.byte (RNumber7 >> 8 & $FF)
 	.byte (RNumber8 >> 8 & $FF)
 	.byte (RNumber9 >> 8 & $FF)
-
-	.byte (RExclamationMark >> 8 & $FF)
 
 RSpecialLines:
 	.byte (REmptyText & $FF)
@@ -2164,15 +2193,6 @@ RNumber9:
 	.byte #%01100110
 	.byte #%01100110
 	.byte #%01111110
-RExclamationMark:
-	.byte #%00011000
-	.byte #%00011000
-	.byte #%00000000
-	.byte #%00011000
-	.byte #%00011000
-	.byte #%00011000
-	.byte #%00011000
-	.byte #%00011000
 
 RNumberLookup:
 	.byte 27

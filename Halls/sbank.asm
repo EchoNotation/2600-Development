@@ -659,11 +659,546 @@ SUpdateCompassPointerBoss: SUBROUTINE ;Updates tempPointer1 in order to render a
 	sta REFP0
 	rts
 
+SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advances with the selected options if so.
+	lda #$08 
+	bit currentInput
+	beq .SContinue ;Return if the button is not pressed
+.SReturn:
+	rts
+.SContinue:
+	lda currentMenu
+	beq .SReturn
+	ldx currentBattler
+	cmp #$80
+	beq .SBattleOptionsMenu
+	cmp #$81
+	beq .SGoToSelectEnemyMenu
+	cmp #$82
+	beq .SSelectAllyMenu
+	cmp #$83
+	beq .SSelectOtherAllyMenu
+	cmp #$84
+	beq .SGoToSelectSpellMenu
+	cmp #$85
+	beq .SNoSpellsKnownMenu
+	rts
+
+.SGoToSelectEnemyMenu:
+	jmp .SSelectEnemyMenu
+.SGoToSelectSpellMenu:
+	jmp .SSelectSpellMenu
+
+.SNoSpellsKnownMenu
+	lda #$80
+	sta currentMenu
+	rts
+
+.SSelectOtherAllyMenu:
+	ldx cursorIndexAndMessageY
+	inx
+	ldy #0
+.SIndexConversionLoop
+	cpy currentBattler
+	beq .SIsCurrent
+	dex
+	beq .SSaveAllyTargeting
+.SIsCurrent:
+	iny
+	bpl .SIndexConversionLoop ;Saves byte over jmp
+
+
+.SSelectAllyMenu:
+	ldy cursorIndexAndMessageY
+.SSaveAllyTargeting:
+	tya
+	jsr S5Asl
+	ldx currentBattler
+	ora battleActions,x
+	sta battleActions,x
+	jmp .SCheckNextBattler
+.SBattleOptionsMenu:
+	ldy highlightedLine
+	lda menuLines,y
+	cmp #$80
+	beq .SSetFightAction
+	cmp #$81
+	beq .SEnterSpellMenu
+	cmp #$82
+	beq .SSetMoveAction
+	cmp #$83
+	beq .SSetRunAction
+	cmp #$84
+	beq .SSetGuardAction
+.SSetParryAction:
+	lda #$04
+	sta battleActions,x
+	jmp .SCheckNextBattler
+.SSetGuardAction:
+	lda #$03
+	sta battleActions,x
+	lda #$83
+	sta currentMenu
+	lda #0
+	sta cursorIndexAndMessageY
+	lda #2
+	sta menuSize
+	rts
+.SSetRunAction:
+	lda #$02
+	sta battleActions,x
+	jmp .SCheckNextBattler
+.SSetMoveAction:
+	lda #$01
+	sta battleActions,x
+	jmp .SCheckNextBattler
+.SSetFightAction:
+	lda #$00
+	sta battleActions,x
+	;Check how many enemies are alive, proceeding to $81 if more than 1 is alive
+	jsr SCheckEnemies
+	cpx #2
+	bcs .SNeedToTargetFight
+	;Only one enemy, so auto-target this fight
+	ldx currentBattler ;Changed by LCheckEnemies
+	tya
+	jsr S5Asl
+	ora battleActions,x
+	sta battleActions,x
+	jmp .SCheckNextBattler
+.SNeedToTargetFight
+	lda #$81
+	sta currentMenu
+	dex
+	stx menuSize
+	lda #0
+	sta cursorIndexAndMessageY
+	rts
+.SEnterSpellMenu:
+	;Check how many spells this party member has
+	ldx currentBattler
+	lda char1,x
+	and #$0F ;Get just the class of this battler
+	tay
+	lda mazeAndPartyLevel
+	and #$0F ;Get the level of the party
+	tax
+	cpy #4
+	bcs .SIsHalfCaster
+	cpx #9
+	bcs .SClampLevel
+	bcc .SDontClampLevel
+.SClampLevel:
+	dex
+.SDontClampLevel:
+	stx menuSize
+	ldy #0
+	sty cursorIndexAndMessageY
+	lda #$84
+	sta currentMenu
+	rts
+.SIsHalfCaster:
+	txa
+	lsr
+	beq .SLevel1HalfCaster
+	tax
+	bne .SDontClampLevel
+.SLevel1HalfCaster
+	lda #$85 ;Show a special message if this party member knows no spells (only possible for level 1 Paladin and Ranger)
+	sta currentMenu
+	rts
+.SSelectSpellMenu:
+	lda highlightedLine
+	and #$7F
+	tay
+	lda menuLines,y
+	and #$1F ;Get just the spell ID
+	bne .SCheckSpellLogic
+	;Back button was selected
+	lda #$80
+	sta currentMenu
+	lda #1 ;Put the cursor on CAST
+	sta cursorIndexAndMessageY
+	lda #3
+	sta menuSize
+	rts
+.SCheckSpellLogic:
+	ldy highlightedLine
+	bpl .SConfirmSpell
+	;Not enough mana to select this spell. Play an error sound effect
+	rts
+.SConfirmSpell:	
+	;Need to determine what the targeting of this spell is in order to advance to none or correct targeting
+	ldx currentBattler
+	ora battleActions,x
+	ora #$80 ;Set the spell flag of the action
+	sta battleActions,x
+	and #$1F ;Get just the spell ID again
+	tax
+	lda SSpellTargetingLookup,x
+	beq .SNoSpellTargeting
+	cmp #$01
+	beq .STargetEnemy
+	cmp #$82
+	beq .SAllEnemies
+	cmp #$03
+	beq .STargetAlly
+	cmp #$84
+	beq .SAllAllies
+	cmp #$05
+	beq .SNoSpellTargeting ;Highest HP enemy, only used by THUNDR
+	cmp #$86
+	beq .STargetEnemy ;Currently only used by METEOR
+	rts
+.STargetEnemy:
+	jsr SCheckEnemies
+	cpx #2
+	bcs .SNeedToTargetSpell
+	;Only one enemy, so auto-target this spell
+	ldx currentBattler ;Changed by LCheckEnemies
+	tya
+	jsr S5Asl
+	ora battleActions,x
+	sta battleActions,x
+	jmp .SCheckNextBattler
+.SNeedToTargetSpell:
+	lda #$81
+	sta currentMenu
+	dex
+	stx menuSize
+	lda #0
+	sta cursorIndexAndMessageY
+	rts
+.STargetAlly:
+	lda #$82
+	sta currentMenu
+	lda #$03
+	sta menuSize
+	lda #0
+	sta cursorIndexAndMessageY
+	rts
+.SAllEnemies:
+.SAllAllies:
+.SNoSpellTargeting:
+	jmp .SCheckNextBattler
+.SSelectEnemyMenu:
+	lda #enemyHP
+	sta tempPointer1
+	lda #0
+	sta tempPointer1+1
+	ldx cursorIndexAndMessageY
+	jsr SCursorIndexToBattlerIndex
+	tya
+	jsr S5Asl
+	ldx currentBattler
+	ora battleActions,x
+	sta battleActions,x
+.SCheckNextBattler:
+	ldx currentBattler
+	cpx #3
+	bcs .SNoMoreActions
+.SFindNextBattler:
+	inx
+	cpx #4
+	bcs .SNoMoreActions ;Make sure to avoid checking enemyHP!
+	lda hp1,x
+	beq .SFindNextBattler
+	stx currentBattler ;Found another party member, keep getting actions!
+	lda #$80
+	sta currentMenu
+	lda #3
+	sta menuSize
+	lda #0
+	sta cursorIndexAndMessageY
+	rts
+.SNoMoreActions:
+	lda #$81 ;No more party member actions to collect.
+	sta inBattle
+	lda #0
+	sta currentMenu
+	rts
+
+SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine according to the current menu state
+	lda currentMenu
+	cmp #$80
+	beq .SSetupBattleOptions
+	cmp #$81
+	beq .SGoToEnemyTargeting
+	cmp #$82
+	beq .SSetupAllyTargeting
+	cmp #$83
+	beq .SSetupOtherAllyTargeting
+	cmp #$84
+	beq .SGoToSpellOptions
+	cmp #$85
+	beq .SGoToNoSpellsKnown
+.SReturn
+	rts
+.SGoToEnemyTargeting:
+	jmp .SSetupEnemyTargeting
+.SGoToSpellOptions:
+	jmp .SSetupSpellOptions
+.SGoToNoSpellsKnown:
+	jmp .SSetupNoSpellsKnown
+
+.SSetupBattleOptions:
+	ldx currentBattler
+	lda char1,x
+	and #$0F ;Get just the class of this party member
+	tay
+	lda SBattleTables,y
+	sta tempPointer1
+	lda #(SKnightBattleTable >> 8 & $FF)
+	sta tempPointer1+1
+
+	jsr SSetMenuActiveLine
+
+	ldx #0
+	ldy startingCursorIndexAndTargetID
+.SOptionLinesLoop:
+	lda (tempPointer1),y
+	sta menuLines,x
+	inx
+	iny
+	cpx #3
+	bcs .SReturn
+	bne .SOptionLinesLoop 
+
+.SSetupOtherAllyTargeting:
+	ldy cursorIndexAndMessageY
+	sty highlightedLine
+	ldx #0
+	ldy #0
+.SOtherAllyLinesLoop:
+	cpx #3
+	bcs .SReturn
+	cpy currentBattler
+	beq .SIsSelf
+	sty menuLines,x
+	inx
+.SIsSelf:
+	iny
+	bne .SOtherAllyLinesLoop
+
+.SSetupAllyTargeting:
+	jsr SSetMenuActiveLine
+
+	ldx #0
+	ldy startingCursorIndexAndTargetID
+.SAllyLoop:
+	sty menuLines,x
+	iny
+	inx
+	cpx #3
+	bcc .SAllyLoop
+	rts
+
+.SSetupEnemyTargeting:
+	lda #$FF
+	sta menuLines+2 ;Make sure that the last line is cleared if there are only two enemies
+	lda menuSize
+	cmp #3
+	bcs .SFourEnemies
+	lda #0
+	sta startingCursorIndexAndTargetID
+	ldy cursorIndexAndMessageY
+	sty highlightedLine
+	bpl .SSetEnemyLines
+.SFourEnemies:
+	jsr SSetMenuActiveLine
+
+.SSetEnemyLines:
+	lda menuSize
+	cmp #2
+	bcs .SMoreThanTwo
+	lda #2
+	bne .SAfterLoadingCorrectSize
+.SMoreThanTwo:
+	lda #3
+.SAfterLoadingCorrectSize:
+	sta temp1
+	ldx #0
+	ldy startingCursorIndexAndTargetID
+	iny
+	iny
+	iny
+	iny
+.SEnemyLineLoop:
+	lda battlerHP,y
+	beq .SNoEnemyHere
+	sty menuLines,x
+	inx
+.SNoEnemyHere:
+	iny
+	cpx temp1
+	bcc .SEnemyLineLoop
+
+	lda #enemyHP
+	sta tempPointer1
+	lda #0
+	sta tempPointer1+1
+	ldx cursorIndexAndMessageY
+	jsr SCursorIndexToBattlerIndex
+	sty enemyAction
+.SDone:
+	rts
+
+.SSetupNoSpellsKnown:
+	ldx #$E1
+	stx menuLines
+	inx
+	stx menuLines+1
+	inx
+	stx menuLines+2
+	rts
+
+.SSetupSpellOptions:
+	lda #$FF
+	sta menuLines+2 ;Set the third line to not show in case there are only two options
+	ldx currentBattler
+	lda char1,x
+	and #$0F ;Get just the class of this party member
+	sta temp2
+	tax
+	lda SSpellListLookup,x
+	sta tempPointer1
+	lda #(SWizardSpellList >> 8 & $FF)
+	sta tempPointer1+1 ;tempPointer1 now points to the spell list for this class
+
+	lda menuSize
+	cmp #2
+	bcs .SMoreThanTwoSpellOptions
+	lda #2
+	bne .SAfterLoadingCorrectSpellSize
+.SMoreThanTwoSpellOptions:
+	lda #3
+.SAfterLoadingCorrectSpellSize:
+	sta temp1
+
+	jsr SSetMenuActiveLine
+
+	ldx temp2
+	lda SCasterType,x
+	bmi .SIsHalfCaster
+	ldy startingCursorIndexAndTargetID
+	jmp .SSetSpells
+.SIsHalfCaster:
+	lda startingCursorIndexAndTargetID
+	asl
+	tay
+.SSetSpells:
+	ldx #0
+.SSetSpellLoop:
+	lda (tempPointer1),y
+	cmp #$FF
+	beq .SSkipThisSpell
+	sta menuLines,x
+	inx
+	cpx temp1
+	bcs .SCheckMana
+.SSkipThisSpell:
+	iny
+	bne .SSetSpellLoop
+
+.SCheckMana:
+	ldy highlightedLine
+	lda menuLines,y
+	tay
+	lda SSpellManaLookup,y
+	sta temp1
+	ldx currentBattler
+	lda mp1,x
+	cmp temp1
+	bcs .SEnoughMana
+	lda highlightedLine
+	ora #$80
+	sta highlightedLine
+.SEnoughMana:
+.SSpellIDsSet:
+	ldx #2
+.SEnforceSpellLoop:
+	lda menuLines,x
+	ora #$C0
+	sta menuLines,x
+	dex
+	bpl .SEnforceSpellLoop
+	rts
+
+SSetMenuActiveLine: SUBROUTINE
+	lda menuSize
+	cmp #3
+	bcs .SAtLeastThree
+	lda cursorIndexAndMessageY
+	sta highlightedLine
+	lda #0
+	sta startingCursorIndexAndTargetID
+	rts
+.SAtLeastThree:
+	ldy cursorIndexAndMessageY
+	beq .STopOfMenu
+	cpy menuSize
+	bcc .SMiddleOfMenu
+.SBottomOfMenu:
+	dey
+	dey
+	sty startingCursorIndexAndTargetID
+	ldy #2
+	sty highlightedLine
+	rts
+.SMiddleOfMenu:
+	dey
+	sty startingCursorIndexAndTargetID
+	ldy #1
+	sty highlightedLine
+	rts
+.STopOfMenu:
+	sty startingCursorIndexAndTargetID
+	sty highlightedLine
+	rts
+
+;Interprets X as the cursorPosition
+SCursorIndexToBattlerIndex: SUBROUTINE ;Converts the position of a menu cursor into the correct location in the array of the target (based on tempPointer1)
+	ldy #0
+	inx
+.SIndexConversionLoop
+	lda (tempPointer1),y
+	cmp #0
+	beq .SNoHit
+	dex
+	beq .SDone
+.SNoHit:
+	iny
+	bpl .SIndexConversionLoop ;Saves byte over jmp
+.SDone:
+	rts ;Y is the correct offset into the enemyID array
+
+SCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in X, and the last index of an alive enemy in Y
+	ldx #0
+	ldy #0
+.SCheckEnemyLoop:
+	lda enemyHP,y
+	beq .SEnemyDead
+	sty tempPointer6
+	inx
+.SEnemyDead
+	iny
+	cpy #4
+	bcc .SCheckEnemyLoop
+	ldy tempPointer6
+	rts
+
 S4Lsr: SUBROUTINE
 	lsr
 	lsr
 	lsr
 	lsr
+	rts
+
+S5Asl: SUBROUTINE
+	asl
+	asl
+	asl
+	asl
+	asl
 	rts
 
 	;Arrow IDs start with 0 at straight east, then increasing moving clockwise
@@ -700,12 +1235,149 @@ SArrowReflectionLookup:
 	.byte #%00001000
 	.byte #%00001000
 
+SNormalBattleTable:
+	.byte $80
+	.byte $81
+	.byte $82
+	.byte $83
+SKnightBattleTable:
+	.byte $80
+	.byte $84
+	.byte $82
+	.byte $83
+SRogueBattleTable:
+	.byte $80
+	.byte $85
+	.byte $82
+	.byte $83
+
+SBattleTables:
+	.byte (SKnightBattleTable & $FF)
+	.byte (SRogueBattleTable & $FF)
+	.byte (SNormalBattleTable & $FF)
+	.byte (SNormalBattleTable & $FF)
+	.byte (SNormalBattleTable & $FF)
+	.byte (SNormalBattleTable & $FF)
+
+SCasterType:
+	.byte 0 ;Knight
+	.byte 0 ;Rogue
+	.byte 1 ;Cleric
+	.byte 1 ;Wizard
+	.byte $FF ;Ranger
+	.byte $FF ;Paladin
+
+SSpellListLookup:
+	.byte (SEmptySpellList & $FF)
+	.byte (SEmptySpellList & $FF)
+	.byte (SClericSpellList & $FF)
+	.byte (SWizardSpellList & $FF)
+	.byte (SRangerSpellList & $FF)
+	.byte (SPaladinSpellList & $FF)
+
+SWizardSpellList:
+	.byte #$0 ;BACK
+	.byte #$1 ;FIRE
+	.byte #$3 ;BLIZRD
+	.byte #$4 ;DRAIN
+	.byte #$2 ;SLEEP
+	.byte #$5 ;THUNDR
+	.byte #$6 ;SHIELD
+	.byte #$8 ;CHAOS
+	.byte #$7 ;METEOR
+SClericSpellList:
+	.byte #$0 ;BACK
+	.byte #$9 ;HEAL
+	.byte #$F ;WITHER
+	.byte #$C ;SHARP
+	.byte #$E ;TRIAGE
+	.byte #$D ;BLIGHT
+	.byte #$11 ;TRANCE
+	.byte #$12 ;DONATE
+	.byte #$10 ;BANISH
+SPaladinSpellList:
+	.byte #$0 ;BACK
+	.byte #$FF 
+	.byte #$9 ;HEAL
+	.byte #$FF
+	.byte #$A ;SMITE
+	.byte #$FF
+	.byte #$C ;SHARP
+	.byte #$FF 
+	.byte #$6 ;SHIELD
+SRangerSpellList:
+	.byte #$0 ;BACK
+	.byte #$FF
+	.byte #$B ;POISON
+	.byte #$FF
+	.byte #$9 ;HEAL
+	.byte #$FF
+	.byte #$2 ;SLEEP
+	.byte #$FF
+	.byte #$D ;BLIGHT
+SEmptySpellList:
+	.byte #0
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+	.byte #$FF
+
+SSpellTargetingLookup:
+	.byte $0 ;BACK
+	.byte $1 ;FIRE
+	.byte $1 ;SLEEP
+	.byte $82 ;BLIZRD
+	.byte $1 ;DRAIN
+	.byte $5 ;THUNDR
+	.byte $3 ;SHIELD
+	.byte $86 ;METEOR
+	.byte $82 ;CHAOS
+	.byte $3 ;HEAL
+	.byte $1 ;SMITE
+	.byte $1 ;POISON
+	.byte $3 ;SHARP
+	.byte $1 ;BLIGHT
+	.byte $84 ;TRIAGE
+	.byte $1 ;WITHER
+	.byte $82 ;BANISH
+	.byte $0 ;TRANCE
+	.byte $84 ;WISH
+	.byte $82 ;SHIFT
+
+SSpellManaLookup:
+	.byte 0 ;BACK
+	.byte 1 ;FIRE
+	.byte 1 ;SLEEP
+	.byte 1 ;BLIZRD
+	.byte 1 ;DRAIN
+	.byte 1 ;THUNDR
+	.byte 1 ;SHIELD
+	.byte 1 ;METEOR
+	.byte 1 ;CHAOS
+	.byte 1 ;HEAL
+	.byte 1 ;SMITE
+	.byte 1 ;POISON
+	.byte 1 ;SHARP
+	.byte 1 ;BLIGHT
+	.byte 1 ;TRIAGE
+	.byte 1 ;WITHER
+	.byte 1 ;BANISH
+	.byte 1 ;TRANCE
+	.byte 1 ;WISH
+	.byte 0 ;SHIFT
+
 SHighLabelBytes:
 	.byte (SGenerateMazeData >> 8 & $FF)
 	.byte (SUpdateMazeRenderingPointers >> 8 & $FF)
 	.byte (SUpdatePlayerMovement >> 8 & $FF)
 	.byte (SClearMazeData >> 8 & $FF)
 	.byte (SUpdateCompassPointerBoss >> 8 & $FF)
+	.byte (SUpdateMenuAdvancement >> 8 & $FF)
+	.byte (SUpdateMenuRendering >> 8 & $FF)
 
 SLowLabelBytes:
 	.byte (SGenerateMazeData & $FF)
@@ -713,6 +1385,8 @@ SLowLabelBytes:
 	.byte (SUpdatePlayerMovement & $FF)
 	.byte (SClearMazeData & $FF)
 	.byte (SUpdateCompassPointerBoss & $FF)
+	.byte (SUpdateMenuAdvancement & $FF)
+	.byte (SUpdateMenuRendering & $FF)
 
 	ORG $FFB0 ;Bankswitching nonsense
 	RORG $FFB0
