@@ -1,4 +1,4 @@
-	;BANK 3 - CONTAINS SOUND EFFECT ROUTINES AND DATA
+	;BANK 3 - CONTAINS SOUND EFFECT ROUTINES AND DATA (AS WELL AS LOTS OF MAZE AND BATTLE UI LOGIC)
 
 	ORG $F000
 	RORG $F000
@@ -1293,8 +1293,8 @@ SClericSpellList:
 	.byte #$E ;TRIAGE
 	.byte #$D ;BLIGHT
 	.byte #$11 ;TRANCE
-	.byte #$12 ;DONATE
 	.byte #$10 ;BANISH
+	.byte #$12 ;WISH
 SPaladinSpellList:
 	.byte #$0 ;BACK
 	.byte #$FF 

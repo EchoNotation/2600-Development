@@ -1,7 +1,7 @@
 	ORG $D000
 	RORG $F000
 
-	;BANK 1 - CONTAINS THE MAJORITY OF THE MAZE/BATTLE SYSTEM LOGIC
+	;BANK 1 - CONTAINS THE MAJORITY OF THE BATTLE SYSTEM LOGIC
 
 LReset:
 	nop $1FF7 ;Make sure to stay in bank 1
@@ -52,7 +52,7 @@ LSkipSeeding:
 	sta name4
 	lda #EMPTY
 	sta name5
-	lda #$58
+	lda #$5
 	sta hp1
 	lda #$23
 	sta mp1
@@ -107,9 +107,6 @@ LSkipSeeding:
 	lda #$04
 	sta mp4
 
-	lda #$09
-	sta battlerStatus
-
 	lda #$F8
 	sta currentInput
 	sta previousInput
@@ -122,21 +119,18 @@ LSkipSeeding:
 	lda #$80
 	sta inBattle
 	sta currentMenu
-	lda #$F8
-	sta hasAction
 	lda #$FF
-	sta enemyID+1
-	sta enemyID+3
+	sta hasAction
+	;sta enemyID+1
+	;sta enemyID+3
 	lda #$03
 	sta menuSize
 	lda #1
 	sta enemyHP
-	; sta enemyHP+1
+	sta enemyHP+1
 	sta enemyHP+2
-	; sta enemyHP+3
-	sta highlightedLine
+	sta enemyHP+3
 	sta currentEffect
-	sta enemyAction
 
 LStartOfFrame:
 	lda #$82
@@ -260,12 +254,14 @@ LBattleProcessLowBytes:
 	.byte (LProcessRunning & $FF)
 	.byte (LProcessGuarding & $FF)
 	.byte (LProcessParrying & $FF)
+	.byte (LProcessSpecial & $FF)
 LBattleProcessHighBytes:
 	.byte (LProcessFighting >> 8 & $FF)
 	.byte (LProcessMoving >> 8 & $FF)
 	.byte (LProcessRunning >> 8 & $FF)
 	.byte (LProcessGuarding >> 8 & $FF)
 	.byte (LProcessParrying >> 8 & $FF)
+	.byte (LProcessSpecial >> 8 & $FF)
 
 LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.	
 	ldx currentBattler
@@ -480,12 +476,24 @@ LAdvanceBattlerStatus:
 	jsr LCheckBattlerStatus
 	bne .LProcessAction
 	rts
+
+.LGoToHandleSingleTgtEffect:
+	jmp .LHandleSingleTgtEffect
+.LGoToSingleTgtPhase2:
+	jmp .LSingleTgtPhase2
+
 LProcessCasting:
 	lda inBattle
 	cmp #$A0
-	beq .LHandleSingleTgtEffect
+	beq .LGoToHandleSingleTgtEffect
 	cmp #$A1
 	beq .LSingleTgtSpellKill
+	cmp #$A2
+	beq .LGoToSingleTgtPhase2
+	cmp #$A3
+	beq .LDrainKilled
+	cmp #$A4
+	beq .LWishMPRestoration
 	cmp #$B0
 	beq .LGoToHandleAoEEffect
 	cmp #$B1
@@ -503,7 +511,9 @@ LProcessCasting:
 	bcs .LDontRemoveMana
 	lda mp1,y
 	sec
+	sed
 	sbc LSpellManaLookup,x
+	cld
 	sta mp1,y
 .LDontRemoveMana:
 	lda LSpellTargetingLookup,x
@@ -514,6 +524,8 @@ LProcessCasting:
 	rts
 .LIsAoE:
 	cmp #$82
+	beq .LIsOffensive
+	cmp #$86
 	beq .LIsOffensive
 	jsr LSetTotalAoETgtsDefensive
 	jmp .LTotalTgtsSet
@@ -527,6 +539,7 @@ LProcessCasting:
 .LSingleTgtSpellKill:
 	lda #$81
 	sta inBattle
+.LSharedKillLogic:
 	lda #$09 ;X DOWN
 	sta currentMessage
 	ldx startingCursorIndexAndTargetID
@@ -542,8 +555,75 @@ LProcessCasting:
 	ldx startingCursorIndexAndTargetID
 	;Target ID should already be set from previous message
 	jsr LDeathCleanup
-	rts
+	jmp .LTryNextTgt
 
+.LDrainKilled:
+	lda #$A2
+	sta inBattle
+	bne .LSharedKillLogic
+
+.LWishMPRestoration:
+	lda #$25 ;PARTY MP UP
+	sta currentMessage
+	ldx #3
+	stx aoeTargetID
+.LRestoreAllAlliesLoop:
+	lda aoeValue
+	jsr LApplyRestoration
+.LNotThisBattler:
+	dec aoeTargetID
+	ldx aoeTargetID
+	cpx currentBattler
+	beq .LNotThisBattler
+	inx
+	dex
+	bpl .LRestoreAllAlliesLoop
+	jmp .LNormalTgtedExit
+
+.LSingleTgtPhase2:
+	;Currently only used by the DRAIN and TRANCE spells
+	lda temp1
+	and #$1F
+	cmp #$04 ;ID for DRAIN
+	beq .LDrainPhase2
+	cmp #$11 ;ID for TRANCE
+	beq .LTrancePhase2
+	cmp #$12 ;ID for WISH
+	beq .LWishPhase2
+	rts ;This code intentionally left blank
+.LDrainPhase2:
+	lda aoeValue ;The amount that was dealt
+	lsr
+	ldx currentBattler
+	stx startingCursorIndexAndTargetID
+	jmp .LManageHealingMessage
+.LWishPhase2:
+	lda #$24 ;PARTY HP UP
+	sta currentMessage
+	ldx #3
+.LHealAllAlliesLoop:
+	lda aoeValue
+	jsr LApplyHealing
+	ldx temp5
+.LNoHealingThisBattler:
+	dex
+	cpx currentBattler
+	beq .LNoHealingThisBattler
+	inx
+	dex
+	bpl .LHealAllAlliesLoop
+	lda #$A4
+	sta inBattle
+	rts
+.LTrancePhase2:
+	ldx currentBattler
+	jsr LGetBattlerMaxMP
+	lsr
+	lsr
+	ldx currentBattler
+	jsr LApplyRestoration ;Restore 1/4 max mp
+	lda #$2A ;X MP UP
+	sta currentMessage ;targetID should already be set from previous message
 .LGoToNormalTgtedExit:
 	jmp .LNormalTgtedExit
 
@@ -551,7 +631,9 @@ LProcessCasting:
 	lda temp1
 	and #$1F ;Spell ID
 	tax
+	stx temp6
 	lda LSpellTargetingLookup,x
+	beq .LSelfTargeting
 	cmp #$05
 	beq .LHighestHPTargetingEnemy
 	cmp #$03
@@ -561,6 +643,10 @@ LProcessCasting:
 	rts ;Unknown targeting mode!
 .LBasicTargetingEnemy:
 	jsr LGetTargetFromActionOffensive
+	jmp .LTargetAcquired
+
+.LSelfTargeting
+	ldx currentBattler
 	jmp .LTargetAcquired
 
 .LBasicTargetingAlly:
@@ -597,11 +683,8 @@ LProcessCasting:
 
 .LTargetAcquired:
 	stx startingCursorIndexAndTargetID
-	lda temp1
-	and #$1F ;Spell ID
-	tax
-	stx temp6
 
+	ldx temp6 ;spell ID
 	;Need to check if this spell should miss or not
 	jsr LCheckSpellHit
 	bpl .LSpellConnects
@@ -627,6 +710,8 @@ LProcessCasting:
 	jmp .LTgtDamageKilled
 .LGoToTgtDamageSurvived:
 	jmp .LTgtDamageSurvived
+.LGoToTgtDamage:
+	jmp .LTgtDamage
 
 .LNoShield:
 	ldx temp6
@@ -639,7 +724,8 @@ LProcessCasting:
 	ldy #FULL_MAGIC
 	jsr LDetermineSpellPower
 	ldy #FIRE_RESIST_MASK
-	bne .LTgtDamage
+	bne .LGoToTgtDamage
+
 .LSleep:
 	ldx startingCursorIndexAndTargetID
 	lda #ASLEEP_MASK
@@ -647,14 +733,54 @@ LProcessCasting:
 	lda #$1B ;X FELL ASLEEP
 	sta currentMessage
 	bne .LNormalTgtedExit
+
 .LDrain:
 	;this is a 2-stage maneuver
+	ldy #HALF_MAGIC
+	jsr LDetermineSpellPower
+	sta aoeValue ;Save so that the damaged amount can be used for healing the user
+	ldy #$FF ;True damage
+	ldx startingCursorIndexAndTargetID
+	jsr LApplyDamage
+	bmi .LTgtDrainKilled
+	lda #$A2
+	bne .LSetMessageDrain
+.LTgtDrainKilled:
+	lda #$A3
+.LSetMessageDrain:
+	sta inBattle
+	lda #07 ;X LOSES Y HP
+	sta currentMessage
+	lda temp2
+	jsr LBinaryToDecimal
+	sta cursorIndexAndMessageY
 	rts
+
 .LThundr:
 	ldy #THREE_HALVES_MAGIC
 	jsr LDetermineSpellPower
 	ldy #ELECTRIC_RESIST_MASK
-	bne .LTgtDamage
+	bne .LGoToTgtDamage
+
+.LWish:
+	ldy #HALF_MAGIC
+	jsr LDetermineSpellPower
+	sta aoeValue
+	lda #$28 ;PARTY STATUS CLEAR
+	sta currentMessage
+	lda #(~(ASLEEP_MASK | BLIGHTED_MASK))
+	sta temp2
+	ldx #3
+.LClearNegativeStatusLoop:
+	lda temp2
+	and battlerStatus,x
+	sta battlerStatus,x
+	dex
+	bpl .LClearNegativeStatusLoop
+	lda #$A2
+	sta inBattle
+	rts
+
 .LShield:
 	ldx startingCursorIndexAndTargetID
 	lda #SHIELDED_MASK
@@ -663,19 +789,43 @@ LProcessCasting:
 	jsr LApplyStatus
 	lda #$10 ;X HAS A SHIELD
 	sta currentMessage
-	bne .LNormalTgtedExit
-.LHeal:
+.LNormalTgtedExit:
+	lda #$81
+	sta inBattle
 	rts
+
+.LHeal:
+	ldy #FULL_MAGIC
+	jsr LDetermineSpellPower
+	ldx startingCursorIndexAndTargetID
+.LManageHealingMessage:
+	jsr LApplyHealing
+	bmi .LHealDenied
+	beq .LHealMaxed
+	sta cursorIndexAndMessageY
+	lda #$06 ;X HEALS Y HP
+	bne .LSaveHealMessage
+.LHealMaxed:
+	lda #$26 ;X HEALS FULLY
+	bne .LSaveHealMessage
+.LHealDenied:
+	lda #$0F ;X WAS CURED
+.LSaveHealMessage:
+	sta currentMessage
+	jmp .LNormalTgtedExit
+
 .LSmite:
 	ldy #ATTACK_AND_HALF_MAGIC
 	jsr LDetermineSpellPower
 	ldy #HOLY_RESIST_MASK
 	bne .LTgtDamage
+
 .LPoison:
 	ldy #ATTACK_AND_HALF_MAGIC
 	jsr LDetermineSpellPower
 	ldy #POISON_RESIST_MASK
 	bne .LTgtDamage
+
 .LSharp:
 	ldx startingCursorIndexAndTargetID
 	lda #SHARPENED_MASK
@@ -683,6 +833,7 @@ LProcessCasting:
 	lda #$1A ;X ATTACK UP
 	sta currentMessage
 	bne .LNormalTgtedExit
+
 .LBlight:
 	ldx startingCursorIndexAndTargetID
 	lda #BLIGHTED_MASK
@@ -690,24 +841,33 @@ LProcessCasting:
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
 	bne .LNormalTgtedExit
+	
 .LWither:
 	ldy #THREE_HALVES_MAGIC
 	jsr LDetermineSpellPower
 	ldy #POISON_RESIST_MASK
 	bne .LTgtDamage
+
 .LTrance:
-	;TODO this spell is a pain in the ass that needs more special messages, not as bad as wish though
+	ldx currentBattler
+	lda #$10 ;Sleep for 1 turn
+	ora battlerStatus,x
+	sta battlerStatus,x
+	stx startingCursorIndexAndTargetID
+	lda #$1B ;X FELL ASLEEP
+	sta currentMessage
+	lda #$A2
+	sta inBattle
 	rts
+
 .LShift:
 	lda partyBattlePos
 	eor #$0F
 	sta partyBattlePos
-	;lda need a message for this
-	;sta currentMessage 
-.LNormalTgtedExit:
-	lda #$81
-	sta inBattle
-	rts
+	lda #$29 ;PARTY MIXED UP
+	sta currentMessage 
+	bne .LNormalTgtedExit
+
 .LTgtDamage:
 	ldx startingCursorIndexAndTargetID
 	jsr LApplyDamage
@@ -726,19 +886,180 @@ LProcessCasting:
 	sta cursorIndexAndMessageY
 	rts
 
+.LGoToTryNextTgt:
+	jmp .LTryNextTgt
+
 .LHandleAoEEffect:
+	lda temp1
+	and #$1F ;Spell ID
+	tax
+	stx temp6
+	lda LSpellTargetingLookup,x
+	cmp #$82
+	beq .LAllEnemies
+	cmp #$84
+	beq .LAllAllies
+	cmp #$86
+	beq .LAllEnemies
+	rts ;Unknown targeting mode!
+.LAllEnemies:
+	jsr LFindAoETgtOffensive
+	jmp .LAoETgtAcquired
+.LAllAllies:
+	jsr LFindAoETgtDefensive
+.LAoETgtAcquired:
+	ldx aoeTargetID
+	stx startingCursorIndexAndTargetID
+
+	ldx temp6 ;spell ID
+	;Need to check if this spell should miss or not
+	jsr LCheckSpellHit
+	bpl .LAoESpellConnects
+	lda #$15 ;NO EFFECT
+	sta currentMessage
+	bne .LGoToTryNextTgt
+
+.LAoESpellConnects:
+	;Need to check if this spell will be shielded or not
+	jsr LCheckSpellShield
+	beq .LAoENoShield
+	bmi .LAoEShieldDestroyed
+.LAoEShieldWeakened:
+	lda #$10 ;X HAS A SHIELD
+	sta currentMessage
+	bne .LGoToTryNextTgt
+.LAoEShieldDestroyed:
+	lda #$1E ;X SHIELD FADES
+	sta currentMessage
+	bne .LGoToTryNextTgt
+
+.LAoENoShield:
+	ldx temp6
+	lda LHighSpellLogicLocations,x
+	sta tempPointer1+1
+	lda LLowSpellLogicLocations,x
+	sta tempPointer1
+	jmp (tempPointer1)
 
 .LBlizrd:
-	rts
+	ldy #HALF_MAGIC
+	jsr LDetermineSpellPower
+	ldy #ICE_RESIST_MASK
+	jmp .LAoEDamage
+
 .LMeteor:
-	rts
+	lda temp1
+	and #$60
+	jsr L5Lsr
+	sta temp2
+	lda startingCursorIndexAndTargetID
+	and #$03
+	cmp temp2
+	beq .LHitWithMeteor
+.LHitWithFire:
+	ldy #HALF_MAGIC
+	jsr LDetermineSpellPower
+	ldy #FIRE_RESIST_MASK
+	bne .LAoEDamage
+.LHitWithMeteor:
+	ldy #FULL_MAGIC
+	jsr LDetermineSpellPower
+	ldy #PHYSICAL_RESIST_MASK
+	bne .LAoEDamage
+
 .LChaos:
-	rts
+	jsr LRandom
+	and #$60
+	beq .LChaosStatus ;1/4 chance to do a status
+	ldy #HALF_MAGIC
+	jsr LDetermineSpellPower
+	sta temp2
+	lda rand8
+	and #$7F
+	tay
+	lda LChaosElements,y
+	tay ;Y contains the correct damage type
+	lda temp2 ;Damage to deal
+	jmp .LAoEDamage
+.LChaosStatus:
+	ldx startingCursorIndexAndTargetID
+	jsr LRandom
+	bpl .LChaosSleep
+.LChaosBlight:
+	lda #$0E ;X WASTES AWAY
+	sta currentMessage
+	lda #BLIGHTED_MASK
+	bne .LApplyChaosStatus
+.LChaosSleep:
+	lda #$1B ;X FELL ASLEEP
+	sta currentMessage
+	lda #ASLEEP_MASK
+.LApplyChaosStatus:
+	jsr LApplyStatus
+	jmp .LTryNextTgt
+
 .LTriage:
-	rts
+	ldy #HALF_MAGIC
+	jsr LDetermineSpellPower
+	ldx startingCursorIndexAndTargetID
+.LManageAoEHealingMessage:
+	jsr LApplyHealing
+	bmi .LAoEHealDenied
+	beq .LAoEHealMaxed
+	sta cursorIndexAndMessageY
+	lda #$06 ;X HEALS Y HP
+	bne .LSaveAoEHealMessage
+.LAoEHealMaxed:
+	lda #$26 ;X HEALS FULLY
+	bne .LSaveAoEHealMessage
+.LAoEHealDenied:
+	lda #$0F ;X WAS CURED
+.LSaveAoEHealMessage:
+	sta currentMessage
+	bne .LTryNextTgt
+
 .LBanish:
+	ldx startingCursorIndexAndTargetID
+	jsr LGetBattlerResistances
+	and #LEGENDARY_RESIST_MASK
+	bne .LNoBanishing
+	jsr LRandom
+	bpl .LNoBanishing ;50% chance per enemy
+	lda #$17 ;X EXILED
+	sta currentMessage
+	ldx startingCursorIndexAndTargetID
+	jsr LDeathCleanup
+	jmp .LTryNextTgt
+.LNoBanishing:
+	lda #$15 ;NO EFFECT
+	sta currentMessage
+	bne .LTryNextTgt
+
+.LAoEDamage:
+	ldx startingCursorIndexAndTargetID
+	jsr LApplyDamage
+	beq .LAoEDamageSurvived
+.LAoEDamageKilled:
+	lda #$B1
+	sta inBattle
+.LAoEDamageSurvived:
+	lda #07 ;X LOSES Y HP
+	sta currentMessage
+	lda temp2
+	jsr LBinaryToDecimal
+	sta cursorIndexAndMessageY
+	lda inBattle
+	cmp #$B1
+	bne .LTryNextTgt ;Try the next tgt if this didn't kill
 	rts
-.LWish:
+
+.LTryNextTgt:
+	dec aoeTargetsRemaining
+	beq .LSpellComplete
+	rts
+.LSpellComplete:
+	lda #$81
+	sta inBattle
 	rts
 
 LHighSpellLogicLocations:
@@ -760,7 +1081,7 @@ LHighSpellLogicLocations:
 	.byte (.LWither >> 8 & $FF)
 	.byte (.LBanish >> 8 & $FF)
 	.byte (.LTrance >> 8 & $FF)
-	.byte (.LWither >> 8 & $FF)
+	.byte (.LWish >> 8 & $FF)
 	.byte (.LShift >> 8 & $FF)
 	
 LLowSpellLogicLocations:
@@ -782,7 +1103,7 @@ LLowSpellLogicLocations:
 	.byte (.LWither & $FF)
 	.byte (.LBanish & $FF)
 	.byte (.LTrance & $FF)
-	.byte (.LWither & $FF)
+	.byte (.LWish & $FF)
 	.byte (.LShift & $FF)
 
 .LGoToCalculateFightDamage:
@@ -1014,6 +1335,11 @@ LProcessParrying:
 	jsr LApplyStatus
 	rts
 
+LProcessSpecial:
+	lda #$81
+	sta inBattle
+	rts
+
 LDetermineSpellPower: SUBROUTINE ;Interprets Y as the damage formula to follow, and returns the appropriate value based on the battler's Attack & Magic
 	ldx currentBattler
 	dey
@@ -1236,7 +1562,7 @@ LFindFirstLivingAlly: SUBROUTINE ;Returns the id of first party member with posi
 
 LSetEnemyAction: SUBROUTINE ;Choose what action this enemy will perform and set enemyAction accordingly.
 	;Will have to be way more complicated in the future, but this works for the moment. RIP Whomever is in front of the party
-	;This is a likely candidate for relocation into the S bank
+	;This functionality will be relocated into the S bank
 	lda #$00
 	sta enemyAction
 	rts
@@ -1309,14 +1635,16 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 	sta inBattle
 	ldx currentBattler
 	stx startingCursorIndexAndTargetID
+	jsr LDeathCleanup
+	lda #0
 	rts
 .LSetBlightDamage:
 	jsr LGetBattlerMaxHP
 	lsr
 	lsr
 	lsr
-	beq .LAtLeast1Damage
 	sta temp2 ;Damage to deal in binary
+	beq .LAtLeast1Damage
 	bne .LNoDamageClampNeeded
 .LAtLeast1Damage:
 	inc temp2
@@ -1373,6 +1701,8 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 	sta temp2
 	stx temp3
 	sty temp4
+	cpy #$FF
+	beq .LDamageNotResisted
 	jsr LGetBattlerResistances
 	and temp4
 	beq .LDamageNotResisted
@@ -1398,6 +1728,10 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 .LNotGuarded:
 
 	lda temp2 ;A now contains the final binary damage that should be dealt to target X
+	bne .LNonZeroDamage
+	lda #1
+	sta temp2
+.LNonZeroDamage:
 	ldx temp3
 	cpx #4
 	bcs .LDealDamageToEnemy
@@ -1415,7 +1749,7 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 	bcs .LSurvived
 .LDealDamageToEnemy:
 	lda battlerHP,x
-	clc
+	sec
 	sbc temp2
 	beq .LDied
 	bcc .LDied
@@ -1451,8 +1785,8 @@ LApplyStatus: SUBROUTINE ;Applies additional status A to target X
 	sta battlerStatus,x
 	rts
 
-LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if healing was denied by blight, otherwise the amount that was actually healed
-	stx temp4 ;target index
+LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if healing was denied by blight, 0 if this battler's health was maxed out, else the decimal amount that was healed
+	stx temp5 ;target index
 	sta temp2 ;binary amount to regain
 	lda #BLIGHTED_MASK
 	and battlerStatus,x
@@ -1470,7 +1804,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	lda temp2 ;binary health to heal
 	jsr LBinaryToDecimal
 	sta temp2 ;decimal health to heal
-	ldx temp4
+	ldx temp5
 	lda battlerHP,x
 	sed
 	clc
@@ -1478,53 +1812,63 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	cld
 	sta temp3 ;current health + heal amount
 	jsr LGetBattlerMaxHP
-	ldx temp4 ;targetID
+	jsr LBinaryToDecimal
+	ldx temp5 ;targetID
 	cmp temp3
-	bcs .LMaxedOutHP
-	lda temp3 ;Didn't max out, so load the current health + heal amount
+	bcc .LMaxedOutHP
+	lda temp3
 	sta battlerHP,x
-	lda temp2 ;the decimal amount that was healed
+	lda temp2
 	rts
 .LMaxedOutHP:
 	sta battlerHP,x
-
+	lda #0
 	rts
-
 .LHealEnemy:
-
+	lda battlerHP,x
+	clc
+	adc temp2 ;amount to heal
+	sta temp3 ;current health + heal amount (in binary)
+	jsr LGetBattlerMaxHP
+	ldx temp5 ;target id
+	cmp temp3 ; maxHP - predicted health after healing
+	bcc .LMaxedOutHPEnemy
+	lda temp3
+	sta battlerHP,x
+	lda temp2
+	jsr LBinaryToDecimal
+	rts
+.LMaxedOutHPEnemy:
+	sta battlerHP,x ;predicted healing is greater, so just store the max hp
+	lda #0
 	rts
 
-LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Returns the amount of mana that was actually recovered (0 for enemies)
+LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Returns FF if this battler does not have mp.
 	cpx #4
 	bcc .LIsAlly
-	lda #0 ;Enemies don't track or recover mana
+.LNoMana:
+	lda #$FF ;Enemies don't track or recover mana
 	rts
 .LIsAlly:
-	stx temp4 ;target index
+	stx temp5 ;target index
 	jsr LBinaryToDecimal
 	sta temp3 ;decimal amount to regain
-	ldx temp4
+	ldx temp5
 	lda mp1,x
-	sta temp5 ;current mana
 	clc
 	sed
 	adc temp3
 	cld
-	sta temp2 ;Total mana after regaining, but before clamping
-	jsr LGetBattlerMaxMP
-	ldx temp4
+	sta temp2 ;Total mana after regaining, but before clamping (decimal)
+	jsr LGetBattlerMaxMP ;max mana for this battler (binary)
+	jsr LBinaryToDecimal ;A contains max mana for this battler (decimal)
+	beq .LNoMana
+	ldx temp5
 	cmp temp2
 	bcc .LOverRestored
 	lda temp2 ;Didn't hit max mana, so just store the amount after addition
-	sta mp1,x
-	lda temp3
-	;A now contains the amount of mana that was restored
-	rts
 .LOverRestored:
-	sed
-	sbc mp1,x ;Max MP - Current MP
-	cld
-	;A now contains the amount of mana that was restored
+	sta mp1,x
 	rts
 
 LFindAoETgtOffensive: SUBROUTINE ;Updates the aoeTargetID to the next relevant battler for offensive casts (make sure to check that aoeTargetsRemaining > 0 before use!)
@@ -1909,8 +2253,8 @@ LEnemyMagic:
 	.byte 0 ;Giant
 	.byte 20 ;Dragon
 LEnemyHP:
-	.byte #1 ;Zombie
-	.byte #10 ;Giant
+	.byte #10 ;Zombie
+	.byte #40 ;Giant
 	.byte #150 ;Dragon
  
 ;Format is LPFIHEPR
@@ -2145,8 +2489,8 @@ LClericSpellList:
 	.byte #$E ;TRIAGE
 	.byte #$D ;BLIGHT
 	.byte #$11 ;TRANCE
-	.byte #$12 ;DONATE
 	.byte #$10 ;BANISH
+	.byte #$12 ;WISH
 LPaladinSpellList:
 	.byte #$0 ;BACK
 	.byte #$FF 
@@ -2197,7 +2541,7 @@ LSpellTargetingLookup:
 	.byte $1 ;WITHER
 	.byte $82 ;BANISH
 	.byte $0 ;TRANCE
-	.byte $84 ;WISH
+	.byte $0 ;WISH
 	.byte $82 ;SHIFT
 
 LSpellManaLookup:
@@ -2218,7 +2562,7 @@ LSpellManaLookup:
 	.byte 1 ;TRIAGE
 	.byte 1 ;WITHER
 	.byte 1 ;BANISH
-	.byte 1 ;TRANCE
+	.byte 0 ;TRANCE
 	.byte 1 ;WISH
 	.byte 0 ;SHIFT
 
@@ -2279,6 +2623,16 @@ LIsClassRanged:
 	.byte $1 ;Wizard
 	.byte $1 ;Ranger
 	.byte $0 ;Paladin
+
+LChaosElements:
+	.byte $FF ;Non-elemental
+	.byte PHYSICAL_RESIST_MASK
+	.byte FIRE_RESIST_MASK
+	.byte ICE_RESIST_MASK
+	.byte ELECTRIC_RESIST_MASK
+	.byte HOLY_RESIST_MASK
+	.byte POISON_RESIST_MASK
+	.byte $FF ;Non-elemental
 
 	ORG $DFB0
 	RORG $FFB0

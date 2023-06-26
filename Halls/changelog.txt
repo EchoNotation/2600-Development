@@ -443,28 +443,45 @@
 	-Added LDetermineSpellPower subroutine, which continues to abstract/simplify/reduce size of spellcasting logic
 		-Currently supports 1*Magic, 0.5*Magic, 1.5*Magic, and 1*Attack+0.5*Magic
 	-Changed Paladin color again
+	-Completely refactored DONATE to WISH
+	-Added messages needed for WISH, TRANCE, and SHIFT
+	-Changed RMazeColors to reflect the current pattern:
+		---  THE GROUNDS  ---
+		---  THE CASTLE   ---
+		--- THE CATACOMBS ---
+		---   THE ABYSS   ---
+	-Finished implementing single target spells (haven't tested every single one...)
+	-Implemented basic AoE framework, and BLIZRD seems to work well
+	-Refactored LApplyHealing and LApplyRestoration, which seem to work alright now
+6/25/23
+	-Implemented CHAOS
+		-Fixed bugs relating to BLIGHT status effect
+	-Implemented TRIAGE
+	-Implemented BANISH
+	-Implemented METEOR
+	-Implemented WISH
+	-Fixed bug where spell mana costs were subtracted in binary mode instead of decimal
+	-Fixed bug where LApplyRestoration compared two numbers in different bases
 
 Known Bugs:
 	-Exiting battle shows glitchy maze for 1 frame. SUpdateMazeRenderingPointers isn't called when exiting battle
 		-Probably going to wait to fix this until battle transitions are better defined
+	
+	-Battle system behaves strangely if hasAction is inappropriately set when entering the battle, check LDetermineNextBattler?
 
 	-If the last party member doesn't learn a spell, it takes an extra input to end the battle
 		-This is actually a problem that will need to be addressed for all AoE effects
 
 TODO:
-	-Make party members gain delta HP, delta MP when leveling up
-
 	-Battle transitions?
 
-	-Campfire rendering
+	-Campfire rendering??
 		-Give campfire battle-like scene? Yes
 
-	-Title on actual title screen?
 	-Make simpler version of RDrawCharacterInfo for main menu kernel usage
 
-	Overarching questions:	
-		-Hear a "roar" when getting near the boss?
-		-Exit will not be rendered, campfire will exist as an enemy in a special battle type
+	-Battle system optimization
+	
 
 	-How is enemy AI going to be stored?
 		-Number of action slots, list of meta-enemyActions
@@ -482,16 +499,16 @@ TODO:
 				-Increased data complexity, decreased code complexity, better game design, lower encounter variety
 
 	Requirements for functional game loop:
-		-Functional combat - 60%
+		-Functional combat - 80%
 			-Control Flow/Battler Selection - 100%
 			-Fighting - 100%
-			-Spellcasting - 40%
+			-Spellcasting - 100%
 			-Moving - 100%
 			-Running - 100%
-			-Functional status effects - 95% (SLEEP, BLIGHT, SHARP, GUARD, and PARRY implemented: need to implement SHIELD for AoE)
+			-Functional status effects - 100%
 			-Enemy AI - 0%
 			-Character advancement - 85% (Slight refactor required to fix bug with (last position) party members who didn't learn a spell)
-			-Mana implementation - 90% (TRANCE and WISH)
+			-Mana implementation - 100%
 		-Additional maze logic
 			-Moving between floors
 			-Encounter generation
@@ -521,13 +538,21 @@ TODO:
 		-Try to balance everything
 
 	Version 1.1 considerations:
-		-Make it so that the button enters into the menu when in maze view?
+		-Maze input behavior:
+			-Make it so that the button enters into the menu when in maze view?
 			-Make back button move you backwards while maintaining facing direction
-		-Not all enemies are centered, create more of a "group skirmish" appearance
-		-Potentially try to center enemies more precisely?
-		-Being guarded reduces blight damage.
-		-Add resistances to party members
-		-Should elemental-flavors be resistances or vulnerabilities?
-		-Add damage types to basic attacks
-		-Introduce random value offsets based on party level (attack and healing amounts)
-		-Consider refactoring X LOSES Y HP to X TAKES Y DMG
+		-Position of enemy sprites in battle:
+			-Not all enemies are centered, create more of a "group skirmish" appearance
+			-Potentially try to center enemies more precisely?
+		-Battle system quirks:
+			-Being guarded reduces blight damage.
+			-Shields block friendly magic (HEAL, TRIAGE, WISH, SHARP, SHIELD)
+			-Avatars are not updated after the last logic frame for a single round
+		-Battle system improvements:
+			-Add resistances to party members
+			-Should elemental-flavors be resistances or vulnerabilities?
+			-Add damage types to basic attacks
+			-Introduce random value offsets based on party level (attack and healing amounts)
+			-Consider refactoring X LOSES Y HP to X TAKES Y DMG
+			-Make party members gain delta HP, delta MP when leveling up
+		-Hear a "roar" when getting near the boss?

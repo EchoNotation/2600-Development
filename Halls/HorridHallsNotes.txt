@@ -102,8 +102,7 @@ $06 - SUpdateMenuRendering
 00000010 : RUN --- Party will escape if the currentBattler's speed is greater than the highest speed enemy.
 0TT00011 : GUARD --- User and targeted ally gain the guarded status, which grants 3/4 damage reduction from all sources for the remainder of the round. This move has priority when used by party members.
 00000100 : PARRY --- User will evade all physical attacks for the remainder of the round, and retort against any attackers with a basic attack of their own.
-0IIII101 : SUMMON --- User will attempt to summon a new enemy of the ID described by IIII. (Only enemy IDs between 0-F can be summoned)
-00000110 : EXPLODE --- User will deal fire damage to all enemies, then destruct
+?????101 : SPECIAL --- Defined per enemy ID
 00000111 : ???
 1TTIIIII : Casting a spell
 
@@ -112,9 +111,7 @@ $06 - SUpdateMenuRendering
 -Cast
 -Guard
 -Parry
--Summon
--Summon & Damage (do damage to self equal to magic)
--Imitate?
+-Special
 
 --- SPELL TARGETING LOOKUP ---
 $00: No targeting (BACK, TRANCE)
@@ -236,8 +233,8 @@ MESSAGE COMPONENTS:
 29: FADES
 2A: EXILED
 2B: GAME
-2C: CLEAR!
-2D: OVER!
+2C: CLEAR
+2D: OVER
 2E: THE
 2F: MAZE
 30: AWAITS
@@ -246,8 +243,10 @@ MESSAGE COMPONENTS:
 33: HP UP
 34: MP UP
 35: FULLY
+36: MIXED
+37: STATUS
 
-Messages:
+MESSAGES:
 00: X STABS Y
 01: X SHOOTS Y
 02: X BASHES Y
@@ -284,6 +283,13 @@ Messages:
 21: THE MAZE AWAITS
 22: X (target) STABS Y (currentBattler)
 23: X BLOCKS
+24: PARTY HP UP
+25: PARTY MP UP
+26: X HEALS FULLY
+27: PARTY HEALS FULLY
+28: PARTY STATUS CLEAR
+29: PARTY MIXED UP
+2A: X MP UP
 
 Status Effects:
 Pos:
@@ -313,7 +319,7 @@ E: TRIAGE : Heals all allies
 F: WITHER : Deals poison damage to a single target
 10: BANISH : Attempts to banish all enemies
 11: TRANCE : Self sleep 1, regain mana (1/4 of max?)
-12: WISH : Clear all allies' status, take all user's MP, restore allies' HP and MP by half the amount taken
+12: WISH : Clear all allies' status, restore allies' HP and MP by half magic power (party members only)
 
 ENEMY ONLY?
 13: SHIFT : Inverts party position
@@ -335,8 +341,8 @@ Cleric Spell List:
 -TRIAGE - 4
 -BLIGHT - 5
 -TRANCE - 6
--WISH - 7
--BANISH - 8
+-BANISH - 7
+-WISH - 8
 
 Paladin Spell List:
 -HEAL - 2

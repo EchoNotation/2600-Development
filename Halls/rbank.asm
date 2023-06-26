@@ -616,6 +616,35 @@ RXBlocks:
 	.byte $1
 	.byte $32
 	.byte $FF
+RPartyHPUp:
+	.byte $1A
+	.byte $33
+	.byte $FF
+RPartyMPUp:
+	.byte $1A
+	.byte $34
+	.byte $FF
+RXHealsFully:
+	.byte $1
+	.byte $A
+	.byte $35
+RPartyHealsFully:
+	.byte $1A
+	.byte $A
+	.byte $35
+RPartyStatusClear:
+	.byte $1A
+	.byte $37
+	.byte $2C
+RPartyMixedUp:
+	.byte $1A
+	.byte $36
+	.byte $0E
+RXMPUp:
+	.byte $1
+	.byte $34
+	.byte $FF
+
 
 RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 values correctly. Interprets A as the line of the message to set.
 	ldy #TEXT_HIGHLIGHTED_COLOR
@@ -1707,6 +1736,20 @@ RFullyText:
 	.byte #L
 	.byte #Y
 	.byte #EMPTY
+RMixedText:
+	.byte #M
+	.byte #I
+	.byte #X
+	.byte #E
+	.byte #D
+	.byte #EMPTY
+RStatusText:
+	.byte #S
+	.byte #T
+	.byte #A
+	.byte #T
+	.byte #U
+	.byte #S
 
 RClassColors:
 	.byte $8A ;Knight
@@ -1725,10 +1768,10 @@ RCasterType: ;0 is no casting, 1 is full caster, FF is half-caster
 	.byte $FF ;Paladin
 
 RMazeColors:
-	.byte $2A ;Orange
-	.byte $8A ;Blue
-	.byte $6A ;Purple
-	.byte $0A ;Gray
+	.byte $C6 ;Green --- THE GROUNDS
+	.byte $0A ;Gray --- THE CASTLE
+	.byte $94 ;Blue --- THE CATACOMBS
+	.byte $6A ;Purple --- THE ABYSS
 
 RSpellColors:
 	.byte TEXT_HIGHLIGHTED_COLOR ;BACK
@@ -1832,6 +1875,8 @@ RMessagesLowLookup:
 	.byte (RHPUpText & $FF)
 	.byte (RMPUpText & $FF)
 	.byte (RFullyText & $FF)
+	.byte (RMixedText & $FF)
+	.byte (RStatusText & $FF)
 
 RSpellTextLookupTable:
 	.byte (RBackText & $FF)
