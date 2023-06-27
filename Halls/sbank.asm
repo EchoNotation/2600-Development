@@ -1,11 +1,247 @@
-	;BANK 3 - CONTAINS SOUND EFFECT ROUTINES AND DATA (AS WELL AS LOTS OF MAZE AND BATTLE UI LOGIC)
+	;BANK 3 - THE STARTUP BANK. CONTAINS SOUND EFFECT ROUTINES AND DATA (AS WELL AS LOTS OF MAZE AND BATTLE UI LOGIC)
 
 	ORG $F000
 	RORG $F000
 
 SReset:
-	sta $1FF7 ;Go to bank 1, the correct startup bank
-	;sta $1FF9 ;Stay in this bank
+	sta $1FF9 ;Stay in this bank
+	ldx #0
+	txa
+	tay
+SClear:
+	dex
+	txs
+	pha	
+	bne SClear
+	cld
+
+	lda #21
+	sta CTRLPF ;Sets the playfield to reflect, and makes the ball 4 clocks wide
+
+	lda #0
+	sta SWACNT
+	sta playerX
+	sta playerY
+	sta playerFacing
+
+	lda INTIM ;Seed the random number generator
+	bne SSkipSeeding
+	lda #$6B ;Extremely random random number generator here
+SSkipSeeding:
+	sta rand8
+
+	lda #$09 ;Maze level 0, party level 9
+	sta mazeAndPartyLevel
+
+	jsr SClearMazeData
+	jsr SGenerateMazeData
+
+	;Temp testing code that will be removed much, much later
+	lda #$33
+	sta char1
+	lda #F
+	sta name1
+	lda #R
+	sta name2
+	lda #E
+	sta name3
+	lda #D
+	sta name4
+	lda #EMPTY
+	sta name5
+	lda #$5
+	sta hp1
+	lda #$23
+	sta mp1
+
+	lda #$35
+	sta char2
+	lda #D
+	sta name1+1
+	lda #A
+	sta name2+1
+	lda #V
+	sta name3+1
+	lda #E
+	sta name4+1
+	lda #EMPTY
+	sta name5+1
+	lda #$17
+	sta hp2
+	lda #$17
+	sta mp2
+
+	lda #$32
+	sta char3
+	lda #T
+	sta name1+2
+	lda #I
+	sta name2+2
+	lda #M
+	sta name3+2
+	lda #EMPTY
+	sta name4+2
+	sta name5+2
+	lda #$45
+	sta hp3
+	lda #$02
+	sta mp3
+
+	lda #$34
+	sta char4
+	lda #J
+	sta name1+3
+	lda #O
+	sta name2+3
+	lda #H
+	sta name3+3
+	lda #N
+	sta name4+3
+	lda #EMPTY
+	sta name5+3
+	lda #$1
+	sta hp4
+	lda #$04
+	sta mp4
+
+	lda #$F8
+	sta currentInput
+	sta previousInput
+
+	ldy #2 ;Subroutine ID for LUpdateAvatars
+	jsr SRunFunctionInLBank
+
+	lda #$44
+	sta exitLocation
+
+	lda #$80
+	sta inBattle
+	sta currentMenu
+	lda #$FF
+	sta hasAction
+	;sta enemyID+1
+	;sta enemyID+3
+	lda #$03
+	sta menuSize
+	lda #1
+	sta enemyHP
+	sta enemyHP+1
+	sta enemyHP+2
+	sta enemyHP+3
+	sta currentEffect
+
+SStartOfFrame:
+	lda #$82
+	sta VBLANK ;Enable blanking
+	sta VSYNC ;Enable syncing signal
+	sta WSYNC ;Requisite 3 scanlines of VSYNC
+	sta WSYNC
+	sta WSYNC
+	lda #0
+	sta VSYNC ;Stop broadcasting VSYNC signal
+
+
+	jsr SRandom ;Tick the random number generator
+
+	lda #1
+	bit SWCHB
+	beq SGoToReset ;Reset the game if the console reset switch is pressed
+
+	lda #VBLANK_TIMER_DURATION
+	sta TIM64T ;Set timer to complete at the end of VBLANK.
+
+	lda inBattle
+	bne SBattleLogicVBlank ;Skip this logic if we are not in maze mode...
+
+SMazeLogicVBlank:
+	jsr SUpdatePlayerMovement
+	jsr SUpdateMazeRenderingPointers
+	jsr SUpdateCompassPointerBoss
+	jmp SGoToUpdateEffects
+
+SBattleLogicVBlank:
+	lda currentMenu
+	bmi SUpdateMenuRenderingVBlank
+	lda currentInput
+	eor previousInput
+	and #$08
+	beq SWaitForVblankTimer ;Must be different from previousInput
+	lda #$08
+	bit currentInput
+	bne SWaitForVblankTimer ;Button must be pressed in
+	lda inBattle
+	cmp #$81
+	bne SDontNeedANewBattler
+	ldy #1 ;Subroutine ID for LDetermineNextBattler
+	jsr SRunFunctionInLBank
+	lda inBattle
+	cmp #$80
+	beq SUpdateMenuRenderingVBlank ;Don't advance if we just entered the menu
+SDontNeedANewBattler:
+	ldy #2 ;Subroutine ID for LUpdateAvatars
+	jsr SRunFunctionInLBank
+	ldy #0 ;Subroutine ID for LDoBattle
+	jsr SRunFunctionInLBank
+	jmp SWaitForVblankTimer
+
+SGoToReset:
+	jmp SReset
+
+SUpdateMenuRenderingVBlank:
+	jsr SUpdateMenuRendering
+
+SAfterEffectUpdate:
+SWaitForVblankTimer:
+	lda INTIM
+	bne SWaitForVblankTimer ;Is VBLANK over yet?
+	sta WSYNC
+
+	jmp SGoToMainPicture
+
+SOverscan:
+	lda #OVERSCAN_TIMER_DURATION
+	sta TIM64T
+
+	;Update the currentInput variable
+	lda currentInput
+	sta previousInput
+	lda SWCHA
+	and #$F0
+	sta temp1
+	lda INPT4
+	and #$80
+	jsr S4Lsr
+	ora temp1
+	sta currentInput
+
+	lda inBattle
+	beq SMazeLogicOverscan ;Skip the following logic if we are in maze mode...
+
+SBattleLogicOverscan:
+	lda currentMenu
+	bpl SAfterMenuLogic
+	lda currentInput
+	eor previousInput
+	and #$F8
+	beq SNoMenuAdvancement
+	jsr SUpdateMenuCursorPos
+	
+	jsr SUpdateMenuAdvancement
+SNoMenuAdvancement:
+SAfterMenuLogic:
+	jmp SWaitForOverscanTimer
+
+SMazeLogicOverscan:
+	;Need to check for the maze exit and campfire location
+	;Need to determine if a random encounter occurs	
+
+SWaitForOverscanTimer:
+	lda INTIM
+	bne SWaitForOverscanTimer
+
+	sta WSYNC
+	jmp SStartOfFrame
+
 
 SStartScreenKernel:
 
@@ -1159,6 +1395,32 @@ SSetMenuActiveLine: SUBROUTINE
 	sty highlightedLine
 	rts
 
+SUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick presses
+	ldy cursorIndexAndMessageY
+	lda #DOWN_MASK
+	bit currentInput
+	beq .SDownPressed
+	lda #UP_MASK
+	bit currentInput
+	beq .SUpPressed
+	rts
+.SDownPressed:
+	cpy menuSize
+	bcc .SNotAtLastPosition
+	rts
+.SNotAtLastPosition
+	iny
+	sty cursorIndexAndMessageY
+	rts
+.SUpPressed:
+	ldy cursorIndexAndMessageY
+	bne .SNotAtFirstPosition
+	rts
+.SNotAtFirstPosition
+	dey
+	sty cursorIndexAndMessageY
+	rts
+
 ;Interprets X as the cursorPosition
 SCursorIndexToBattlerIndex: SUBROUTINE ;Converts the position of a menu cursor into the correct location in the array of the target (based on tempPointer1)
 	ldy #0
@@ -1395,23 +1657,60 @@ SLowLabelBytes:
 	ORG $FFB0 ;Bankswitching nonsense
 	RORG $FFB0
 
-SRunFunctionForLBank:
-	nop ;1
-	nop ;sta $1FF9
-	nop ;3
-	lda SHighLabelBytes,y ;6
-	sta tempPointer1+1 ;8
-	lda SLowLabelBytes,y ;11
-	sta tempPointer1 ;13
-	lda #(SReturnLocation >> 8 & $FF) ;15
-	pha ;16
-	lda #(SReturnLocation & $FF) ;18
-	pha ;19
-SReturnLocation: 
-	jmp (tempPointer1) ;22
-	sta returnValue ;24
-	sta $1FF7 ;Return to L bank ;27
-	nop ;28
+SRunFunctionInLBank:
+	nop $1FF7 ;Go to bank 1
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	rts
+
+	ORG $FFD0
+	RORG $FFD0
+
+SGoToUpdateEffects:
+	nop $1FF8 ;Go to bank 2
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	jmp SAfterEffectUpdate
+
+	ORG $FFE0
+	RORG $FFE0
+
+SGoToMainPicture:
+	nop $1FF6 ;Go to bank 0, it is time to render the picture
+	nop
+	nop
+	nop
+SCatchFromMainPicture:
+	nop
+	nop
+	nop
+	jmp SOverscan
 
 	ORG $FFFA
 	RORG $FFFA

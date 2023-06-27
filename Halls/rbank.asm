@@ -5,7 +5,7 @@
 
 ;Sets all registers and RAM to 0. Also ensures that the processor is not in decimal mode.
 RReset:
-	nop $1FF7 ;Switch to bank 1, which contains the startup information
+	nop $1FF9 ;Switch to bank 3, which contains the startup information
 
 RMainPicture:
 	ldx #$80
@@ -2978,7 +2978,7 @@ RCatchFromVBlank:
 	nop
 	jmp RMainPicture
 RGoToOverscan:
-	sta $1FF7 ;Go to bank 1
+	sta $1FF9 ;Go to bank 3
 	nop
 	nop
 	nop

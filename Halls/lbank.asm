@@ -4,249 +4,7 @@
 	;BANK 1 - CONTAINS THE MAJORITY OF THE BATTLE SYSTEM LOGIC
 
 LReset:
-	nop $1FF7 ;Make sure to stay in bank 1
-	ldx #0
-	txa
-	tay
-LClear:
-	dex
-	txs
-	pha	
-	bne LClear
-	cld
-
-	lda #21
-	sta CTRLPF ;Sets the playfield to reflect, and makes the ball 4 clocks wide
-
-	lda #0
-	sta SWACNT
-	sta playerX
-	sta playerY
-	sta playerFacing
-
-	lda INTIM ;Seed the random number generator
-	bne LSkipSeeding
-	lda #$6B ;Extremely random random number generator here
-LSkipSeeding:
-	sta rand8
-
-	lda #$09 ;Maze level 0, party level 9
-	sta mazeAndPartyLevel
-
-	ldy #3; Subroutine ID for SClearMazeData
-	jsr LRunFunctionInSBank
-
-	ldy #0; Subroutine ID for SGenerateMazeData
-	jsr LRunFunctionInSBank
-
-	;Temp testing code that will be removed much, much later
-	lda #$33
-	sta char1
-	lda #F
-	sta name1
-	lda #R
-	sta name2
-	lda #E
-	sta name3
-	lda #D
-	sta name4
-	lda #EMPTY
-	sta name5
-	lda #$5
-	sta hp1
-	lda #$23
-	sta mp1
-
-	lda #$35
-	sta char2
-	lda #D
-	sta name1+1
-	lda #A
-	sta name2+1
-	lda #V
-	sta name3+1
-	lda #E
-	sta name4+1
-	lda #EMPTY
-	sta name5+1
-	lda #$17
-	sta hp2
-	lda #$17
-	sta mp2
-
-	lda #$32
-	sta char3
-	lda #T
-	sta name1+2
-	lda #I
-	sta name2+2
-	lda #M
-	sta name3+2
-	lda #EMPTY
-	sta name4+2
-	sta name5+2
-	lda #$45
-	sta hp3
-	lda #$02
-	sta mp3
-
-	lda #$34
-	sta char4
-	lda #J
-	sta name1+3
-	lda #O
-	sta name2+3
-	lda #H
-	sta name3+3
-	lda #N
-	sta name4+3
-	lda #EMPTY
-	sta name5+3
-	lda #$1
-	sta hp4
-	lda #$04
-	sta mp4
-
-	lda #$F8
-	sta currentInput
-	sta previousInput
-
-	jsr LUpdateAvatars
-
-	lda #$44
-	sta exitLocation
-
-	lda #$80
-	sta inBattle
-	sta currentMenu
-	lda #$FF
-	sta hasAction
-	;sta enemyID+1
-	;sta enemyID+3
-	lda #$03
-	sta menuSize
-	lda #1
-	sta enemyHP
-	sta enemyHP+1
-	sta enemyHP+2
-	sta enemyHP+3
-	sta currentEffect
-
-LStartOfFrame:
-	lda #$82
-	sta VBLANK ;Enable blanking
-	sta VSYNC ;Enable syncing signal
-	sta WSYNC ;Requisite 3 scanlines of VSYNC
-	sta WSYNC
-	sta WSYNC
-	lda #0
-	sta VSYNC ;Stop broadcasting VSYNC signal
-
-
-	jsr LRandom ;Tick the random number generator
-
-	lda #1
-	bit SWCHB
-	beq LGoToReset ;Reset the game if the console reset switch is pressed
-
-	lda #VBLANK_TIMER_DURATION
-	sta TIM64T ;Set timer to complete at the end of VBLANK.
-
-	lda inBattle
-	bne LBattleLogicVBlank ;Skip this logic if we are not in maze mode...
-
-LMazeLogicVBlank:
-	ldy #2 ;Subroutine ID for SUpdatePlayerMovement
-	jsr LRunFunctionInSBank
-
-	ldy #1 ;Subroutine ID for SUpdateMazeRenderingPointers
-	jsr LRunFunctionInSBank
-
-	ldy #4 ;Subroutine ID for SUpdateCompassPointerBoss
-	jsr LRunFunctionInSBank
-	jmp LGoToUpdateEffects
-
-LBattleLogicVBlank:
-	lda currentMenu
-	bmi LUpdateMenuRenderingVBlank
-	lda currentInput
-	eor previousInput
-	and #$08
-	beq LWaitForVblankTimer ;Must be different from previousInput
-	lda #$08
-	bit currentInput
-	bne LWaitForVblankTimer ;Button must be pressed in
-	lda inBattle
-	cmp #$81
-	bne LDontNeedANewBattler
-	jsr LDetermineNextBattler
-	lda inBattle
-	cmp #$80
-	beq LUpdateMenuRenderingVBlank ;Don't advance if we just entered the menu
-LDontNeedANewBattler:
-	jsr LUpdateAvatars
-	jsr LDoBattle
-	jmp LWaitForVblankTimer
-
-LGoToReset:
-	jmp LReset
-
-LUpdateMenuRenderingVBlank:
-	ldy #6 ;Subroutine ID for SUpdateMenuRendering
-	jsr LRunFunctionInSBank
-
-LAfterEffectUpdate:
-LWaitForVblankTimer:
-	lda INTIM
-	bne LWaitForVblankTimer ;Is VBLANK over yet?
-	sta WSYNC
-
-	jmp LGoToMainPicture
-
-LOverscan:
-	lda #OVERSCAN_TIMER_DURATION
-	sta TIM64T
-
-	;Update the currentInput variable
-	lda currentInput
-	sta previousInput
-	lda SWCHA
-	and #$F0
-	sta temp1
-	lda INPT4
-	and #$80
-	jsr L4Lsr
-	ora temp1
-	sta currentInput
-
-	lda inBattle
-	beq LMazeLogicOverscan ;Skip the following logic if we are in maze mode...
-
-LBattleLogicOverscan:
-	lda currentMenu
-	bpl LAfterMenuLogic
-	lda currentInput
-	eor previousInput
-	and #$F8
-	beq LNoMenuAdvancement
-	jsr LUpdateMenuCursorPos
-	
-	ldy #5 ;Subroutine ID for SUpdateMenuAdvancement
-	jsr LRunFunctionInSBank
-LNoMenuAdvancement:
-LAfterMenuLogic:
-	jmp LWaitForOverscanTimer
-
-LMazeLogicOverscan:
-	;Need to check for the maze exit and campfire location
-	;Need to determine if a random encounter occurs	
-
-LWaitForOverscanTimer:
-	lda INTIM
-	bne LWaitForOverscanTimer
-
-	sta WSYNC
-	jmp LStartOfFrame
+	nop $1FF9 ;Go to bank 3, the startup bank
 
 LBattleProcessLowBytes:
 	.byte (LProcessFighting & $FF)
@@ -2006,6 +1764,25 @@ LSetStatPointers:
 	inx
 	rts
 
+LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return the resistances of (in A). Format is LPFIDEPR
+									;L: Legendary resist (Banish/Sleep), P: Physical, F: Fire, I:Ice, D: Divine, E: Electric, P: Poison, R: isRanged
+	cpx #4 ;This section used to be 24 nops for bankswitching, but this function is conveniently exactly 24 bytes
+	bcs .LHasResistanceByte 
+	lda char1,x
+	and #$0f
+	tax
+	lda LIsClassRanged,x
+	rts
+.LHasResistanceByte:
+	dex
+	dex
+	dex
+	dex
+	lda enemyID,x
+	tax
+	lda LEnemyResistances,x
+	rts
+
 LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to convert to decimal. Returns the result in A.
 	ldx #0
 .LRemove10s:
@@ -2057,32 +1834,6 @@ LRandom: SUBROUTINE ;Ticks the random number generator when called 10 bytes
 	eor #$B4
 .LNoEOR:
 	sta rand8
-	rts
-
-LUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick presses
-	ldy cursorIndexAndMessageY
-	lda #DOWN_MASK
-	bit currentInput
-	beq .LDownPressed
-	lda #UP_MASK
-	bit currentInput
-	beq .LUpPressed
-	rts
-.LDownPressed:
-	cpy menuSize
-	bcc .LNotAtLastPosition
-	rts
-.LNotAtLastPosition
-	iny
-	sty cursorIndexAndMessageY
-	rts
-.LUpPressed:
-	ldy cursorIndexAndMessageY
-	bne .LNotAtFirstPosition
-	rts
-.LNotAtFirstPosition
-	dey
-	sty cursorIndexAndMessageY
 	rts
 
 LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their status and health
@@ -2187,6 +1938,15 @@ L4Lsr:
 	lsr
 	lsr
 	lsr
+	rts
+
+L5Asl:
+	asl
+L4Asl:
+	asl
+	asl
+	asl
+	asl
 	rts
 
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
@@ -2587,38 +2347,6 @@ LChaosElements:
 	.byte POISON_RESIST_MASK
 	.byte $FF ;Non-elemental
 
-	; ~120 bytes here
-
-	ORG $DFB0
-	RORG $FFB0
-
-LRunFunctionInSBank:
-	sta $1FF9 ;Go to bank 3
-LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return the resistances of (in A). Format is LPFIDEPR
-									;L: Legendary resist (Banish/Sleep), P: Physical, F: Fire, I:Ice, D: Divine, E: Electric, P: Poison, R: isRanged
-	cpx #4 ;This section used to be 24 nops for bankswitching, but this function is conveniently exactly 24 bytes
-	bcs .LHasResistanceByte 
-	lda char1,x
-	and #$0f
-	tax
-	lda LIsClassRanged,x
-	rts
-.LHasResistanceByte:
-	dex
-	dex
-	dex
-	dex
-	lda enemyID,x
-	tax
-	lda LEnemyResistances,x
-	nop
-	rts ;28 bytes later
-
-	ORG $DFD0
-	RORG $FFD0
-
-LGoToUpdateEffects:
-	sta $1FF8 ;Go to bank 2
 LIsClassRanged: ;This section used to be 6 nops, but this can be stored here instead!
 	.byte $0 ;Knight
 	.byte $0 ;Rogue
@@ -2626,23 +2354,41 @@ LIsClassRanged: ;This section used to be 6 nops, but this can be stored here ins
 	.byte $1 ;Wizard
 	.byte $1 ;Ranger
 	.byte $0 ;Paladin
-	jmp LAfterEffectUpdate
 
-	ORG $DFE0
-	RORG $FFE0
+	; ~120 bytes here
 
-LGoToMainPicture:
-	sta $1FF6 ;Go to bank 0, it is time to render the picture
-L5Asl:
-	asl
-L4Asl:
-	asl
-	asl
-LCatchFromMainPicture:
-	asl
-	asl
-	rts
-	jmp LOverscan
+LLowLabelBytes:
+	.byte (LDoBattle & $FF)
+	.byte (LDetermineNextBattler & $FF)
+	.byte (LUpdateAvatars & $FF)
+
+LHighLabelBytes:
+	.byte (LDoBattle >> 8 & $FF)
+	.byte (LDetermineNextBattler >> 8 & $FF)
+	.byte (LUpdateAvatars >> 8 & $FF)
+
+	ORG $DFB0
+	RORG $FFB0
+
+LRunFunctionForSBank:
+	nop ;1
+	nop ;sta $1FF7
+	nop ;3
+	lda LHighLabelBytes,y ;6
+	sta tempPointer6 ;8
+	lda LLowLabelBytes,y ;11
+	sta temp6 ;13
+	lda #(LReturnLocation >> 8 & $FF) ;15
+	pha ;16
+	lda #(LReturnLocation & $FF) ;18
+	pha ;19
+LReturnLocation: 
+	jmp (temp6) ;22
+	sta returnValue ;24
+	sta $1FF9 ;Return to S bank ;27
+	nop ;28
+
+	;There is a tiny bit of space in here
 
 	ORG $DFFA
 	RORG $FFFA

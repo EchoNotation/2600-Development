@@ -4,7 +4,7 @@
 	RORG $F000
 
 EReset:
-	sta $1FF7 ;Go to bank 1, the correct startup bank
+	nop $1FF9 ;Go to bank 3, the correct startup bank
 
 ETestEffect:
 	.byte $10
@@ -740,7 +740,7 @@ EEnemyColorsHighLookup: ;Stores the high bytes of the pointers to enemy color in
 	ORG $EF00
 	RORG $FF00
 
-EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 16x16, 1 if the enemy is 32x32
+EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1 if the enemy is 16x16, 2 if the enemy is 32x32
 	.byte 0
 	.byte 1
 	.byte 2
@@ -750,7 +750,7 @@ EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 16x16,
 	RORG $FFC0
 
 EGoToDrawingBattleText:
-	sta $1FF6 ;Go to bank 0
+	nop $1FF6 ;Go to bank 0
 	nop
 	nop
 	nop
@@ -768,7 +768,7 @@ ECatchFromMazeLogic:
 	nop
 	nop
 	jsr EUpdateEffects
-	sta $1FF7 ;Go to bank 1
+	sta $1FF9 ;Go to bank 3
 	nop
 	nop
 	nop

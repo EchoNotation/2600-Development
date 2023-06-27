@@ -44,14 +44,15 @@ $85 Check if battler was sleeping
 
 $90 Need to calculate and deal attack's damage
 $91 Basic attack was a kill
-$92 Basic attack was parried (not yet implemented)
+$92 Basic attack was parried
 $93 Retort
 $94 Need to calculate and deal retort's damage
 
-$AX and $BX are out of date
-
-$A0 Need to check if spell hit, and process its effect if it did
-$A1 Spell damage was a kill
+$A0 Need to check if single tgt spell hit, and process its effect if it did
+$A1 Single tgt spell killed enemy
+$A2 Handle single tgt phase 2
+$A3 Drain spell killed enemy
+$A4 Wish spell MP restoration
 
 $B0 Need to check if AoE spell hit, and process its effect if it did
 $B1 AoE spell kill

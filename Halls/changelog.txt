@@ -469,6 +469,7 @@
 	-Rendering engine optimization
 		-Saved like 100 bytes of code in RDrawCharacterInfo
 	-Started work on RDrawCharacterInfoMinimal, which will be used on the startup screen
+	-Swapped high level game logic and initialization code into the S bank, leaving L with more room for battle specific code
 
 Known Bugs:
 	-Exiting battle shows glitchy maze for 1 frame. SUpdateMazeRenderingPointers isn't called when exiting battle
