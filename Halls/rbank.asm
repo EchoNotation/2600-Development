@@ -914,6 +914,7 @@ RDrawCharacterInfo: SUBROUTINE
 	lda #(RAvatarHappy >> 8 & $FF)
 	sta tempPointer1+1
 
+.RDrawTheText:	
 	lda inBattle
 	beq .RNoExtraLine
 	sta WSYNC
@@ -977,49 +978,7 @@ RDrawCharacterInfo: SUBROUTINE
 	sty temp5 ;The high digit of the MP value
 
 	jsr RSetTextPointers
-
-	lda inBattle
-	beq .RSkipThisLine
-	sta WSYNC
-.RSkipThisLine:
-	lda #2
-	sta ENABL
-
-	ldy #CHARACTER_HEIGHT
-	dey
-.RDrawHPAndMP:
-	sty temp1 ;Stores how many loops are left
-	lda (temp6),y
-	sta temp2 ;Stores another digit that doesn't have a register to stay in
-	sta WSYNC
-	lda (tempPointer1),y
-	sta GRP0
-	lda (tempPointer2),y
-	sta GRP1
-	lda (tempPointer3),y
-	sta GRP0
-	lda (temp5),y
-	tax
-	lda (temp4),y
-	ldy temp2
-	nop
-	sta GRP1
-	stx GRP0
-	sty GRP1
-	sta GRP0
-	ldy temp1
-	dey
-	bpl .RDrawHPAndMP
-
-	iny
-	sty ENABL
-	sty GRP0 ;Clear player graphics while HP, MP data is being prepared
-	sty GRP1
-	sty ENABL
-	sty GRP0
-	sty GRP1
-
-	rts
+	jmp .RDrawTheText
 
 .RShowingClassAndLevel:
 	ldx charIndex
@@ -1028,7 +987,7 @@ RDrawCharacterInfo: SUBROUTINE
 	tax
 	lda RClassNameLookupTable,x
 	sta tempPointer1
-	lda #$FB
+	lda #(RKnightText >> 8 & $FF)
 	sta tempPointer1+1
 
 	ldy #0
@@ -1056,46 +1015,66 @@ RDrawCharacterInfo: SUBROUTINE
 	nop
 	nop
 	nop
-	lda inBattle
-	beq .RSkipExtraClassLevelLine
-	sta WSYNC
-.RSkipExtraClassLevelLine:
-	lda #2
-	sta ENABL
+	jmp .RDrawTheText
 
-	ldy #CHARACTER_HEIGHT
-	dey
-.RDrawClassAndLevel:
-	sty temp1 ;Stores how many loops are left
-	lda (temp6),y
-	sta temp2 ;Stores another digit that doesn't have a register to stay in
-	sta WSYNC
+RDrawMinimalCharacterInfo: SUBROUTINE
+	ldx charIndex
+	lda char1,x
+	and #$0F
+	tay
+	lda RClassColors,y
+	sta COLUP0
+	sta COLUP1
+
+	lda name1,x
+	sta temp2
+	lda name2,x
+	sta temp3
+	lda name3,x
+	sta temp4
+	lda name4,x
+	sta temp5
+	lda name5,x
+	sta temp6
+	jsr RSetTextPointers
+
+	lda #(RAvatarHappy & $FF)
+	sta tempPointer1
+	lda #(RAvatarHappy >> 8 & $FF)
+	sta tempPointer1+1
+	jsr RDrawText
+
+	ldx charIndex
+	lda char1,x
+	and #$0F
+	tay
+	lda RClassNameLookupTable,y
+	sta tempPointer1
+	lda #(RKnightText >> 8 & $FF)
+	sta tempPointer1+1
+
+	ldy #0
 	lda (tempPointer1),y
-	sta GRP0
-	lda (tempPointer2),y
-	sta GRP1
-	lda (tempPointer3),y
-	sta GRP0
-	lda (temp5),y
-	tax
-	lda (temp4),y
-	ldy temp2
-	nop
-	sta GRP1
-	stx GRP0
-	sty GRP1
-	sta GRP0
-	ldy temp1
-	dey
-	bpl .RDrawClassAndLevel
-
+	sta temp1
 	iny
-	sty ENABL
-	sty GRP0 ;Clear player graphics while HP, MP data is being prepared
-	sty GRP1
-	sty ENABL
-	sty GRP0
-	sty GRP1
+	lda (tempPointer1),y
+	sta temp2
+	iny
+	lda (tempPointer1),y
+	sta temp3
+	iny
+	lda (tempPointer1),y
+	sta temp4
+	iny
+	lda (tempPointer1),y
+	sta temp5
+	iny
+	lda (tempPointer1),y
+	sta temp6
+
+	jsr RSetTextPointers
+	jsr RDrawText
+
 	rts
 
 RSetTextPointers: SUBROUTINE ;Will treat the values in temp1-6 as character indices and stores the pointers to the graphics data in tempPointer6-tempPointer1 

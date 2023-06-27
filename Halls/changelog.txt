@@ -462,6 +462,13 @@
 	-Implemented WISH
 	-Fixed bug where spell mana costs were subtracted in binary mode instead of decimal
 	-Fixed bug where LApplyRestoration compared two numbers in different bases
+6/26/23
+	-Battle system optimization
+		-Relocated some functions into dead bankswitching code areas
+		-LApplyPositionalDamageModifier
+	-Rendering engine optimization
+		-Saved like 100 bytes of code in RDrawCharacterInfo
+	-Started work on RDrawCharacterInfoMinimal, which will be used on the startup screen
 
 Known Bugs:
 	-Exiting battle shows glitchy maze for 1 frame. SUpdateMazeRenderingPointers isn't called when exiting battle
@@ -482,6 +489,7 @@ TODO:
 
 	-Battle system optimization
 	
+	-Move game logic control flow out of L bank??
 
 	-How is enemy AI going to be stored?
 		-Number of action slots, list of meta-enemyActions
@@ -507,6 +515,7 @@ TODO:
 			-Running - 100%
 			-Functional status effects - 100%
 			-Enemy AI - 0%
+				-Special moves - ??%
 			-Character advancement - 85% (Slight refactor required to fix bug with (last position) party members who didn't learn a spell)
 			-Mana implementation - 100%
 		-Additional maze logic
@@ -545,14 +554,14 @@ TODO:
 			-Not all enemies are centered, create more of a "group skirmish" appearance
 			-Potentially try to center enemies more precisely?
 		-Battle system quirks:
-			-Being guarded reduces blight damage.
-			-Shields block friendly magic (HEAL, TRIAGE, WISH, SHARP, SHIELD)
+			-Shields block friendly magic (HEAL, TRIAGE, TRANCE, WISH, SHARP, SHIELD)
 			-Avatars are not updated after the last logic frame for a single round
+			-Being guarded reduces blight damage.
 		-Battle system improvements:
+			-Introduce random value offsets based on party level (attack and healing amounts)
+			-Make party members gain delta HP, delta MP when leveling up
 			-Add resistances to party members
 			-Should elemental-flavors be resistances or vulnerabilities?
 			-Add damage types to basic attacks
-			-Introduce random value offsets based on party level (attack and healing amounts)
 			-Consider refactoring X LOSES Y HP to X TAKES Y DMG
-			-Make party members gain delta HP, delta MP when leveling up
 		-Hear a "roar" when getting near the boss?

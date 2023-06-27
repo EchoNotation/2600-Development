@@ -48,6 +48,8 @@ $92 Basic attack was parried (not yet implemented)
 $93 Retort
 $94 Need to calculate and deal retort's damage
 
+$AX and $BX are out of date
+
 $A0 Need to check if spell hit, and process its effect if it did
 $A1 Spell damage was a kill
 
@@ -293,11 +295,11 @@ MESSAGES:
 
 Status Effects:
 Pos:
--Sharpened : Target's attack power is doubled
--Shielded : Magic attacks are negated twice
+-Sharpened : Target's attack power is doubled.
+-Shielded : Magic attacks are negated twice.
 Neg:
--Asleep : Target is unable to attack, move, or run for a random number of turns (1-3)
--Poisoned : Target receives half healing, and takes damage per turn, either %MAX HP or %CURRENT HP
+-Asleep : Target is unable to take any actions for the next 2 turns.
+-Poisoned : Target takes 1/8th max HP damage per turn. Is cured on the next heal, but denies the HP gain from said heal.
 
 SPELL LISTING
 0: BACK : Just for spell menuing purposes

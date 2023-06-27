@@ -1613,31 +1613,27 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 	and #$E7
 	ora temp2
 	sta battlerStatus,x
-	ldy #0 ;Return in LDoBattle
 	stx startingCursorIndexAndTargetID
+	lda #0 ;Return in LDoBattle
 	rts
 .LCheckIfBlighted:
 	lda battlerStatus,x
 	and #BLIGHTED_MASK
 	beq .LCheckIfSleeping
 	;This battler has blight
-	lda #$83
-	sta inBattle
+	stx startingCursorIndexAndTargetID
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
-	lda #0 ;Return in LDoBattle
-	stx startingCursorIndexAndTargetID
-	rts
+	lda #$83
+	bne .LSaveInBattle
 .LDiedToBlight:
 	lda #$09
 	sta currentMessage
-	lda #$81
-	sta inBattle
 	ldx currentBattler
 	stx startingCursorIndexAndTargetID
 	jsr LDeathCleanup
-	lda #0
-	rts
+	lda #$81
+	bne .LSaveInBattle
 .LSetBlightDamage:
 	jsr LGetBattlerMaxHP
 	lsr
@@ -1665,13 +1661,12 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 	lda temp3
 	bne .LDied
 	lda #$85
-	sta inBattle
-	lda #0
-	rts
+	bne .LSaveInBattle
 .LDied:
 	lda #$84
+.LSaveInBattle:
 	sta inBattle
-	lda #0
+	lda #0 ;Return in LDoBattle
 	rts
 
 LApplyPositionalDamageModifier: SUBROUTINE ;Treats X as the absolute ID of the attacker, and modifies the binary damage in temp2 accordingly
@@ -1681,20 +1676,21 @@ LApplyPositionalDamageModifier: SUBROUTINE ;Treats X as the absolute ID of the a
 	lda char1,x
 	and #$0F
 	tay ;Save the class of this battler for later
-
+	
 	lda LPartyPositionMasks,x
 	and partyBattlePos
 	bne .LBattlerInFrontline
 .LBattlerInBackline:
-	lda LBacklineModifiers,y ;0 means normal damage, anything else means half
+	lda LFrontlineModifiers,y
+	eor #$01
 	bne .LHalfDamage
-	beq .LFullDamage
+	rts
 .LBattlerInFrontline:
 	lda LFrontlineModifiers,y
 	beq .LFullDamage
 .LHalfDamage:
 	lsr temp2
-.LFullDamage
+.LFullDamage:
 	rts
 
 LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
@@ -2054,26 +2050,7 @@ LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to conve
 	ora tempPointer2
 	rts
 
-LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return the resistances of (in A). Format is LPFIDEPR
-									;L: Legendary resist (Banish/Sleep), P: Physical, F: Fire, I:Ice, D: Divine, E: Electric, P: Poison, R: isRanged
-	cpx #4
-	bcs .LHasResistanceByte
-	lda char1,x
-	and #$0f
-	tax
-	lda LIsClassRanged,x
-	rts
-.LHasResistanceByte:
-	dex
-	dex
-	dex
-	dex
-	lda enemyID,x
-	tax
-	lda LEnemyResistances,x
-	rts
-
-LRandom: SUBROUTINE ;Ticks the random number generator when called
+LRandom: SUBROUTINE ;Ticks the random number generator when called 10 bytes
 	lda rand8
 	lsr
 	bcc .LNoEOR
@@ -2191,7 +2168,7 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 	inc charIndex
 	rts
 
-LOverrideAvatar: SUBROUTINE ;Sets party member Y's mood to X.
+LOverrideAvatar: SUBROUTINE ;Sets party member Y's mood to X. 17 bytes
 	lda char1,y
 	and #$0F ;Get just the class
 	sta temp6
@@ -2201,7 +2178,7 @@ LOverrideAvatar: SUBROUTINE ;Sets party member Y's mood to X.
 	sta char1,y
 	rts
 
-L6Lsr:
+L6Lsr: ;7 bytes
 	lsr
 L5Lsr
 	lsr
@@ -2210,15 +2187,6 @@ L4Lsr:
 	lsr
 	lsr
 	lsr
-	rts
-
-L5Asl:
-	asl
-L4Asl:
-	asl
-	asl
-	asl
-	asl
 	rts
 
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
@@ -2608,21 +2576,6 @@ LFrontlineModifiers:
 	.byte $1 ;Wizard
 	.byte $1 ;Ranger
 	.byte $0 ;Paladin
-LBacklineModifiers:
-	.byte $1 ;Knight
-	.byte $1 ;Rogue
-	.byte $1 ;Cleric
-	.byte $0 ;Wizard
-	.byte $0 ;Ranger
-	.byte $1 ;Paladin
-
-LIsClassRanged:
-	.byte $0 ;Knight
-	.byte $0 ;Rogue
-	.byte $0 ;Cleric
-	.byte $1 ;Wizard
-	.byte $1 ;Ranger
-	.byte $0 ;Paladin
 
 LChaosElements:
 	.byte $FF ;Non-elemental
@@ -2634,62 +2587,61 @@ LChaosElements:
 	.byte POISON_RESIST_MASK
 	.byte $FF ;Non-elemental
 
+	; ~120 bytes here
+
 	ORG $DFB0
 	RORG $FFB0
 
 LRunFunctionInSBank:
 	sta $1FF9 ;Go to bank 3
-	nop ;4
+LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return the resistances of (in A). Format is LPFIDEPR
+									;L: Legendary resist (Banish/Sleep), P: Physical, F: Fire, I:Ice, D: Divine, E: Electric, P: Poison, R: isRanged
+	cpx #4 ;This section used to be 24 nops for bankswitching, but this function is conveniently exactly 24 bytes
+	bcs .LHasResistanceByte 
+	lda char1,x
+	and #$0f
+	tax
+	lda LIsClassRanged,x
+	rts
+.LHasResistanceByte:
+	dex
+	dex
+	dex
+	dex
+	lda enemyID,x
+	tax
+	lda LEnemyResistances,x
 	nop
-	nop
-	nop
-	nop
-	nop
-	nop ;10
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop ;20
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	rts ;28
+	rts ;28 bytes later
 
 	ORG $DFD0
 	RORG $FFD0
 
 LGoToUpdateEffects:
 	sta $1FF8 ;Go to bank 2
-	nop ;
-	nop ; jsr EUpdateEffects
-	nop ;
-	nop ;
-	nop ; sta $1FF7
-	nop ;
+LIsClassRanged: ;This section used to be 6 nops, but this can be stored here instead!
+	.byte $0 ;Knight
+	.byte $0 ;Rogue
+	.byte $0 ;Cleric
+	.byte $1 ;Wizard
+	.byte $1 ;Ranger
+	.byte $0 ;Paladin
 	jmp LAfterEffectUpdate
 
 	ORG $DFE0
 	RORG $FFE0
 
 LGoToMainPicture:
-	sta $1FF6 ;Go to bank 1, it is time to render the picture
-	nop
-	nop
-	nop
+	sta $1FF6 ;Go to bank 0, it is time to render the picture
+L5Asl:
+	asl
+L4Asl:
+	asl
+	asl
 LCatchFromMainPicture:
-	nop
-	nop
-	nop
+	asl
+	asl
+	rts
 	jmp LOverscan
 
 	ORG $DFFA

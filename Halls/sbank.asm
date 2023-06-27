@@ -5,6 +5,10 @@
 
 SReset:
 	sta $1FF7 ;Go to bank 1, the correct startup bank
+	;sta $1FF9 ;Stay in this bank
+
+SStartScreenKernel:
+
 
 SUpdateSound:
 	rts
