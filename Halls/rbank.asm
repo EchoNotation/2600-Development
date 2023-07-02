@@ -26,12 +26,17 @@ RPlaceCompass:
 	lsr
 	tay
 	lda RMazeColors,y
+	and transitionValue
 	sta COLUP0
 	sta COLUPF
 
 	;Delay in order to put the compass in the middle of the screen
-	jsr RSpinWheels
 	nop
+	nop
+	nop
+	nop
+	nop
+	cpx temp1 ;delay 3 cycles
 	lda #$C0
 	sta HMP0
 	sta RESP0
@@ -52,64 +57,234 @@ RPrepareToDrawMaze:
 	iny
 	sty GRP0
 	ldy #MAZE_HEIGHT
-RDrawMaze:
+	lda aoeValueAndCampfireControl
+	bmi RGoToDrawMazeNoFire
+	beq RConfigureNearFire
+RConfigureFarFire:
 	sta WSYNC
-	lda ROutermost,y
-	sta PF0
-	lda (tempPointer2),y
-	sta PF1
-	lda (tempPointer3),y
-	sta PF2
-	lda (temp4),y
-	tax
-	lda (temp5),y
+	lda #CAMPFIRE_COLOR
+	sta COLUP0
+	lda #(RDrawMazeFarFire >> 8 & $FF)
+	sta tempPointer1+1
+	lda #(RDrawMazeFarFire & $FF)
+	sta tempPointer1
+	lda #FAR_FIRE_MAZE_HEIGHT
+	bne RStoreFireMazeHeight
+RConfigureNearFire:
+	jsr RSpinWheels
+	nop
+	sta RESP0
+	sta RESP1
+	lda #$10
+	sta HMP1
+	lda #CAMPFIRE_COLOR
+	sta COLUP0
+	sta COLUP1
+	sta WSYNC
+	sta HMOVE
+	lda #(RDrawMazeNearFire >> 8 & $FF)
+	sta tempPointer1+1
+	lda #(RDrawMazeNearFire & $FF)
+	sta tempPointer1
+	lda #NEAR_FIRE_MAZE_HEIGHT
+	bne RStoreFireMazeHeight
 
-	nop
-	nop
-	nop
-	nop
-	stx PF2
+RGoToDrawMazeNoFire:
+	sta WSYNC
+	jmp RDrawMazeNoFire
+
+	;40 cycles between sta WSYNC and stx PF2 in order to maintain proper maze functionality
+
+RStoreFireMazeHeight:
+	sta fireMazeHeight
+	lda #3
+	sta charIndex
+RDrawMazePreFire:
+	sta WSYNC
+	lda ROutermost,y; 4 cycles
+	sta PF0 ;2
+	lda (tempPointer2),y ;5
+	sta PF1 ;2
+	lda (tempPointer3),y ;5
+	sta PF2 ;2
+	lda (temp4),y ;5
+	tax ;2
+	lda (temp5),y ;5
+
+	nop ;2
+	nop ;2
+	nop ;2
+	nop ;2
+	stx PF2 
+	sta PF1
+
+	dec charIndex
+	bne RDrawMazePreFire
+	lda #3
+	sta charIndex
+	dey
+	cpy fireMazeHeight
+	bcs RDrawMazePreFire
+	jmp (tempPointer1)
+RDrawMazeFarFire:
+	sta WSYNC
+	lda ROutermost,y; 4 cycles
+	sta PF0 ;2
+	lda (tempPointer2),y ;5
+	sta PF1 ;2
+	lda (tempPointer3),y ;5
+	sta PF2 ;2
+
+	lda FAR_FIRE_GRAPHICS+1,y ;4
+	sta GRP0 ;3
+
+	lda (temp4),y ;5
+	tax ;2
+	lda (temp5),y ;5
+	stx PF2 
 	sta PF1
 
 	sta WSYNC
-	lda ROutermost,y
-	sta PF0
-	lda (tempPointer2),y
-	sta PF1
-	lda (tempPointer3),y
-	sta PF2
-	lda (temp4),y
-	tax
-	lda (temp5),y
+	lda ROutermost,y; 4 cycles
+	sta PF0 ;2
+	lda (tempPointer2),y ;5
+	sta PF1 ;2
+	lda (tempPointer3),y ;5
+	sta PF2 ;2
 
-	nop
-	nop
-	nop
-	nop
-	stx PF2
+	lda FAR_FIRE_GRAPHICS+4,y ;4
+	sta GRP0 ;3
+
+	lda (temp4),y ;5
+	tax ;2
+	lda (temp5),y ;5
+	stx PF2 
 	sta PF1
+	
+	sta WSYNC
+	lda ROutermost,y; 4 cycles
+	sta PF0 ;2
+	lda (tempPointer2),y ;5
+	sta PF1 ;2
+	lda (tempPointer3),y ;5
+	sta PF2 ;2
+
+	lda FAR_FIRE_GRAPHICS+7,y ;4
+	sta GRP0 ;3
+
+	lda (temp4),y ;5
+	tax ;2
+	lda (temp5),y ;5
+
+	stx PF2 
+	sta PF1
+	dey
+	cpy #FAR_FIRE_MAZE_HEIGHT - 3
+	bcs RDrawMazeFarFire
+	lda #0
+	sta GRP0
+	beq RDrawMazeNoFire
+
+RDrawMazeNearFire:
+	sta WSYNC
+	lda ROutermost,y; 4 cycles
+	sta PF0 ;2
+	lda (tempPointer2),y ;5
+	sta PF1 ;2
+	lda (tempPointer3),y ;5
+	sta PF2 ;2
+
+	lda #NEAR_FIRE_GRAPHICS1+1,y
+	sta GRP0
+
+	lda (temp4),y ;5
+	tax ;2
+	lda (temp5),y ;5
+	stx PF2 
+	sta PF1
+
+	lda #NEAR_FIRE_GRAPHICS2+1,y
+	sta GRP1
 
 	sta WSYNC
-	lda ROutermost,y
-	sta PF0
-	lda (tempPointer2),y
-	sta PF1
-	lda (tempPointer3),y
-	sta PF2
-	lda (temp4),y
-	tax
-	lda (temp5),y
+	lda ROutermost,y; 4 cycles
+	sta PF0 ;2
+	lda (tempPointer2),y ;5
+	sta PF1 ;2
+	lda (tempPointer3),y ;5
+	sta PF2 ;2
 
-	nop
-	nop
-	nop
-	nop
-	stx PF2
+	lda #NEAR_FIRE_GRAPHICS1+6,y
+	sta GRP0
+
+	lda (temp4),y ;5
+	tax ;2
+	lda (temp5),y ;5
+	stx PF2 
 	sta PF1
+	
+	lda #NEAR_FIRE_GRAPHICS2+6,y
+	sta GRP1
+
+	sta WSYNC
+	lda ROutermost,y; 4 cycles
+	sta PF0 ;2
+	lda (tempPointer2),y ;5
+	sta PF1 ;2
+	lda (tempPointer3),y ;5
+	sta PF2 ;2
+
+	lda #NEAR_FIRE_GRAPHICS1+11,y
+	sta GRP0
+
+	lda (temp4),y ;5
+	tax ;2
+	lda (temp5),y ;5
+	stx PF2 
+	sta PF1
+
+	lda #NEAR_FIRE_GRAPHICS2+11,y
+	sta GRP1
 
 	dey
+	cpy #NEAR_FIRE_MAZE_HEIGHT - 5
+	bcs RDrawMazeNearFire
+	lda #0
+	sta GRP0
+	sta GRP1
+	lda #3
+	sta charIndex
+	bne RDrawMazeNoFireNoExtraLine
+RDrawMazeNoFire:
+	lda #3
+	sta charIndex
+RDrawMazeNoFireLoop:	
+	sta WSYNC
+RDrawMazeNoFireNoExtraLine:
+	lda ROutermost,y; 4 cycles
+	sta PF0 ;2
+	lda (tempPointer2),y ;5
+	sta PF1 ;2
+	lda (tempPointer3),y ;5
+	sta PF2 ;2
+	lda (temp4),y ;5
+	tax ;2
+	lda (temp5),y ;5
+
+	nop ;2
+	nop ;2
+	nop ;2
+	nop ;2
+	stx PF2 
+	sta PF1
+	dec charIndex
+	bne RDrawMazeNoFireLoop
+	lda #3
+	sta charIndex
+	dey
 	cpy #MAZE_HEIGHT+10
-	bcc RDrawMaze
+	bcc RDrawMazeNoFireLoop
+RDoneDrawingMaze:
 	sta WSYNC
 	jsr RSpinWheels
 	jsr RSpinWheels
@@ -132,15 +307,18 @@ RDrawPartyInfoMaze:
 	stx VDELP1
 
 	ldx #$10 ;Moves one color clock to the left.
-	stx HMP1
 
 	;Need some sort of delay here in order to more or less center this data.
-	nop
+	lda #0
+	sta GRP0
 	nop
 	sta RESP0
 	sta RESP1
+	
+	sta GRP1
+	stx HMP1
 
-	ldy #4
+	ldy #3
 .LWaitToDrawCharacterInfoLoop:
 	sta WSYNC
 	dey
@@ -372,7 +550,11 @@ RShowSpecialOptions:
 	sta tempPointer1
 	lda #(RSpellsText >> 8 & $FF)
 	sta tempPointer1+1
+	lda #TEXT_HIGHLIGHTED_COLOR
+	cpx highlightedLine
+	beq RUseSpecialColor
 	lda #TEXT_COLOR
+RUseSpecialColor:
 	jsr RDrawBattleMenuLine
 	jmp RDrawBattleMenuLoop
 
@@ -441,8 +623,6 @@ RAfterRendering:
 
 
 
-RSpinWheels: SUBROUTINE
-	rts
 
 RDrawBattleMenuLine: SUBROUTINE ;Draws one line of battle menu text, using A as the color of the text, and tempPointer1 as the location to pull text data from.
 	sta COLUP0
@@ -469,6 +649,7 @@ RDrawBattleMenuLine: SUBROUTINE ;Draws one line of battle menu text, using A as 
 
 	jsr RSetTextPointers
 	jsr RDrawText
+RSpinWheels: SUBROUTINE
 	rts
 
 RMessageConstructors:
@@ -1077,57 +1258,6 @@ RDrawMinimalCharacterInfo: SUBROUTINE
 
 	rts
 
-RSetTextPointers: SUBROUTINE ;Will treat the values in temp1-6 as character indices and stores the pointers to the graphics data in tempPointer6-tempPointer1 
-	ldx temp1
-	lda RCharacterLowLookupTable,x
-	sta tempPointer1
-	lda RCharacterHighLookupTable,x
-	sta tempPointer1+1
-	ldx temp2
-	lda RCharacterLowLookupTable,x
-	sta tempPointer2
-	lda RCharacterHighLookupTable,x
-	sta tempPointer2+1
-	ldx temp3
-	lda RCharacterLowLookupTable,x
-	sta tempPointer3
-	lda RCharacterHighLookupTable,x
-	sta tempPointer3+1
-	ldx temp4
-	lda RCharacterLowLookupTable,x
-	sta temp4
-	lda RCharacterHighLookupTable,x
-	sta tempPointer4
-	ldx temp5
-	lda RCharacterLowLookupTable,x
-	sta temp5
-	lda RCharacterHighLookupTable,x
-	sta tempPointer5
-	ldx temp6
-	lda RCharacterLowLookupTable,x
-	sta temp6
-	lda RCharacterHighLookupTable,x
-	sta tempPointer6
-	rts
-
-RCalculateDigitIndices: SUBROUTINE ;Will interpret whatever is in A when called as a decimal value, then return the character lookup indices in X and Y.
-	tay
-	and #$0F
-	clc
-	adc #27
-	tax ;Character index corresponding to low digit of the specified decimal value is now in the x register.
-	tya
-	lsr
-	lsr
-	lsr
-	lsr
-	and #$0F
-	clc
-	adc #27
-	tay ;Character index corresponding to high digit of the specified decimal value is now in the y register.
-	rts
-
-
 
 RDrawText: SUBROUTINE ;Will update graphics registers accordingly as long as the sprites are positioned correctly and the pointers set.
 	sta WSYNC
@@ -1162,6 +1292,39 @@ RDrawText: SUBROUTINE ;Will update graphics registers accordingly as long as the
 	sty GRP0
 	sty GRP1
 	rts	
+
+RSetTextPointers: SUBROUTINE ;Will treat the values in temp1-6 as character indices and stores the pointers to the graphics data in tempPointer6-tempPointer1 
+	ldx temp1
+	lda RCharacterLowLookupTable,x
+	sta tempPointer1
+	lda RCharacterHighLookupTable,x
+	sta tempPointer1+1
+	ldx temp2
+	lda RCharacterLowLookupTable,x
+	sta tempPointer2
+	lda RCharacterHighLookupTable,x
+	sta tempPointer2+1
+	ldx temp3
+	lda RCharacterLowLookupTable,x
+	sta tempPointer3
+	lda RCharacterHighLookupTable,x
+	sta tempPointer3+1
+	ldx temp4
+	lda RCharacterLowLookupTable,x
+	sta temp4
+	lda RCharacterHighLookupTable,x
+	sta tempPointer4
+	ldx temp5
+	lda RCharacterLowLookupTable,x
+	sta temp5
+	lda RCharacterHighLookupTable,x
+	sta tempPointer5
+	ldx temp6
+	lda RCharacterLowLookupTable,x
+	sta temp6
+	lda RCharacterHighLookupTable,x
+	sta tempPointer6
+	rts
 
 RIndexToEnemyPosition: SUBROUTINE ;Converts the position of a menu cursor into the correct location in the enemyID array of the target
 	ldy #0
@@ -1729,6 +1892,20 @@ RStatusText:
 	.byte #T
 	.byte #U
 	.byte #S
+RCampText:
+	.byte #C
+	.byte #A
+	.byte #M
+	.byte #P
+	.byte #EMPTY
+	.byte #EMPTY
+RLeaveText:
+	.byte #L
+	.byte #E
+	.byte #A
+	.byte #V
+	.byte #E
+	.byte #EMPTY
 
 RClassColors:
 	.byte $8A ;Knight
@@ -2050,6 +2227,14 @@ RSpecialLines:
 	.byte (RNoText & $FF)
 	.byte (RSpellsText & $FF)
 	.byte (RKnownText & $FF)
+	.byte (RCampText & $FF)
+	.byte (RLeaveText & $FF)
+
+RPartyPositionMasks:
+	.byte $01
+	.byte $02
+	.byte $04
+	.byte $08
 
 	ORG $CC00 ;Used to hold more graphics data
 	RORG $FC00
@@ -2218,24 +2403,6 @@ RNumber9:
 	.byte #%01100110
 	.byte #%01111110
 
-RNumberLookup:
-	.byte 27
-	.byte 28
-	.byte 29
-	.byte 30
-	.byte 31
-	.byte 32
-	.byte 33
-	.byte 34
-	.byte 35
-	.byte 36
-
-RPartyPositionMasks:
-	.byte $01
-	.byte $02
-	.byte $04
-	.byte $08
-
 RMoodLookupTable:
 	.byte (RAvatarDead & $FF)
 	.byte (RAvatarSad & $FF)
@@ -2291,6 +2458,40 @@ RArrowDown:
 	.byte %00011000
 	.byte %00011000
 	.byte %00011000
+
+RNearFire:
+	.byte %00111101 ;L13
+	.byte %01101111 ;L10
+	.byte %01100011 ;L7
+	.byte %00000110 ;L4
+	.byte %00000000 ;L1
+	.byte %00011100 ;L14
+	.byte %01101110 ;L11
+	.byte %01111111 ;L8
+	.byte %00100110 ;L5
+	.byte %00000000 ;L2
+	.byte %00001111 ;L15
+	.byte %00110101 ;L12
+	.byte %01110111 ;L9
+	.byte %01000111 ;L6
+	.byte %00000011 ;L3
+	.byte $FF ;----
+	.byte %10011100 ;R14
+	.byte %11111110 ;R11
+	.byte %00111110 ;R8
+	.byte %01110000 ;R5
+	.byte %10010000 ;R2
+	.byte %11110000 ;R15
+	.byte %11011110 ;R12
+	.byte %01101110 ;R9
+	.byte %01111010 ;R6
+	.byte %00100000 ;R3
+	.byte $FF ;----
+	.byte %10110110 ;R13
+	.byte %11001110 ;R10
+	.byte %00111100 ;R7
+	.byte %00100000 ;R4
+	.byte $FF ;----
 
 	ORG $CD00 ;Used for holding the letters of the alphabet
 	RORG $FD00
@@ -2538,6 +2739,23 @@ RLetterZ:
 	.byte #%00000100
 	.byte #%00000010
 	.byte #%01111110
+
+RCalculateDigitIndices: SUBROUTINE ;Will interpret whatever is in A when called as a decimal value, then return the character lookup indices in X and Y.
+	tay
+	and #$0F
+	clc
+	adc #27
+	tax ;Character index corresponding to low digit of the specified decimal value is now in the x register.
+	tya
+	lsr
+	lsr
+	lsr
+	lsr
+	and #$0F
+	clc
+	adc #27
+	tay ;Character index corresponding to high digit of the specified decimal value is now in the y register.
+	rts
 
 	ORG $CE00 ;Used to hold maze rendering data
 	RORG $FE00
@@ -2954,6 +3172,17 @@ ROnly1Room: ;Used for PF2
 	.byte #%00000000
 	.byte #%00000000
 	.byte #%00000000
+
+RFarFire:
+	.byte %11101111 ;7th
+	.byte %10011011 ;4th
+	.byte %00001000 ;1st
+	.byte %01111111 ;8th
+	.byte %11011011 ;5th
+	.byte %00010001 ;2nd
+	.byte %00111110 ;9th
+	.byte %11001101 ;6th
+	.byte %01011010 ;3rd
 
 	ORG $CFC0
 	RORG $FFC0

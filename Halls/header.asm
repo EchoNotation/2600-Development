@@ -22,6 +22,14 @@ TEXT_INVALID_COLOR=$40
 FRONTLINE_INDICATOR_COLOR=$2A
 BACKLINE_INDICATOR_COLOR=$8A
 
+
+CAMPFIRE_COLOR = $2A
+FAR_FIRE_MAZE_HEIGHT = MAZE_HEIGHT - 24
+NEAR_FIRE_MAZE_HEIGHT = MAZE_HEIGHT - 30
+FAR_FIRE_GRAPHICS = RFarFire + 2 - FAR_FIRE_MAZE_HEIGHT
+NEAR_FIRE_GRAPHICS1 = RNearFire + 4 -  NEAR_FIRE_MAZE_HEIGHT
+NEAR_FIRE_GRAPHICS2 = RNearFire + 4 + 16 - NEAR_FIRE_MAZE_HEIGHT
+
 EMPTY=0
 A=1
 B=2
@@ -62,6 +70,9 @@ NUMBER9=36
 
 ;Memory related --- This is actually a bad idea and should maybe be changed
 MAZE_POINTER_PAGE_1 = $FE
+
+;Flag related
+CAMPFIRE_USED = $80
 
 ;Maze related
 NORTH = $08
@@ -143,7 +154,7 @@ currentMenu ds 1
 
 cursorIndexAndMessageY ds 1
 startingCursorIndexAndTargetID ds 1
-aoeValue ds 1
+aoeValueAndCampfireControl ds 1
 aoeTargetID ds 1
 aoeTargetsRemaining ds 1
 menuSize ds 1
@@ -169,6 +180,8 @@ effectCountdown ds 1
 mazeAndPartyLevel ds 1
 flags ds 1
 returnValue ds 1
+fireMazeHeight ds 1
+transitionValue ds 1
 
 	SEG CODE 
 

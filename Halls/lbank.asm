@@ -32,12 +32,20 @@ LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages 
 	jmp LAdvanceBattlerStatus
 .LGoToProcessAction:
 	jmp .LProcessAction
+.LGoToCampfirePhase1:
+	jmp .LCampfirePhase1
+.LGoToCampfirePhase2:
+	jmp .LCampfirePhase2
 
 .LNeedEnemyAction
 	lda enemyAction
 .LGotCurrentAction:
 	sta temp1 ;temp1 will contain the current battler's action
 	lda inBattle
+	cmp #$D0
+	beq .LGoToCampfirePhase1
+	cmp #$D1
+	beq .LGoToCampfirePhase2
 	cmp #$81
 	beq .LGoToAdvanceBattlerStatus
 	cmp #$83
@@ -217,6 +225,32 @@ LProcessCharacterAdvancement:
 	sta inBattle
 	rts
 
+.LCampfirePhase1:
+	ldx #3
+.LFullRestoreLoop:
+	stx charIndex
+	jsr LGetBattlerMaxHP
+	jsr LBinaryToDecimal
+	ldx charIndex
+	sta battlerHP,x
+	jsr LGetBattlerMaxMP
+	jsr LBinaryToDecimal
+	ldx charIndex
+	sta mp1,x
+	dex
+	bpl .LFullRestoreLoop
+
+	lda flags
+	ora #CAMPFIRE_USED
+	sta flags
+	lda #$D1
+	bne .LCampfireStoreAndExit
+.LCampfirePhase2:
+	lda #$00
+.LCampfireStoreAndExit:
+	sta inBattle
+	rts
+
 .LGoToHandleAoEEffect:
 	jmp .LHandleAoEEffect
 
@@ -326,7 +360,7 @@ LProcessCasting:
 	ldx #3
 	stx aoeTargetID
 .LRestoreAllAlliesLoop:
-	lda aoeValue
+	lda aoeValueAndCampfireControl
 	jsr LApplyRestoration
 .LNotThisBattler:
 	dec aoeTargetID
@@ -350,7 +384,7 @@ LProcessCasting:
 	beq .LWishPhase2
 	rts ;This code intentionally left blank
 .LDrainPhase2:
-	lda aoeValue ;The amount that was dealt
+	lda aoeValueAndCampfireControl ;The amount that was dealt
 	lsr
 	ldx currentBattler
 	stx startingCursorIndexAndTargetID
@@ -360,7 +394,7 @@ LProcessCasting:
 	sta currentMessage
 	ldx #3
 .LHealAllAlliesLoop:
-	lda aoeValue
+	lda aoeValueAndCampfireControl
 	jsr LApplyHealing
 	ldx temp5
 .LNoHealingThisBattler:
@@ -496,7 +530,7 @@ LProcessCasting:
 	;this is a 2-stage maneuver
 	ldy #HALF_MAGIC
 	jsr LDetermineSpellPower
-	sta aoeValue ;Save so that the damaged amount can be used for healing the user
+	sta aoeValueAndCampfireControl ;Save so that the damaged amount can be used for healing the user
 	ldy #$FF ;True damage
 	ldx startingCursorIndexAndTargetID
 	jsr LApplyDamage
@@ -523,7 +557,7 @@ LProcessCasting:
 .LWish:
 	ldy #HALF_MAGIC
 	jsr LDetermineSpellPower
-	sta aoeValue
+	sta aoeValueAndCampfireControl
 	lda #$28 ;PARTY STATUS CLEAR
 	sta currentMessage
 	lda #(~(ASLEEP_MASK | BLIGHTED_MASK))
@@ -1161,15 +1195,6 @@ LGetTargetFromActionDefensive: ;Returns the absolute battlerID of the defensive 
 	rts
 
 LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the next battler to take their action
-	lda inBattle
-	cmp #$81
-	bne .LNotSeekingNewBattler
-	lda #$08
-	bit currentInput
-	beq .LButtonPressed
-.LNotSeekingNewBattler:
-	rts
-.LButtonPressed:
 	;Need to check if either side has lost
 	lda hp1
 	ora hp2
@@ -1263,7 +1288,7 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	bcs .LDetermineEnemyAI
 	rts
 .LDetermineEnemyAI
-	jsr LSetEnemyAction
+	lda #$FF ;Signal the S bank to determine enemy AI
 	rts
 
 LCheckSpellHit: SUBROUTINE ;Determines if the spell corresponding to ID X should miss (because the target battler is unconscious or dead). Returns FF if the spell misses
@@ -1316,13 +1341,6 @@ LFindFirstLivingAlly: SUBROUTINE ;Returns the id of first party member with posi
 	inx
 	bne .LLoop
 .LEnd:
-	rts
-
-LSetEnemyAction: SUBROUTINE ;Choose what action this enemy will perform and set enemyAction accordingly.
-	;Will have to be way more complicated in the future, but this works for the moment. RIP Whomever is in front of the party
-	;This functionality will be relocated into the S bank
-	lda #$00
-	sta enemyAction
 	rts
 
 LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes control flow logic to do with SLEEP and BLIGHT
@@ -2355,7 +2373,7 @@ LIsClassRanged: ;This section used to be 6 nops, but this can be stored here ins
 	.byte $1 ;Ranger
 	.byte $0 ;Paladin
 
-	; ~120 bytes here
+	; ~118 bytes here
 
 LLowLabelBytes:
 	.byte (LDoBattle & $FF)
@@ -2388,7 +2406,7 @@ LReturnLocation:
 	sta $1FF9 ;Return to S bank ;27
 	nop ;28
 
-	;There is a tiny bit of space in here
+	;46 bytes in here
 
 	ORG $DFFA
 	RORG $FFFA

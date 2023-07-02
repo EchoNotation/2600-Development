@@ -470,6 +470,27 @@
 		-Saved like 100 bytes of code in RDrawCharacterInfo
 	-Started work on RDrawCharacterInfoMinimal, which will be used on the startup screen
 	-Swapped high level game logic and initialization code into the S bank, leaving L with more room for battle specific code
+	-Moved enemy AI call from LDetermineNextBattler into the S bank. (Dependent on LDetermineNextBattler returning $FF, which doesn't seem possible otherwise)
+		-Removed some redundant checks from LDetermineNextBattler
+6/27/23
+	-Made several improvements to HallsEnemyPainter
+		-Fixed temp file saving
+		-You need to hold CTRL to activate most hotkeys now
+		-Default directory can be set with command line arguments
+		-Can toggle between white and black background colors
+		-Middle click now picks a color
+6/28/23
+	-Lots of obnoxious work around campfire rendering
+6/29/23
+	-Functional campfire rendering, if slightly expensive space-wise in both R and S banks.
+		-Need to modify the sprites to be thinner, making them look more square-like when squished
+7/1/23
+	-Basic campfire menuing and battle logic
+	-Allocated first of the flags, CAMPFIRE_USED
+	-Campfire can not be seen after it has been used
+	-Logic fixes surrounding SUpdatePlayerMovement
+	-Campfires heal and restore mana!
+	-Campfire can no longer be seen through maze walls
 
 Known Bugs:
 	-Exiting battle shows glitchy maze for 1 frame. SUpdateMazeRenderingPointers isn't called when exiting battle
@@ -478,34 +499,26 @@ Known Bugs:
 	-Battle system behaves strangely if hasAction is inappropriately set when entering the battle, check LDetermineNextBattler?
 
 	-If the last party member doesn't learn a spell, it takes an extra input to end the battle
-		-This is actually a problem that will need to be addressed for all AoE effects
 
 TODO:
 	-Battle transitions?
 
-	-Campfire rendering??
-		-Give campfire battle-like scene? Yes
-
 	-Make simpler version of RDrawCharacterInfo for main menu kernel usage
 
-	-Battle system optimization
+	-Battle system optimization (400 bytes remaining for code)
+		-This space will be most likely used for filling in boss specials (every enemy can technically have 1)
+		-S bank optimization is probably a higher priority right now
 	
-	-Move game logic control flow out of L bank??
-
 	-How is enemy AI going to be stored?
-		-Number of action slots, list of meta-enemyActions
-			-Meta-enemyActions might be along the lines of "attack", "heal ally", "paralyze enemy", etc.
+		-List of meta-enemyActions, 4 per enemy type
+			-Meta-enemyActions might be along the lines of "attack frontline", "cast heal self", "cast sleep any enemy", etc.
 			-These meta-actions are then converted into actual enemyAction by LDetermineEnemyAI routine
-			-More sophisticated, less data space, more code space. Seems like a good idea
-		-Make AI dependent on health for bosses
+		-Make AI dependent on health for bosses? If space allows
 			
 	-How is encounter data going to be stored?
-		-Depends on whether or not certain groups of enemies should appear together
-			-If not, then just have a list of which enemies can appear on which floors
-				-Decreased data complexity, increased code complexity, worse design control, higher encounter variety
-				-Will probably need to be this option due to ROM limitations
-			-If yes, then need to actual store all possible encounters by floor
-				-Increased data complexity, decreased code complexity, better game design, lower encounter variety
+		-If not, then just have a list of which enemies can appear on which floors
+			-Decreased data complexity, increased code complexity, worse design control, higher encounter variety
+		-The exception is boss encounters, which are pre-defined
 
 	Requirements for functional game loop:
 		-Functional combat - 80%
@@ -522,10 +535,9 @@ TODO:
 		-Additional maze logic
 			-Moving between floors
 			-Encounter generation
-				-Affected by mazeLevel
-			-Transitioning between maze and battles
-			-Campfires
-			-Bosses
+				-Bosses
+			-Campfires - 95% (Need to add actual campfire enemy type)			
+		-Transitioning between maze and battles
 
 		-Advanced effect system - 80% (mostly used by spells)
 			-No routine for setting a visual effect
@@ -533,9 +545,6 @@ TODO:
 		-Sound engine - 0%
 		
 		-Name entry and class selection screen - 0%
-		-Title screen
-			-Should these two be the same screen? Yes
-			-What bank will this be in? S?
 		
 	Should have functional game loop first:
 		-Create all enemies
@@ -556,13 +565,13 @@ TODO:
 			-Potentially try to center enemies more precisely?
 		-Battle system quirks:
 			-Shields block friendly magic (HEAL, TRIAGE, TRANCE, WISH, SHARP, SHIELD)
+				-This almost certainly needs to be fixed
 			-Avatars are not updated after the last logic frame for a single round
 			-Being guarded reduces blight damage.
 		-Battle system improvements:
 			-Introduce random value offsets based on party level (attack and healing amounts)
 			-Make party members gain delta HP, delta MP when leveling up
-			-Add resistances to party members
-			-Should elemental-flavors be resistances or vulnerabilities?
-			-Add damage types to basic attacks
+			-Add resistances to party members?
+				-Add damage types to enemy basic attacks
 			-Consider refactoring X LOSES Y HP to X TAKES Y DMG
 		-Hear a "roar" when getting near the boss?

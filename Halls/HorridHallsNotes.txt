@@ -57,6 +57,8 @@ $A4 Wish spell MP restoration
 $B0 Need to check if AoE spell hit, and process its effect if it did
 $B1 AoE spell kill
 
+$D0 Campfire was used, need to exit battle
+
 $E0 Failed to run
 $E1 Succeeded run
 $E2 Exit battle via running
@@ -80,6 +82,7 @@ $82 Targeting allies
 $83 Target other ally (GUARD)
 $84 Show spells to select
 $85 No spells known
+$86 Should we camp?
 
 --- VISUAL EFFECTS ---
 $00 - No effect

@@ -1,0 +1,1 @@
+java -jar HallsEnemyPainter.jar "C:\2600-Development\HallsGraphics"

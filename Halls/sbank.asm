@@ -15,7 +15,7 @@ SClear:
 	bne SClear
 	cld
 
-	lda #21
+	lda #%00010001
 	sta CTRLPF ;Sets the playfield to reflect, and makes the ball 4 clocks wide
 
 	lda #0
@@ -114,21 +114,23 @@ SSkipSeeding:
 	lda #$44
 	sta exitLocation
 
-	lda #$80
-	sta inBattle
-	sta currentMenu
+	;lda #$80
+	;sta inBattle
+	;sta currentMenu
 	lda #$FF
 	sta hasAction
+
+	sta aoeValueAndCampfireControl
 	;sta enemyID+1
 	;sta enemyID+3
-	lda #$03
-	sta menuSize
+	;lda #$03
+	;sta menuSize
 	lda #1
 	sta enemyHP
 	sta enemyHP+1
 	sta enemyHP+2
 	sta enemyHP+3
-	sta currentEffect
+	;sta currentEffect
 
 SStartOfFrame:
 	lda #$82
@@ -154,10 +156,10 @@ SStartOfFrame:
 	bne SBattleLogicVBlank ;Skip this logic if we are not in maze mode...
 
 SMazeLogicVBlank:
-	jsr SUpdatePlayerMovement
+	jsr SUpdateCampfireRendering
 	jsr SUpdateMazeRenderingPointers
 	jsr SUpdateCompassPointerBoss
-	jmp SGoToUpdateEffects
+	jmp SGoToUpdateEffects ;Only necessary for the cursor flashing when in the party position menu
 
 SBattleLogicVBlank:
 	lda currentMenu
@@ -174,6 +176,10 @@ SBattleLogicVBlank:
 	bne SDontNeedANewBattler
 	ldy #1 ;Subroutine ID for LDetermineNextBattler
 	jsr SRunFunctionInLBank
+	cmp #$FF
+	bne SDontNeedEnemyAI
+	jsr SDetermineEnemyAI
+SDontNeedEnemyAI:
 	lda inBattle
 	cmp #$80
 	beq SUpdateMenuRenderingVBlank ;Don't advance if we just entered the menu
@@ -231,10 +237,44 @@ SNoMenuAdvancement:
 SAfterMenuLogic:
 	jmp SWaitForOverscanTimer
 
-SMazeLogicOverscan:
-	;Need to check for the maze exit and campfire location
-	;Need to determine if a random encounter occurs	
+STryEnterCampfire:
+	lda flags
+	and #CAMPFIRE_USED
+	bne SDidNotTriggerCampfire
+	;Perform campfire trigger logic
+	lda #$80
+	sta inBattle
+	lda #$86
+	sta currentMenu
+	lda #1 ;Two options
+	sta menuSize
+	jmp SPartyDidNotMove
 
+SMazeLogicOverscan:
+	jsr SUpdatePlayerMovement
+	cmp #$FF
+	bne SPartyDidNotMove
+	;Need to check for the maze exit and campfire location
+	;Need to determine if a random encounter occurs
+	lda playerX
+	asl
+	asl
+	asl
+	asl
+	ora playerY
+	cmp campfireLocation
+	beq STryEnterCampfire
+SDidNotTriggerCampfire:
+	cmp exitLocation
+	bne SDidNotTriggerExit
+
+	;Enter boss battle logic
+
+SDidNotTriggerExit:
+	;Check to see if a random encounter should occur
+	
+
+SPartyDidNotMove:
 SWaitForOverscanTimer:
 	lda INTIM
 	bne SWaitForOverscanTimer
@@ -244,7 +284,7 @@ SWaitForOverscanTimer:
 
 
 SStartScreenKernel:
-
+	
 
 SUpdateSound:
 	rts
@@ -565,6 +605,8 @@ SUpdateMazeRenderingPointers: SUBROUTINE
 	ldy playerFacing
 	and SMazeBackwardMask,y
 	beq .SAtLeast1Room
+	lda #$FF
+	sta aoeValueAndCampfireControl ;Do not show campfire if looking at a dead end
 	lda #(RDeadEnd1 & $FF)
 	sta tempPointer2
 	sta temp5
@@ -605,6 +647,12 @@ SUpdateMazeRenderingPointers: SUBROUTINE
 	lda temp1
 	and SMazeForwardMask,y
 	beq .SAtLeast2Rooms
+	lda aoeValueAndCampfireControl
+	cmp #1
+	bne .SCampfireIsFine
+	lda #$FF
+	sta aoeValueAndCampfireControl
+.SCampfireIsFine:
 	lda #(ROnly1Room & $FF)
 	sta tempPointer3
 	sta temp4
@@ -665,6 +713,84 @@ SUpdateMazeRenderingPointers: SUBROUTINE
 .SNoFarRightDoor2:
 	lda #(RNoFarDoorOnlyTwo & $FF)
 	sta temp4
+	rts
+
+SUpdateCampfireRendering: SUBROUTINE
+	lda flags
+	and #CAMPFIRE_USED
+	bne .SCampfireNotVisible ;Do not show the campfire if it has already been used!
+	lda campfireLocation
+	and #$F0
+	jsr S4Lsr
+	sta temp1 ;Campfire X
+	lda campfireLocation
+	and #$0F
+	sta temp2 ;Campfire Y
+	ldx playerX
+	ldy playerY
+	lda playerFacing
+	beq .SFacingEast
+	sec
+	sbc #1
+	beq .SFacingSouth
+	sbc #1
+	beq .SFacingWest
+.SFacingNorth:
+	stx temp3
+	dey
+	sty temp4
+	dey
+	stx temp5
+	sty temp6
+	jmp .SCheckRooms
+.SFacingSouth:
+	stx temp3
+	iny
+	sty temp4
+	iny
+	stx temp5
+	sty temp6
+	jmp .SCheckRooms
+.SFacingEast:
+	inx
+	stx temp3
+	sty temp4
+	inx
+	stx temp5
+	sty temp6
+	jmp .SCheckRooms
+.SFacingWest:
+	dex
+	stx temp3
+	sty temp4
+	dex
+	stx temp5
+	sty temp6
+.SCheckRooms:
+	lda temp1
+	eor temp3
+	sta temp3
+	lda temp2
+	eor temp4
+	ora temp3
+	beq .SCampfireIsNear
+	lda temp1
+	eor temp5
+	sta temp5
+	lda temp2
+	eor temp6
+	ora temp5
+	beq .SCampfireIsFar
+.SCampfireNotVisible:
+	lda #$FF
+	bne .SStoreAndReturn
+.SCampfireIsFar:
+	lda #$01
+	bne .SStoreAndReturn
+.SCampfireIsNear:
+	lda #$00
+.SStoreAndReturn:
+	sta aoeValueAndCampfireControl
 	rts
 
 STurnLeft:
@@ -766,7 +892,8 @@ SUpdatePlayerMovement: SUBROUTINE
 .SCheckForForwardMovement:
 	lda currentInput
 	and #$10
-	bne .SReturnFromPlayerMovement
+	beq .SMoveForward
+	rts
 
 	;Code for checking if possible to move forward from current direction, and moving if so
 .SMoveForward:
@@ -789,21 +916,25 @@ SUpdatePlayerMovement: SUBROUTINE
 	ldy playerY
 	dey
 	sty playerY
+	lda #$FF
 	rts
 .SEast:
 	ldx playerX
 	inx
 	stx playerX
+	lda #$FF
 	rts
 .SSouth:
 	ldy playerY
 	iny
 	sty playerY
+	lda #$FF
 	rts
 .SWest:
 	ldx playerX
 	dex
 	stx playerX
+	lda #$FF
 .SReturnFromPlayerMovement
 	rts
 
@@ -817,7 +948,6 @@ SRandom: SUBROUTINE ;Ticks the random number generator when called
 	rts
 
 SUpdateCompassPointerBoss: SUBROUTINE ;Updates tempPointer1 in order to render an arrow at the top of the screen pointing towards this floor's exit
-	;This is a good candidate for relocation to bank S
 	lda exitLocation
 	and #$0F
 	sta temp2 ;Y location of boss
@@ -921,6 +1051,8 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	beq .SGoToSelectSpellMenu
 	cmp #$85
 	beq .SNoSpellsKnownMenu
+	cmp #$86
+	beq .SCampingMenu
 	rts
 
 .SGoToSelectEnemyMenu:
@@ -931,6 +1063,23 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SNoSpellsKnownMenu
 	lda #$80
 	sta currentMenu
+	rts
+
+.SCampingMenu:
+	lda #0
+	sta currentMenu
+	ldx cursorIndexAndMessageY
+	beq .SDecidedToCamp
+.SNotCamping:
+	sta inBattle
+	sta cursorIndexAndMessageY
+	rts
+.SDecidedToCamp:
+	lda #$D0
+	sta inBattle
+	lda #$27 ;PARTY HEALS FULLY
+	sta currentMessage
+	;Need to fully heal the party!
 	rts
 
 .SSelectOtherAllyMenu:
@@ -1171,6 +1320,8 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine acco
 	beq .SGoToSpellOptions
 	cmp #$85
 	beq .SGoToNoSpellsKnown
+	cmp #$86
+	beq .SCampingMenu
 .SReturn
 	rts
 .SGoToEnemyTargeting:
@@ -1179,6 +1330,16 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine acco
 	jmp .SSetupSpellOptions
 .SGoToNoSpellsKnown:
 	jmp .SSetupNoSpellsKnown
+
+.SCampingMenu:
+	ldx #$E4
+	stx menuLines
+	inx
+	stx menuLines+1
+	lda #$FF
+	sta menuLines+2
+	jsr SSetMenuActiveLine
+	rts
 
 .SSetupBattleOptions:
 	ldx currentBattler
@@ -1289,6 +1450,8 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine acco
 	stx menuLines+1
 	inx
 	stx menuLines+2
+	lda #$FF
+	sta highlightedLine
 	rts
 
 .SSetupSpellOptions:
@@ -1450,6 +1613,11 @@ SCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in X, a
 	cpy #4
 	bcc .SCheckEnemyLoop
 	ldy tempPointer6
+	rts
+
+SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
+	lda #$00
+	sta enemyAction
 	rts
 
 S4Lsr: SUBROUTINE
@@ -1635,24 +1803,6 @@ SSpellManaLookup:
 	.byte 1 ;TRANCE
 	.byte 1 ;WISH
 	.byte 0 ;SHIFT
-
-SHighLabelBytes:
-	.byte (SGenerateMazeData >> 8 & $FF)
-	.byte (SUpdateMazeRenderingPointers >> 8 & $FF)
-	.byte (SUpdatePlayerMovement >> 8 & $FF)
-	.byte (SClearMazeData >> 8 & $FF)
-	.byte (SUpdateCompassPointerBoss >> 8 & $FF)
-	.byte (SUpdateMenuAdvancement >> 8 & $FF)
-	.byte (SUpdateMenuRendering >> 8 & $FF)
-
-SLowLabelBytes:
-	.byte (SGenerateMazeData & $FF)
-	.byte (SUpdateMazeRenderingPointers & $FF)
-	.byte (SUpdatePlayerMovement & $FF)
-	.byte (SClearMazeData & $FF)
-	.byte (SUpdateCompassPointerBoss & $FF)
-	.byte (SUpdateMenuAdvancement & $FF)
-	.byte (SUpdateMenuRendering & $FF)
 
 	ORG $FFB0 ;Bankswitching nonsense
 	RORG $FFB0
