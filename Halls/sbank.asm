@@ -33,6 +33,10 @@ SSkipSeeding:
 	lda #$09 ;Maze level 0, party level 9
 	sta mazeAndPartyLevel
 
+	lda #$F8
+	sta currentInput
+	sta previousInput
+
 	jsr SClearMazeData
 	jsr SGenerateMazeData
 
@@ -104,10 +108,6 @@ SSkipSeeding:
 	lda #$04
 	sta mp4
 
-	lda #$F8
-	sta currentInput
-	sta previousInput
-
 	ldy #2 ;Subroutine ID for LUpdateAvatars
 	jsr SRunFunctionInLBank
 
@@ -118,18 +118,19 @@ SSkipSeeding:
 	;sta inBattle
 	;sta currentMenu
 	lda #$FF
-	sta hasAction
+	;sta hasAction
 
 	sta aoeValueAndCampfireControl
 	;sta enemyID+1
+	;sta enemyID+2
 	;sta enemyID+3
 	;lda #$03
 	;sta menuSize
-	lda #1
-	sta enemyHP
-	sta enemyHP+1
-	sta enemyHP+2
-	sta enemyHP+3
+	;lda #1
+	;sta enemyHP
+	;sta enemyHP+1
+	;sta enemyHP+2
+	;sta enemyHP+3
 	;sta currentEffect
 
 SStartOfFrame:
@@ -159,7 +160,7 @@ SMazeLogicVBlank:
 	jsr SUpdateCampfireRendering
 	jsr SUpdateMazeRenderingPointers
 	jsr SUpdateCompassPointerBoss
-	jmp SGoToUpdateEffects ;Only necessary for the cursor flashing when in the party position menu
+	jmp SGoToUpdateEffects ;Necessary for cursor flashing in party pos menu, and transitions to battle
 
 SBattleLogicVBlank:
 	lda currentMenu
@@ -188,7 +189,14 @@ SDontNeedANewBattler:
 	jsr SRunFunctionInLBank
 	ldy #0 ;Subroutine ID for LDoBattle
 	jsr SRunFunctionInLBank
+	lda inBattle
+	bpl SJustExitedBattle
 	jmp SWaitForVblankTimer
+
+SJustExitedBattle:
+	lda #STEP_GRACE_PERIOD
+	sta highlightedLineAndSteps
+	bne SMazeLogicVBlank
 
 SGoToReset:
 	jmp SReset
@@ -197,6 +205,7 @@ SUpdateMenuRenderingVBlank:
 	jsr SUpdateMenuRendering
 
 SAfterEffectUpdate:
+	jsr SUpdateMazeColor
 SWaitForVblankTimer:
 	lda INTIM
 	bne SWaitForVblankTimer ;Is VBLANK over yet?
@@ -246,11 +255,16 @@ STryEnterCampfire:
 	sta inBattle
 	lda #$86
 	sta currentMenu
-	lda #1 ;Two options
-	sta menuSize
+	ldx #1 ;Two options
+	stx menuSize
+	dex
+	stx cursorIndexAndMessageY
 	jmp SPartyDidNotMove
 
 SMazeLogicOverscan:
+	lda flags
+	and #TRANSITIONING_TO_BATTLE
+	bne SPartyDidNotMove ;Party cannot move if in a transition
 	jsr SUpdatePlayerMovement
 	cmp #$FF
 	bne SPartyDidNotMove
@@ -272,9 +286,41 @@ SDidNotTriggerCampfire:
 
 SDidNotTriggerExit:
 	;Check to see if a random encounter should occur
-	
-
+	ldx highlightedLineAndSteps
+	bne SNoRandomEncounter
+	lda rand8
+	and #ENCOUNTER_RATE_MASK
+	bne SPartyDidNotMove	
+	;Need to generate a random enocunter!
+	lda #0
+	sta enemyID
+	lda #$FF
+	sta enemyID+1
+	sta enemyID+2
+	sta enemyID+3
+	ldy #3 ;LLoadEnemyHP
+	jsr SRunFunctionInLBank
+	jsr SSetupTransitionEffect
+	jmp SPartyDidNotMove
+SNoRandomEncounter:
+	dec highlightedLineAndSteps
 SPartyDidNotMove:
+
+	lda flags
+	and #TRANSITIONING_TO_BATTLE
+	beq SNotTransitioning
+	;If here, we are currently transitioning to a battle!
+	lda currentEffect
+	bne SNotTransitioning ;Wait if the effect is still playing
+	;Time to enter battle!
+	lda flags
+	eor #TRANSITIONING_TO_BATTLE ;Disable the flag
+	sta flags
+	ldy #4 ;LEnterBattleSetup
+	jsr SRunFunctionInLBank
+
+SNotTransitioning:
+
 SWaitForOverscanTimer:
 	lda INTIM
 	bne SWaitForOverscanTimer
@@ -282,9 +328,17 @@ SWaitForOverscanTimer:
 	sta WSYNC
 	jmp SStartOfFrame
 
-
-SStartScreenKernel:
-	
+SSetupTransitionEffect: SUBROUTINE
+	lda #TRANSITIONING_TO_BATTLE
+	ora flags
+	sta flags
+	lda #2
+	sta currentEffect
+	lda #1
+	sta effectCountdown
+	lda #8
+	sta effectCounter
+	rts
 
 SUpdateSound:
 	rts
@@ -1106,7 +1160,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	sta battleActions,x
 	jmp .SCheckNextBattler
 .SBattleOptionsMenu:
-	ldy highlightedLine
+	ldy highlightedLineAndSteps
 	lda menuLines,y
 	cmp #$80
 	beq .SSetFightAction
@@ -1196,7 +1250,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	sta currentMenu
 	rts
 .SSelectSpellMenu:
-	lda highlightedLine
+	lda highlightedLineAndSteps
 	and #$7F
 	tay
 	lda menuLines,y
@@ -1211,7 +1265,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	sta menuSize
 	rts
 .SCheckSpellLogic:
-	ldy highlightedLine
+	ldy highlightedLineAndSteps
 	bpl .SConfirmSpell
 	;Not enough mana to select this spell. Play an error sound effect
 	rts
@@ -1306,7 +1360,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	sta currentMenu
 	rts
 
-SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine according to the current menu state
+SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSteps according to the current menu state
 	lda currentMenu
 	cmp #$80
 	beq .SSetupBattleOptions
@@ -1366,7 +1420,7 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine acco
 
 .SSetupOtherAllyTargeting:
 	ldy cursorIndexAndMessageY
-	sty highlightedLine
+	sty highlightedLineAndSteps
 	ldx #0
 	ldy #0
 .SOtherAllyLinesLoop:
@@ -1402,7 +1456,7 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine acco
 	lda #0
 	sta startingCursorIndexAndTargetID
 	ldy cursorIndexAndMessageY
-	sty highlightedLine
+	sty highlightedLineAndSteps
 	bpl .SSetEnemyLines
 .SFourEnemies:
 	jsr SSetMenuActiveLine
@@ -1451,7 +1505,7 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine acco
 	inx
 	stx menuLines+2
 	lda #$FF
-	sta highlightedLine
+	sta highlightedLineAndSteps
 	rts
 
 .SSetupSpellOptions:
@@ -1503,7 +1557,7 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine acco
 	bne .SSetSpellLoop
 
 .SCheckMana:
-	ldy highlightedLine
+	ldy highlightedLineAndSteps
 	lda menuLines,y
 	tay
 	lda SSpellManaLookup,y
@@ -1512,9 +1566,9 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLine acco
 	lda mp1,x
 	cmp temp1
 	bcs .SEnoughMana
-	lda highlightedLine
+	lda highlightedLineAndSteps
 	ora #$80
-	sta highlightedLine
+	sta highlightedLineAndSteps
 .SEnoughMana:
 .SSpellIDsSet:
 	ldx #2
@@ -1531,7 +1585,7 @@ SSetMenuActiveLine: SUBROUTINE
 	cmp #3
 	bcs .SAtLeastThree
 	lda cursorIndexAndMessageY
-	sta highlightedLine
+	sta highlightedLineAndSteps
 	lda #0
 	sta startingCursorIndexAndTargetID
 	rts
@@ -1545,17 +1599,17 @@ SSetMenuActiveLine: SUBROUTINE
 	dey
 	sty startingCursorIndexAndTargetID
 	ldy #2
-	sty highlightedLine
+	sty highlightedLineAndSteps
 	rts
 .SMiddleOfMenu:
 	dey
 	sty startingCursorIndexAndTargetID
 	ldy #1
-	sty highlightedLine
+	sty highlightedLineAndSteps
 	rts
 .STopOfMenu:
 	sty startingCursorIndexAndTargetID
-	sty highlightedLine
+	sty highlightedLineAndSteps
 	rts
 
 SUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick presses
@@ -1620,6 +1674,32 @@ SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
 	sta enemyAction
 	rts
 
+SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate value based on the current game state
+	lda mazeAndPartyLevel
+	jsr S4Lsr
+	and #$0F ;A now contains the current maze level
+	tay
+	lda flags
+	and #TRANSITIONING_TO_BATTLE
+	bne .SInTransition
+.SNotInTransition:
+	lda SMazeColors,y
+	sta mazeColor
+	rts
+.SInTransition:
+	tya
+	asl
+	asl
+	asl ;Current mazeLevel * 8
+	clc
+	adc effectCounter ;effectCounter range should be 0-7
+	tay
+	lda SMazeColorsTransition,y
+	sta mazeColor
+	lda #$FF
+	sta aoeValueAndCampfireControl ;Do not show the campfire if transitioning
+	rts
+
 S4Lsr: SUBROUTINE
 	lsr
 	lsr
@@ -1634,6 +1714,52 @@ S5Asl: SUBROUTINE
 	asl
 	asl
 	rts
+
+	ORG $FF00
+	RORG $FF00
+
+SMazeColors:
+	.byte $C6 ;Green --- THE GROUNDS
+	.byte $0A ;Gray --- THE CASTLE
+	.byte $96 ;Blue --- THE CATACOMBS
+	.byte $6A ;Purple --- THE ABYSS
+
+SMazeColorsTransition:
+	.byte $00
+	.byte $C0
+	.byte $C2
+	.byte $C4
+	.byte $C6
+	.byte $0F
+	.byte $C6
+	.byte $0F
+
+	.byte $00
+	.byte $04
+	.byte $06
+	.byte $08
+	.byte $0A
+	.byte $0F
+	.byte $0A
+	.byte $0F
+
+	.byte $00
+	.byte $90
+	.byte $92
+	.byte $94
+	.byte $96
+	.byte $0F
+	.byte $96
+	.byte $0F
+
+	.byte $00
+	.byte $60
+	.byte $64
+	.byte $66
+	.byte $6A
+	.byte $0F
+	.byte $6A
+	.byte $0F
 
 	;Arrow IDs start with 0 at straight east, then increasing moving clockwise
 SArrows:
@@ -1782,6 +1908,11 @@ SSpellTargetingLookup:
 	.byte $84 ;WISH
 	.byte $82 ;SHIFT
 
+	ORG $FFB0 ;Bankswitching nonsense
+	RORG $FFB0
+
+SRunFunctionInLBank:
+	nop $1FF7 ;Go to bank 1
 SSpellManaLookup:
 	.byte 0 ;BACK
 	.byte 1 ;FIRE
@@ -1803,32 +1934,6 @@ SSpellManaLookup:
 	.byte 1 ;TRANCE
 	.byte 1 ;WISH
 	.byte 0 ;SHIFT
-
-	ORG $FFB0 ;Bankswitching nonsense
-	RORG $FFB0
-
-SRunFunctionInLBank:
-	nop $1FF7 ;Go to bank 1
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
 	nop
 	nop
 	nop

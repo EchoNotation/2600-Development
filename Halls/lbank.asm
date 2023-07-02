@@ -1218,6 +1218,7 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	lda #$F0
 	sta inBattle
 	rts
+LEnterBattleSetup:
 .LUpdateHasAction:
 	ldx #7
 .LSetHasActionLoop:
@@ -2373,17 +2374,34 @@ LIsClassRanged: ;This section used to be 6 nops, but this can be stored here ins
 	.byte $1 ;Ranger
 	.byte $0 ;Paladin
 
-	; ~118 bytes here
+LLoadEnemyHP: SUBROUTINE ;Loads the correct starting HP values for all enemies based on enemyID. DO NOT CALL IF ENEMYIDs ARE NOT SET! 
+	ldx #3
+.LLoadEnemyHPLoop:
+	lda enemyID,x
+	cmp #$FF
+	beq .LNextIteration
+	tay
+	lda LEnemyHP,y
+	sta enemyHP,x
+.LNextIteration:
+	dex
+	bpl .LLoadEnemyHPLoop
+	rts
+
 
 LLowLabelBytes:
 	.byte (LDoBattle & $FF)
 	.byte (LDetermineNextBattler & $FF)
 	.byte (LUpdateAvatars & $FF)
+	.byte (LLoadEnemyHP & $FF)
+	.byte (LEnterBattleSetup & $FF)
 
 LHighLabelBytes:
 	.byte (LDoBattle >> 8 & $FF)
 	.byte (LDetermineNextBattler >> 8 & $FF)
 	.byte (LUpdateAvatars >> 8 & $FF)
+	.byte (LLoadEnemyHP >> 8 & $FF)
+	.byte (LEnterBattleSetup >> 8 & $FF)
 
 	ORG $DFB0
 	RORG $FFB0

@@ -25,18 +25,14 @@ RPlaceCompass:
 	lsr
 	lsr
 	tay
-	lda RMazeColors,y
-	and transitionValue
+	lda mazeColor
+
 	sta COLUP0
 	sta COLUPF
 
 	;Delay in order to put the compass in the middle of the screen
-	nop
-	nop
-	nop
-	nop
-	nop
-	cpx temp1 ;delay 3 cycles
+	cpx temp1
+	jsr RSpinWheels
 	lda #$C0
 	sta HMP0
 	sta RESP0
@@ -451,10 +447,10 @@ RShowSpellOptions:
 	lda #(RFireText >> 8 & $FF)
 	sta tempPointer1+1
 	
-	lda highlightedLine
+	lda highlightedLineAndSteps
 	and #$7F
 	sta temp4
-	lda highlightedLine
+	lda highlightedLineAndSteps
 	bpl REnoughMana
 	cpx temp4
 	bne RDontHighlightSpell ;Branch if this line isn't hovered
@@ -479,7 +475,7 @@ RShowBattleOptions:
 	lda #(RFightText >> 8 & $FF)
 	sta tempPointer1+1
 	lda #TEXT_COLOR
-	cpx highlightedLine
+	cpx highlightedLineAndSteps
 	bne RDontHighlightBattleOption
 	lda #TEXT_HIGHLIGHTED_COLOR
 RDontHighlightBattleOption:
@@ -505,7 +501,7 @@ RShowAllyName:
 	lda #EMPTY
 	sta temp6
 
-	cpx highlightedLine
+	cpx highlightedLineAndSteps
 	bne .RDontHighlightAllyName
 	lda char1,y
 	and #$0f
@@ -532,7 +528,7 @@ RShowEnemyName:
 	sta tempPointer1
 	lda #(RZombieText >> 8 & $FF)
 	sta tempPointer1+1
-	cpx highlightedLine
+	cpx highlightedLineAndSteps
 	beq RUseEnemyColor
 	lda #TEXT_COLOR
 	bne RColorLoaded
@@ -551,7 +547,7 @@ RShowSpecialOptions:
 	lda #(RSpellsText >> 8 & $FF)
 	sta tempPointer1+1
 	lda #TEXT_HIGHLIGHTED_COLOR
-	cpx highlightedLine
+	cpx highlightedLineAndSteps
 	beq RUseSpecialColor
 	lda #TEXT_COLOR
 RUseSpecialColor:
@@ -1922,12 +1918,6 @@ RCasterType: ;0 is no casting, 1 is full caster, FF is half-caster
 	.byte $1 ;Wizard
 	.byte $FF ;Ranger
 	.byte $FF ;Paladin
-
-RMazeColors:
-	.byte $C6 ;Green --- THE GROUNDS
-	.byte $0A ;Gray --- THE CASTLE
-	.byte $94 ;Blue --- THE CATACOMBS
-	.byte $6A ;Purple --- THE ABYSS
 
 RSpellColors:
 	.byte TEXT_HIGHLIGHTED_COLOR ;BACK

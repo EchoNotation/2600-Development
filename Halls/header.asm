@@ -73,6 +73,7 @@ MAZE_POINTER_PAGE_1 = $FE
 
 ;Flag related
 CAMPFIRE_USED = $80
+TRANSITIONING_TO_BATTLE = $40
 
 ;Maze related
 NORTH = $08
@@ -81,6 +82,8 @@ EAST = $02
 WEST = $01
 MAZE_WIDTH = 8
 MAX_MAZE_LEVEL = 3
+STEP_GRACE_PERIOD = 4
+ENCOUNTER_RATE_MASK = $07
 
 ;Battle related
 TIMER_MASK = $80
@@ -166,12 +169,12 @@ hEdges ds 7 ;Horizontal edges of the maze xxxxxxxx
 
 battleActions ds 4
 enemyID ds 4
-battlerStatus ds 8 ;TGSSlPAB - T:Guard/shield timer, G:Guard flag, S:Shield flag, Sl:Sleep timer, P:Parrying, A:Sharpened, B:Blighted
+battlerStatus ds 8 ;TGSSlPAB - T:Shield timer, G:Guard flag, S:Shield flag, Sl:Sleep timer, P:Parrying, A:Sharpened, B:Blighted
 enemyAction ds 1
 hasAction ds 1
 currentMessage ds 1
 menuLines ds 3
-highlightedLine ds 1
+highlightedLineAndSteps ds 1
 currentSound ds 1
 soundOffset ds 1
 currentEffect ds 1
@@ -181,7 +184,7 @@ mazeAndPartyLevel ds 1
 flags ds 1
 returnValue ds 1
 fireMazeHeight ds 1
-transitionValue ds 1
+mazeColor ds 1
 
 	SEG CODE 
 

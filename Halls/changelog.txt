@@ -482,7 +482,7 @@
 6/28/23
 	-Lots of obnoxious work around campfire rendering
 6/29/23
-	-Functional campfire rendering, if slightly expensive space-wise in both R and S banks.
+	-Functional campfire rendering, if expensive space-wise in both R and S banks.
 		-Need to modify the sprites to be thinner, making them look more square-like when squished
 7/1/23
 	-Basic campfire menuing and battle logic
@@ -492,13 +492,21 @@
 	-Campfires heal and restore mana!
 	-Campfire can no longer be seen through maze walls
 
-Known Bugs:
-	-Exiting battle shows glitchy maze for 1 frame. SUpdateMazeRenderingPointers isn't called when exiting battle
-		-Probably going to wait to fix this until battle transitions are better defined
-	
-	-Battle system behaves strangely if hasAction is inappropriately set when entering the battle, check LDetermineNextBattler?
+	-Some basic support for transitions into battle from the maze (partially uses the effect system)
 
-	-If the last party member doesn't learn a spell, it takes an extra input to end the battle
+	-Exiting battle no longer shows a glitchy maze for 1 frame.
+		-If inBattle is positive after LDoBattle call, then the game runs everything under SMazeLogicVBlank. 
+		-This does not seem to be a runtime concern for now. Try with more ways to exit battle?
+7/2/23
+	-Added LLoadEnemyHP subroutine.
+	-Some starting logic surrounding random encounter generation
+		-Battles can now be entered relatively cleanly
+		-Encounter rate and step grace period are configurable
+		-Fixed rare bug related to hasAction, which is now set correctly when entering a battle
+
+
+Known Bugs:
+	-Number of inputs required to exit battle is frequently one higher than intended
 
 TODO:
 	-Battle transitions?
@@ -534,10 +542,10 @@ TODO:
 			-Mana implementation - 100%
 		-Additional maze logic
 			-Moving between floors
-			-Encounter generation
+			-Encounter generation - 50%
 				-Bosses
 			-Campfires - 95% (Need to add actual campfire enemy type)			
-		-Transitioning between maze and battles
+		-Transitioning between maze and battles - 80%?
 
 		-Advanced effect system - 80% (mostly used by spells)
 			-No routine for setting a visual effect

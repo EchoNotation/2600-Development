@@ -1,10 +1,7 @@
 --- HORRID HALLS --- (CATACRAWLER?)
 Targeted ROM size: 16-32K
 	-Preferably doesn't need to use Melody board for RAM expansion
-			
-Possible RAM optimization:
-	-Combine the playerX and playerY bytes if possible. 1 byte
-	
+
 Each small enemy takes up 16 bytes.
 Each medium enemy takes up 64 bytes.
 Each large enemy takes up 192 bytes.	
@@ -57,7 +54,8 @@ $A4 Wish spell MP restoration
 $B0 Need to check if AoE spell hit, and process its effect if it did
 $B1 AoE spell kill
 
-$D0 Campfire was used, need to exit battle
+$D0 Campfire was used, need to restore HP and MP
+$D1 Campfire was used, need to exit battle
 
 $E0 Failed to run
 $E1 Succeeded run
@@ -87,20 +85,19 @@ $86 Should we camp?
 --- VISUAL EFFECTS ---
 $00 - No effect
 $01 - Party member highlighting (also highlighting enemies if current menu = $81. Set enemyAction to be the absolute enemy index in this mode)
-$02 - Test effect
-$03 - Firey test effect
+$02 - Transitioning into battle
+$03 - Test effect
+$04 - Firey test effect
 
 --- SOUND EFFECTS ---
 $00 - No sound
 
 --- SUBROUTINE IDs ---
-$00 - SGenerateMazeData
-$01 - SUpdateMazeRenderingPointers
-$02 - SUpdatePlayerMovement
-$03 - SClearMazeData
-$04 - SUpdateCompassPointerBoss
-$05 - SUpdateMenuAdvancement
-$06 - SUpdateMenuRendering
+$00 - LDoBattle
+$01 - LDetermineNextBattler
+$02 - LUpdateAvatars
+$03 - LLoadEnemyHP
+$04 - LEnterBattleSetup
 
 --- BATTLE ACTIONS --- (STTIIIII) S: is Spell, TT: target ID, I: index.
 0TT00000 : FIGHT --- Targeted basic physical attack using battler's Attack stat.

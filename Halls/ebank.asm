@@ -42,6 +42,7 @@ EBasicEffect:
 EEffectLowLookup:
 	.byte 0 ;No effect
 	.byte 0 ;Party member highlighting
+	.byte 0 ;Transition to battle
 	.byte (ETestEffect & $FF)
 	.byte (EFireEffect & $FF)
 	.byte (EBasicEffect & $FF)
@@ -49,6 +50,7 @@ EEffectLowLookup:
 EEffectHighLookup:
 	.byte 0 ;No effect
 	.byte 0 ;Party member highlighting
+	.byte 0 ;Transition to battle
 	.byte (ETestEffect >> 8 & $FF)
 	.byte (EFireEffect >> 8 & $FF)
 	.byte (EBasicEffect >> 8 & $FF)
@@ -56,12 +58,14 @@ EEffectHighLookup:
 EEffectLength:
 	.byte #0
 	.byte #0
+	.byte #0
 	.byte #8
 	.byte #16
 	.byte #5
 EEffectFrequency:
 	.byte #0
-	.byte #32
+	.byte #30
+	.byte #10
 	.byte #30
 	.byte #4
 	.byte #30
@@ -402,8 +406,10 @@ EUpdateEffects: SUBROUTINE
 	sty effectCounter
 .ESkipEffectCounterDecrement:
 	ldx currentEffect
-	cpx #$1 ;party member highlighting, which is the only effect handled outside this bank
+	cpx #$1 ;party member highlighting
 	beq .EHighlightEffect
+	cpx #$2 ;transitioning from maze scene to battle scene
+	beq .ETransitionEffect
 .ENormalEffect:
 	lda EEffectLowLookup,x
 	sta tempPointer1
@@ -426,6 +432,10 @@ EUpdateEffects: SUBROUTINE
 .EHighlightEffect:
 	lda #1
 	sta effectCounter
+	sta temp2
+	rts
+.ETransitionEffect:
+	lda #1
 	sta temp2
 	rts
 
