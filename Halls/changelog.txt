@@ -498,20 +498,27 @@
 		-If inBattle is positive after LDoBattle call, then the game runs everything under SMazeLogicVBlank. 
 		-This does not seem to be a runtime concern for now. Try with more ways to exit battle?
 7/2/23
+	-Allocated another flag for TRANSITIONING_TO_BATTLE
 	-Added LLoadEnemyHP subroutine.
 	-Some starting logic surrounding random encounter generation
 		-Battles can now be entered relatively cleanly
 		-Encounter rate and step grace period are configurable
 		-Fixed rare bug related to hasAction, which is now set correctly when entering a battle
-
+		-Encounter generation is handled in the E bank.
+7/3/23
+	-Fixed timing issue with drawing medium enemies
+	-Significant reworks to transition logic
+		-Added transition to campfire
+		-Added transition from battle to maze
 
 Known Bugs:
 	-Number of inputs required to exit battle is frequently one higher than intended
+		-Seems to happen regardless of whether or not a level up occurred
 
 TODO:
-	-Battle transitions?
-
 	-Make simpler version of RDrawCharacterInfo for main menu kernel usage
+	-Update SGenerateMazeData to be able to "drop in and out"
+		-Required for moving between floors
 
 	-Battle system optimization (400 bytes remaining for code)
 		-This space will be most likely used for filling in boss specials (every enemy can technically have 1)
@@ -524,8 +531,7 @@ TODO:
 		-Make AI dependent on health for bosses? If space allows
 			
 	-How is encounter data going to be stored?
-		-If not, then just have a list of which enemies can appear on which floors
-			-Decreased data complexity, increased code complexity, worse design control, higher encounter variety
+		-Just have a list of which enemies can appear on which floors
 		-The exception is boss encounters, which are pre-defined
 
 	Requirements for functional game loop:
@@ -541,11 +547,11 @@ TODO:
 			-Character advancement - 85% (Slight refactor required to fix bug with (last position) party members who didn't learn a spell)
 			-Mana implementation - 100%
 		-Additional maze logic
-			-Moving between floors
-			-Encounter generation - 50%
-				-Bosses
+			-Moving between floors - 0%
+			-Encounter generation - 65%
+				-Bosses - 50%
 			-Campfires - 95% (Need to add actual campfire enemy type)			
-		-Transitioning between maze and battles - 80%?
+		-Transitioning between maze and battles - 80%
 
 		-Advanced effect system - 80% (mostly used by spells)
 			-No routine for setting a visual effect
@@ -558,7 +564,7 @@ TODO:
 		-Create all enemies
 			-Graphics
 			-AI
-		-Create all encounter tables?
+			-Add bosses to encounter table
 		-Create all visual effects
 		-Create all sound effects
 			-Add sound effects in all the relevant places

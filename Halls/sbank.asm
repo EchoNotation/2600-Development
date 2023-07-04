@@ -196,6 +196,8 @@ SDontNeedANewBattler:
 SJustExitedBattle:
 	lda #STEP_GRACE_PERIOD
 	sta highlightedLineAndSteps
+	lda #TRANSITIONING_TO_MAZE
+	jsr SSetupTransitionEffect
 	bne SMazeLogicVBlank
 
 SGoToReset:
@@ -250,20 +252,13 @@ STryEnterCampfire:
 	lda flags
 	and #CAMPFIRE_USED
 	bne SDidNotTriggerCampfire
-	;Perform campfire trigger logic
-	lda #$80
-	sta inBattle
-	lda #$86
-	sta currentMenu
-	ldx #1 ;Two options
-	stx menuSize
-	dex
-	stx cursorIndexAndMessageY
+	lda #TRANSITIONING_TO_CAMPFIRE
+	jsr SSetupTransitionEffect
 	jmp SPartyDidNotMove
 
 SMazeLogicOverscan:
 	lda flags
-	and #TRANSITIONING_TO_BATTLE
+	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)
 	bne SPartyDidNotMove ;Party cannot move if in a transition
 	jsr SUpdatePlayerMovement
 	cmp #$FF
@@ -281,25 +276,21 @@ SMazeLogicOverscan:
 SDidNotTriggerCampfire:
 	cmp exitLocation
 	bne SDidNotTriggerExit
-
-	;Enter boss battle logic
-
+	beq SGenerateEncounter ;Always trigger an encounter if stepping onto the exit
 SDidNotTriggerExit:
 	;Check to see if a random encounter should occur
 	ldx highlightedLineAndSteps
 	bne SNoRandomEncounter
 	lda rand8
 	and #ENCOUNTER_RATE_MASK
-	bne SPartyDidNotMove	
+	bne SPartyDidNotMove
+SGenerateEncounter:	
 	;Need to generate a random enocunter!
-	lda #0
-	sta enemyID
-	lda #$FF
-	sta enemyID+1
-	sta enemyID+2
-	sta enemyID+3
+	jmp SGoToGenerateEncounter ;Go to bank 2 to generate...
+SEncounterGenerated:
 	ldy #3 ;LLoadEnemyHP
 	jsr SRunFunctionInLBank
+	lda #TRANSITIONING_TO_BATTLE
 	jsr SSetupTransitionEffect
 	jmp SPartyDidNotMove
 SNoRandomEncounter:
@@ -307,17 +298,9 @@ SNoRandomEncounter:
 SPartyDidNotMove:
 
 	lda flags
-	and #TRANSITIONING_TO_BATTLE
+	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)
 	beq SNotTransitioning
-	;If here, we are currently transitioning to a battle!
-	lda currentEffect
-	bne SNotTransitioning ;Wait if the effect is still playing
-	;Time to enter battle!
-	lda flags
-	eor #TRANSITIONING_TO_BATTLE ;Disable the flag
-	sta flags
-	ldy #4 ;LEnterBattleSetup
-	jsr SRunFunctionInLBank
+	jsr SPerformTransitionLogic
 
 SNotTransitioning:
 
@@ -328,17 +311,126 @@ SWaitForOverscanTimer:
 	sta WSYNC
 	jmp SStartOfFrame
 
-SSetupTransitionEffect: SUBROUTINE
-	lda #TRANSITIONING_TO_BATTLE
+SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each transition based on transition type.
+	cmp #TRANSITIONING_TO_BATTLE
+	beq .SCheckBattleTransitionLogic
+	cmp #TRANSITIONING_TO_CAMPFIRE
+	beq .SCheckCampfireTransitionLogic
+	cmp #TRANSITIONING_TO_MAZE
+	beq .SCheckMazeTransitionLogic
+	rts
+.SCheckBattleTransitionLogic:
+	lda currentEffect
+	bne .SEffectStillPlaying ;Wait if the effect is still playing
+	;Time to enter battle!
+	ldy #4 ;LEnterBattleSetup
+	jsr SRunFunctionInLBank
+	jmp .SSharedExit
+.SCheckCampfireTransitionLogic:
+	lda currentEffect
+	bne .SEffectStillPlaying
+	lda #$80
+	sta inBattle
+	lda #$86
+	sta currentMenu
+	ldx #1 ;Two options
+	stx menuSize
+	dex
+	stx cursorIndexAndMessageY
+	beq .SSharedExit
+.SCheckMazeTransitionLogic:
+	lda currentEffect
+	bne .SEffectStillPlaying
+	;TODO change this to support maze generation when necessary
+.SSharedExit:
+	lda flags
+	and #(~(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)) ;Disable all transition flags
+	sta flags
+.SEffectStillPlaying:
+	rts
+
+STransitionEffectIDs:
+	.byte 2
+	.byte 3
+	.byte 4
+
+STransitionEffectLengths:
+	.byte 8
+	.byte 4
+	.byte 4
+
+SSetupTransitionEffect: SUBROUTINE ;Interprets A as the transition flag constant
+	tay
 	ora flags
 	sta flags
-	lda #2
+	cpy #TRANSITIONING_TO_BATTLE
+	beq .STransitionToBattle
+	cpy #TRANSITIONING_TO_CAMPFIRE
+	beq .STransitionToCampfire
+	cpy #TRANSITIONING_TO_MAZE
+	beq .STransitionToMaze
+	rts
+.STransitionToBattle:
+	ldy #0
+	beq .SLoadEffect
+.STransitionToCampfire:
+	ldy #1
+	bne .SLoadEffect
+.STransitionToMaze:
+	ldy #2
+.SLoadEffect:
+	lda STransitionEffectIDs,y
 	sta currentEffect
+	lda STransitionEffectLengths,y
+	sta effectCounter
 	lda #1
 	sta effectCountdown
-	lda #8
-	sta effectCounter
 	rts
+
+SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate value based on the current game state
+	lda mazeAndPartyLevel
+	jsr S4Lsr
+	and #$0F ;A now contains the current maze level
+	tay
+	lda flags
+	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)
+	cmp #TRANSITIONING_TO_BATTLE
+	beq .STransitioningToBattle
+	cmp #TRANSITIONING_TO_CAMPFIRE
+	beq .STransitioningToCampfire
+	cmp #TRANSITIONING_TO_MAZE
+	beq .STransitioningToMaze
+	;Otherwise not in any transition, so just show normal colors
+	lda SMazeColors,y
+	sta mazeColor
+	rts
+.STransitioningToBattle:
+.STransitioningToCampfire:
+	tya
+	asl
+	asl
+	asl ;Current mazeLevel * 8
+	clc
+	adc effectCounter ;effectCounter range should be 0-7 or 0-3
+.SSharedColorUpdating:
+	tay
+	lda SMazeColorsTransition,y
+	sta mazeColor
+	lda #$FF
+	sta aoeValueAndCampfireControl ;Do not show the campfire if transitioning
+	rts
+.STransitioningToMaze:
+	tya
+	asl
+	asl
+	asl ;Current mazeLevel * 8
+	sta temp1
+	lda #3
+	sec
+	sbc effectCounter
+	clc
+	adc temp1 ;mazeLevel * 8 + (3 - effectCounter)
+	bpl .SSharedColorUpdating
 
 SUpdateSound:
 	rts
@@ -1127,6 +1219,8 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SNotCamping:
 	sta inBattle
 	sta cursorIndexAndMessageY
+	lda #TRANSITIONING_TO_MAZE ;LDoBattle never gets called when not using the campfire, so this is required to show the transition back to the maze
+	jsr SSetupTransitionEffect
 	rts
 .SDecidedToCamp:
 	lda #$D0
@@ -1674,32 +1768,6 @@ SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
 	sta enemyAction
 	rts
 
-SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate value based on the current game state
-	lda mazeAndPartyLevel
-	jsr S4Lsr
-	and #$0F ;A now contains the current maze level
-	tay
-	lda flags
-	and #TRANSITIONING_TO_BATTLE
-	bne .SInTransition
-.SNotInTransition:
-	lda SMazeColors,y
-	sta mazeColor
-	rts
-.SInTransition:
-	tya
-	asl
-	asl
-	asl ;Current mazeLevel * 8
-	clc
-	adc effectCounter ;effectCounter range should be 0-7
-	tay
-	lda SMazeColorsTransition,y
-	sta mazeColor
-	lda #$FF
-	sta aoeValueAndCampfireControl ;Do not show the campfire if transitioning
-	rts
-
 S4Lsr: SUBROUTINE
 	lsr
 	lsr
@@ -1908,7 +1976,20 @@ SSpellTargetingLookup:
 	.byte $84 ;WISH
 	.byte $82 ;SHIFT
 
-	ORG $FFB0 ;Bankswitching nonsense
+	ORG $FFA3 ;Bankswitching nonsense
+	RORG $FFA3
+
+SGoToGenerateEncounter:
+	nop $1FF8 ;Go to bank 2
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	jmp SEncounterGenerated
+
+	ORG $FFB0
 	RORG $FFB0
 
 SRunFunctionInLBank:

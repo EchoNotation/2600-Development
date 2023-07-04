@@ -43,6 +43,8 @@ EEffectLowLookup:
 	.byte 0 ;No effect
 	.byte 0 ;Party member highlighting
 	.byte 0 ;Transition to battle
+	.byte 0 ;Transition to fire
+	.byte 0 ;Transition to maze
 	.byte (ETestEffect & $FF)
 	.byte (EFireEffect & $FF)
 	.byte (EBasicEffect & $FF)
@@ -51,11 +53,15 @@ EEffectHighLookup:
 	.byte 0 ;No effect
 	.byte 0 ;Party member highlighting
 	.byte 0 ;Transition to battle
+	.byte 0 ;Transition to fire
+	.byte 0 ;Transition to maze
 	.byte (ETestEffect >> 8 & $FF)
 	.byte (EFireEffect >> 8 & $FF)
 	.byte (EBasicEffect >> 8 & $FF)
 
 EEffectLength:
+	.byte #0
+	.byte #0
 	.byte #0
 	.byte #0
 	.byte #0
@@ -65,6 +71,8 @@ EEffectLength:
 EEffectFrequency:
 	.byte #0
 	.byte #30
+	.byte #10
+	.byte #10
 	.byte #10
 	.byte #30
 	.byte #4
@@ -127,7 +135,6 @@ EDrawBlankEnemyLoop:
 	sta temp1
 	jmp EEnemyRenderingLoop
 ERenderEnemy:
-	;sta WSYNC
 	lda currentMenu
 	cmp #$81
 	sta WSYNC
@@ -187,6 +194,9 @@ EPrepMediumEnemy:
 	sta temp6
 	adc #16
 	sta temp5
+	nop
+	nop
+	nop
 	sta WSYNC
 	sta WSYNC
 	jsr EDrawMediumEnemy
@@ -408,8 +418,8 @@ EUpdateEffects: SUBROUTINE
 	ldx currentEffect
 	cpx #$1 ;party member highlighting
 	beq .EHighlightEffect
-	cpx #$2 ;transitioning from maze scene to battle scene
-	beq .ETransitionEffect
+	cpx #$5 ;Branch if in one of the three transitions
+	bcc .ETransitionEffect
 .ENormalEffect:
 	lda EEffectLowLookup,x
 	sta tempPointer1
@@ -437,6 +447,134 @@ EUpdateEffects: SUBROUTINE
 .ETransitionEffect:
 	lda #1
 	sta temp2
+	rts
+
+EGenerateEncounter: SUBROUTINE ;Sets the enemyIDs to be an appropriate battle for this maze level. Also handles bosses.
+	lda mazeAndPartyLevel
+	lsr
+	lsr
+	lsr
+	lsr
+	and #$0F
+	tay ;Y now contains the current maze level
+	lda playerX
+	asl
+	asl
+	asl
+	asl
+	ora playerY
+	cmp exitLocation
+	bne .ESetupNormalEncounter
+	;This is a boss battle!
+	tya
+	asl
+	asl
+	asl ;A now contains mazeLevel*8
+	sta temp3
+	jsr ERandom
+	and #$04
+	clc
+	adc temp3
+	adc #3
+	tay ;Y now contains mazeLevel*8 + (0 or 4 randomly) + 3
+	ldx #3
+.ECopyBossBattleLoop:
+	lda EBossEncounters,y
+	sta enemyID,x
+	dey
+	dex
+	bpl .ECopyBossBattleLoop
+	rts
+.ESetupNormalEncounter:
+	lda #0
+	sta enemyID
+	lda #$FF
+	sta enemyID+1
+	sta enemyID+2
+	sta enemyID+3
+	rts
+
+	;TODO figure this out
+	jsr ERandom
+	and #$03
+	tax
+	inx 
+	stx temp1 ;Number of enemies to put in this encounter (1-4)
+	lda EEnemyCounts,y
+	sta temp2 ;Number of unique enemies that can randomly appear on this floor
+.EGenerateEncounterOuterLoop:
+	jsr ERandom
+.EGenerateEncounterInnerLoop:
+	sec
+	sbc temp2
+
+
+	rts
+
+EEnemyCounts:
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+
+EGroundsEnemies:
+	.byte $00
+ECastleEnemies:
+	.byte $00
+ECatacombsEnemies:
+	.byte $00
+EAbyssEnemies:
+	.byte $00
+
+EBossEncounters:
+	;GROUNDS BOSS 1
+	.byte $02
+	.byte $FF
+	.byte $FF
+	.byte $FF
+	;GROUNDS BOSS 2
+	.byte $01
+	.byte $FF
+	.byte $01
+	.byte $FF
+	;CASTLE BOSS 1
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;CASTLE BOSS 2
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;CATACOMBS BOSS 1
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;CATACOMBS BOSS 2
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;ABYSS BOSS 1
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;ABYSS BOSS 2
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+
+ERandom: SUBROUTINE ;Ticks the random number generator when called
+	lda rand8
+	lsr
+	bcc .ENoEOR
+	eor #$B4
+.ENoEOR:
+	sta rand8
 	rts
 
 	ORG $EC00
@@ -755,6 +893,18 @@ EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1
 	.byte 1
 	.byte 2
 
+	ORG $EFA3
+	RORG $EFA3
+
+ENeedToGenerateEncounter:
+	nop
+	nop
+	nop
+	jsr EGenerateEncounter
+	sta $1FF9 ;Go to bank 3
+	nop
+	nop
+	nop
 
 	ORG $EFC0
 	RORG $FFC0

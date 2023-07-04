@@ -2379,9 +2379,13 @@ LLoadEnemyHP: SUBROUTINE ;Loads the correct starting HP values for all enemies b
 .LLoadEnemyHPLoop:
 	lda enemyID,x
 	cmp #$FF
-	beq .LNextIteration
+	beq .LBlankSpace
 	tay
 	lda LEnemyHP,y
+	sta enemyHP,x
+	bne .LNextIteration
+.LBlankSpace:
+	lda #0
 	sta enemyHP,x
 .LNextIteration:
 	dex
