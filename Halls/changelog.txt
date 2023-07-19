@@ -510,29 +510,45 @@
 	-Significant reworks to transition logic
 		-Added transition to campfire
 		-Added transition from battle to maze
+7/4/23
+	-Starting functionality for generating a new maze after beating a boss
+		-Still runs too long per frame, and seems to create impenetratable boxes?
+7/5/23
+	-Fixed bug where holding the button to select the 3rd party member's action, then pressing a directional button caused an unintended message to appear
+	-Some improvements around ending battles and character advancement, not finished yet.
+7/6/23
+	-Fixed bug where ending battles through level up required more button presses than it ought to.
+	-Fixed bug where martials could still "learn" spells even though they have none
 
 Known Bugs:
 	-Number of inputs required to exit battle is frequently one higher than intended
 		-Seems to happen regardless of whether or not a level up occurred
+	-Multiple occurence bug on 7/4/23 where the player would appear in a room with no exits after beating a boss. Not been able to reproduce it since
 
 TODO:
-	-Make simpler version of RDrawCharacterInfo for main menu kernel usage
-	-Update SGenerateMazeData to be able to "drop in and out"
-		-Required for moving between floors
+	REQUIRES LOGIC:
+		-Fix runtime issue with generating new mazes
+		-Optimize R bank somehow, in order to add some more messages and hopefully support the startup screen
+		-Make startup screen
+		-Write enemy AI handling
+		-Write basic encounter generation
+		-Add graphics for campfire (probably a large enemy)
+		-Fix allied spells being blocked by shields
+		-Write sound effect routines
+		-Add load a visual effect routine
 
-	-Battle system optimization (400 bytes remaining for code)
-		-This space will be most likely used for filling in boss specials (every enemy can technically have 1)
-		-S bank optimization is probably a higher priority right now
-	
+	DOESN'T REQUIRE LOGIC:
+		-Create all enemy graphics
+		-Create all enemy AI tables
+		-Create all visual effects
+		-Create all sound effects
+			-Make sound effect tracker?
+
 	-How is enemy AI going to be stored?
 		-List of meta-enemyActions, 4 per enemy type
 			-Meta-enemyActions might be along the lines of "attack frontline", "cast heal self", "cast sleep any enemy", etc.
 			-These meta-actions are then converted into actual enemyAction by LDetermineEnemyAI routine
 		-Make AI dependent on health for bosses? If space allows
-			
-	-How is encounter data going to be stored?
-		-Just have a list of which enemies can appear on which floors
-		-The exception is boss encounters, which are pre-defined
 
 	Requirements for functional game loop:
 		-Functional combat - 80%
@@ -544,14 +560,14 @@ TODO:
 			-Functional status effects - 100%
 			-Enemy AI - 0%
 				-Special moves - ??%
-			-Character advancement - 85% (Slight refactor required to fix bug with (last position) party members who didn't learn a spell)
+			-Character advancement - 100%
 			-Mana implementation - 100%
 		-Additional maze logic
-			-Moving between floors - 0%
+			-Moving between floors - 35%
 			-Encounter generation - 65%
 				-Bosses - 50%
-			-Campfires - 95% (Need to add actual campfire enemy type)			
-		-Transitioning between maze and battles - 80%
+			-Campfires - 95% (Need to add actual campfire enemy type)
+		-Transitioning between maze and battles - 90%
 
 		-Advanced effect system - 80% (mostly used by spells)
 			-No routine for setting a visual effect
@@ -559,16 +575,6 @@ TODO:
 		-Sound engine - 0%
 		
 		-Name entry and class selection screen - 0%
-		
-	Should have functional game loop first:
-		-Create all enemies
-			-Graphics
-			-AI
-			-Add bosses to encounter table
-		-Create all visual effects
-		-Create all sound effects
-			-Add sound effects in all the relevant places
-		-Try to balance everything
 
 	Version 1.1 considerations:
 		-Maze input behavior:

@@ -30,7 +30,7 @@ SClear:
 SSkipSeeding:
 	sta rand8
 
-	lda #$09 ;Maze level 0, party level 9
+	lda #$02 ;Maze level 0, party level 1
 	sta mazeAndPartyLevel
 
 	lda #$F8
@@ -39,6 +39,17 @@ SSkipSeeding:
 
 	jsr SClearMazeData
 	jsr SGenerateMazeData
+	jsr SGenerateMazeDataHotDrop
+	jsr SGenerateMazeDataHotDrop
+	jsr SGenerateMazeDataHotDrop
+	jsr SGenerateMazeDataHotDrop
+	jsr SGenerateMazeDataHotDrop
+	jsr SGenerateMazeDataHotDrop
+	jsr SGenerateMazeDataHotDrop
+
+	;lda #4
+	;sta playerX
+	;sta playerY
 
 	;Temp testing code that will be removed much, much later
 	lda #$33
@@ -239,10 +250,14 @@ SBattleLogicOverscan:
 	bpl SAfterMenuLogic
 	lda currentInput
 	eor previousInput
-	and #$F8
-	beq SNoMenuAdvancement
+	and #$F0
+	beq SNoMenuMovement
 	jsr SUpdateMenuCursorPos
-	
+SNoMenuMovement:
+	lda currentInput
+	eor previousInput
+	and #$08
+	beq SNoMenuAdvancement	
 	jsr SUpdateMenuAdvancement
 SNoMenuAdvancement:
 SAfterMenuLogic:
@@ -339,6 +354,27 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 	stx cursorIndexAndMessageY
 	beq .SSharedExit
 .SCheckMazeTransitionLogic:
+	lda flags
+	and #NEED_NEW_MAZE
+	beq .SSkipMazeGeneration
+	lda effectCountdown
+	cmp #$0A
+	beq .SFirstGeneration
+	cmp #$3
+	bcs .SUsualGeneration
+.SPlaceObjectives
+	;Need to position player, exit, and campfire
+	lda flags
+	and #(~NEED_NEW_MAZE) ;Finished generating new maze!
+	sta flags
+	rts
+.SFirstGeneration:
+	jsr SGenerateMazeData
+	rts	
+.SUsualGeneration:
+	jsr SGenerateMazeDataHotDrop
+	rts	
+.SSkipMazeGeneration
 	lda currentEffect
 	bne .SEffectStillPlaying
 	;TODO change this to support maze generation when necessary
@@ -437,23 +473,29 @@ SUpdateSound:
 
 SGenerateMazeData: SUBROUTINE ;Will use the iterative algorithm I designed in order to generate a maze of size specified by #MAZE_WIDTH.
 							 ;Make sure to clear maze data before use.
-	;temp1 will act as X, temp2 as Y, temp3 as direction, temp4 as squaresRemaining, temp5 as the squaresRemaining generator
+	;battleActions will act as X, battleActions+1 as Y, battleActions+2 as direction, battleActions+3 as squaresRemaining, enemyHP+3 as the squaresRemaining generator
+	lda #64
+	sta enemyHP+1 ;The number of squares left in the whole maze
+
 	lda #$10
-	sta temp5
+	sta enemyHP+3
 	lsr
-	sta temp4
+	sta battleActions+3
+SGenerateMazeDataHotDrop:
 .SMazeGenerationLoop:
+	;This code is reached exactly 64 times when generating a maze
+
 	lda #1
 	sta tempPointer4 ;inlineExit
 	sta tempPointer5 ;adjacentExit
 
-	ldx temp1
-	ldy temp2
+	ldx battleActions
+	ldy battleActions+1
 
-	lda temp4
+	lda battleActions+3
 	cmp #1
 	bne .SNotCorner
-	lda temp3
+	lda battleActions+2
 	beq .SEastCorner
 	cmp #2
 	beq .SWestCorner
@@ -495,7 +537,7 @@ SGenerateMazeData: SUBROUTINE ;Will use the iterative algorithm I designed in or
 .SAtLeast1Exit
 	lda tempPointer4
 	bne .SNoInlineExit
-	lda temp3
+	lda battleActions+2
 	beq .SEastInline
 	cmp #$1
 	beq .SSouthInline
@@ -516,12 +558,12 @@ SGenerateMazeData: SUBROUTINE ;Will use the iterative algorithm I designed in or
 	jsr SRemoveVEdge
 	jmp .SNoInlineExit
 .SNoInlineExit:
-	ldx temp1
-	ldy temp2
+	ldx battleActions
+	ldy battleActions+1
 
 	lda tempPointer5
 	bne .SNoAdjacentExit
-	lda temp3
+	lda battleActions+2
 	beq .SEastAdjacent
 	cmp #$1
 	beq .SSouthAdjacent
@@ -542,22 +584,22 @@ SGenerateMazeData: SUBROUTINE ;Will use the iterative algorithm I designed in or
 	jsr SRemoveHEdge
 .SNoAdjacentExit
 .SPrepareForNextIteration:
-	dec temp4
+	dec battleActions+3
 	bne .SSkipTurning
-	inc temp3
-	lda temp3
+	inc battleActions+2
+	lda battleActions+2
 	and #$03
-	sta temp3 ;Turn to the right
+	sta battleActions+2 ;Turn to the right
 
-	dec temp5 ;Get the number of steps needed before turning again
-	lda temp5
-	lsr
+	dec enemyHP+3 ;Get the number of steps needed before turning again
+	lda enemyHP+3
 	beq .SMazeComplete
-	sta temp4
+	lsr
+	sta battleActions+3
 .SSkipTurning
-	ldx temp1
-	ldy temp2
-	lda temp3
+	ldx battleActions
+	ldy battleActions+1
+	lda battleActions+2
 	beq .SMoveEast
 	cmp #$1
 	beq .SMoveSouth
@@ -575,9 +617,14 @@ SGenerateMazeData: SUBROUTINE ;Will use the iterative algorithm I designed in or
 .SMoveWest:
 	dex
 .SNextIteration:
-	stx temp1
-	sty temp2
+	stx battleActions
+	sty battleActions+1
+	dec enemyHP+1
+	lda enemyHP+1
+	and #$07
+	beq .SMazeChunkFinished
 	jmp .SMazeGenerationLoop
+.SMazeChunkFinished
 .SMazeComplete:
 	rts
 

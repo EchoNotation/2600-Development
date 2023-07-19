@@ -86,8 +86,10 @@ $86 Should we camp?
 $00 - No effect
 $01 - Party member highlighting (also highlighting enemies if current menu = $81. Set enemyAction to be the absolute enemy index in this mode)
 $02 - Transitioning into battle
-$03 - Test effect
-$04 - Firey test effect
+$03 - Transitioning to campfire
+$04 - Transitioning to maze
+$05 - Test effect
+$06 - Firey test effect
 
 --- SOUND EFFECTS ---
 $00 - No sound

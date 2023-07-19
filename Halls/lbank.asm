@@ -87,16 +87,36 @@ LProcessCharacterAdvancement:
 
 .LGoToNextFloor:
 	;Exit battle, generate new maze, position player within maze. Probably shouldn't happen from within this function, so just set a flag?
+	lda #$00
+	sta inBattle
+	lda flags
+	ora #NEED_NEW_MAZE
+	sta flags
+	;Clear the mazeData
+	ldy #14
+	lda #vEdges
+	sta tempPointer1
+	lda #0
+	sta tempPointer1+1
+	lda #%11111111
+.LClearMazeLoop:
+	sta (tempPointer1),y
+	dey
+	bpl .LClearMazeLoop
 	rts
 .LPartyDown:
 	lda #$FC
 	sta inBattle
 	lda #$11
+.LStoreEndMessage:
 	sta currentMessage ;PARTY DOWN
 	rts
 .LGameOver:
+	lda #$1F ;GAME OVER
+	bne .LStoreEndMessage
 .LGameCompleted:
-	rts
+	lda #$20 ;GAME CLEAR
+	bne .LStoreEndMessage
 .LExitBattleViaVictory:
 	lda #0
 	sta inBattle
@@ -111,7 +131,7 @@ LProcessCharacterAdvancement:
 	and #$0F
 	sta temp4 ;The current party level
 	cmp #$9
-	bcs .LDidntLevelUp ;Party is already at max level
+	bcs .LGoToCheckTypeOfConclusion ;Party is already at max level
 	lda #0
 	sta temp1 ;temp1 will contain the experience earned during this battle
 	ldx #0
@@ -134,10 +154,7 @@ LProcessCharacterAdvancement:
 	sbc temp1 
 	bcc .LLeveledUp
 	sta experienceToNextLevel
-.LDidntLevelUp:
-	lda #$F3
-	sta inBattle
-	rts
+	jmp .LGoToCheckTypeOfConclusion
 .LLeveledUp: ;THIS WHOLE SECTION NEEDS TO BE TESTED
 	sta experienceToNextLevel
 	lda mazeAndPartyLevel
@@ -160,18 +177,46 @@ LProcessCharacterAdvancement:
 .LPartyLeveledUp:
 	lda #$0A ;PARTY LEVELS UP
 	sta currentMessage
-	lda #$F4
-	sta inBattle
+	ldx #0
+	stx aoeTargetsRemaining
+	;Determine how many battlers learned a spell
+	lda mazeAndPartyLevel
+	and #$0F
+	tay
+.LCheckForNewSpellLoop
+	stx aoeTargetID
+	lda char1,x
+	and #$0F
+	tax
+	lda LSpellListLookup,x
+	sta tempPointer1
+	lda #(LWizardSpellList >> 8 & $FF)
+	sta tempPointer1+1
+	lda (tempPointer1),y
+	bmi .LSkipIncrement
+	beq .LSkipIncrement
+	inc aoeTargetsRemaining
+.LSkipIncrement:
+	ldx aoeTargetID
+	inx
+	cpx #4
+	bcc .LCheckForNewSpellLoop
 	lda #0
 	sta aoeTargetID
+	ldx aoeTargetsRemaining
+	bne .LSomeoneLearnedSpell
+	beq .LCheckTypeOfConclusion ;Nobody learned anything!
+.LSomeoneLearnedSpell
+	lda #$F4
+	sta inBattle
 	rts
 
 .LCheckForNewSpells:
 	lda mazeAndPartyLevel
 	and #$0F
 	tay
-	ldx aoeTargetID
 .LCheckSpellLoop:
+	ldx aoeTargetID
 	lda char1,x
 	and #$0F
 	tax
@@ -182,10 +227,7 @@ LProcessCharacterAdvancement:
 	lda (tempPointer1),y
 	bpl .LLearnedNewSpell
 	inc aoeTargetID
-	ldx aoeTargetID
-	cpx #4
-	bcs .LCheckTypeOfConclusion
-	bcc .LCheckSpellLoop
+	bpl .LCheckSpellLoop
 .LLearnedNewSpell:
 	ldx aoeTargetID
 	stx currentBattler
@@ -193,9 +235,9 @@ LProcessCharacterAdvancement:
 	sta cursorIndexAndMessageY
 	lda #$0B ;X LEARNS Y
 	sta currentMessage
-	ldx aoeTargetID
-	cpx #4
-	bcs .LCheckTypeOfConclusion
+	dec aoeTargetsRemaining
+	beq .LCheckTypeOfConclusion
+	bmi .LCheckTypeOfConclusion
 	rts
 
 .LCheckTypeOfConclusion:
@@ -212,15 +254,14 @@ LProcessCharacterAdvancement:
 	jsr L4Lsr
 	and #$0F
 	cmp #MAX_MAZE_LEVEL
-	bcs .LGameWon
+	bcs .LMarkGameComplete
 	lda #$21 ;THE MAZE AWAITS
 	sta currentMessage
 	lda #$FD
 	sta inBattle
 	rts
-.LGameWon:
-	lda #$20 ;GAME CLEAR!
-	sta currentMessage
+
+.LMarkGameComplete:
 	lda #$FE
 	sta inBattle
 	rts
