@@ -30,7 +30,7 @@ SClear:
 SSkipSeeding:
 	sta rand8
 
-	lda #$02 ;Maze level 0, party level 1
+	lda #$02 ;Maze level 0, party level 2
 	sta mazeAndPartyLevel
 
 	lda #$F8
@@ -47,9 +47,10 @@ SSkipSeeding:
 	jsr SGenerateMazeDataHotDrop
 	jsr SGenerateMazeDataHotDrop
 
-	;lda #4
-	;sta playerX
-	;sta playerY
+	lda #3
+	sta playerX
+	lda #4
+	sta playerY
 
 	;Temp testing code that will be removed much, much later
 	lda #$33
@@ -477,6 +478,11 @@ SGenerateMazeData: SUBROUTINE ;Will use the iterative algorithm I designed in or
 	lda #64
 	sta enemyHP+1 ;The number of squares left in the whole maze
 
+	lda #0
+	sta battleActions
+	sta battleActions+1
+	sta battleActions+2
+
 	lda #$10
 	sta enemyHP+3
 	lsr
@@ -647,7 +653,7 @@ SRemoveHEdge:
 	dex
 	bpl .SShiftingLoop ;Should always be true, just saves a byte over jmp
 .SAfterShifting:
-	;A now contains a decoded y value
+	;A now contains a decoded x value
 	eor #$FF
 	;A now contains all 1s, except for a 0 in the correct spot for the edge to be removed
 	and temp6

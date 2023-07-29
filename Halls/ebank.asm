@@ -528,12 +528,12 @@ EAbyssEnemies:
 
 EBossEncounters:
 	;GROUNDS BOSS 1
-	.byte $01
+	.byte $00
 	.byte $FF
 	.byte $FF
 	.byte $FF
 	;GROUNDS BOSS 2
-	.byte $01
+	.byte $00
 	.byte $FF
 	.byte $FF
 	.byte $FF
