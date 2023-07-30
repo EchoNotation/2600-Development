@@ -522,6 +522,10 @@
 7/29/23
 	-Fixed bug where player would appear in room with no exits after beating boss
 	-Maze generation now runs at an acceptable speed when transitioning out of a boss battle!
+	-Maze level actually increases when beating a boss
+	-Status effects are now cleared when exiting battle
+	-Allied spells are not blocked by spell shields
+	-Added campfire graphics
 
 TODO:
 	REQUIRES LOGIC:
@@ -529,9 +533,7 @@ TODO:
 		-Make startup screen
 		-Write enemy AI handling
 		-Write basic encounter generation
-		-Placing player and exit in new maze when it is generated
-		-Add graphics for campfire (probably a large enemy)
-		-Fix allied spells being blocked by shields
+		-Placing player, campfire, and exit in new maze when it is generated
 		-Write sound effect routines
 		-Add load a visual effect routine
 
@@ -561,10 +563,10 @@ TODO:
 			-Character advancement - 100%
 			-Mana implementation - 100%
 		-Additional maze logic
-			-Moving between floors - 45%
+			-Moving between floors - 60%
 			-Encounter generation - 65%
 				-Bosses - 50%
-			-Campfires - 95% (Need to add actual campfire enemy type)
+			-Campfires - 100%
 		-Transitioning between maze and battles - 100%
 
 		-Advanced effect system - 80% (mostly used by spells)
@@ -577,14 +579,12 @@ TODO:
 	Version 1.1 considerations:
 		-Maze input behavior:
 			-Make it so that the button enters into the menu when in maze view?
-			-Make back button move you backwards while maintaining facing direction
+			-Make back button move you backwards while maintaining facing direction??
 		-Position of enemy sprites in battle:
 			-Not all enemies are centered, create more of a "group skirmish" appearance
 			-Potentially try to center enemies more precisely?
 		-Battle system quirks:
-			-Shields block friendly magic (HEAL, TRIAGE, TRANCE, WISH, SHARP, SHIELD)
-				-This almost certainly needs to be fixed
-			-Avatars are not updated after the last logic frame for a single round
+			-Avatars are not updated after the last logic frame for a single round, or when exiting battle
 			-Being guarded reduces blight damage.
 		-Battle system improvements:
 			-Introduce random value offsets based on party level (attack and healing amounts)

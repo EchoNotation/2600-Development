@@ -577,6 +577,205 @@ ERandom: SUBROUTINE ;Ticks the random number generator when called
 	sta rand8
 	rts
 
+	ORG $EB00
+	RORG $FB00
+
+CampfireGraphics:
+	.byte %11111000
+	.byte %11111110
+	.byte %11110000
+	.byte %11011000
+	.byte %11000000
+	.byte %00111000
+	.byte %10000000
+	.byte %10000000
+	.byte %11000000
+	.byte %01000000
+	.byte %01000000
+	.byte %01100000
+	.byte %01010000
+	.byte %10000000
+	.byte %00100000
+	.byte %10010000
+	.byte %10010000
+	.byte %10000000
+	.byte %01000000
+	.byte %00100000
+	.byte %10001000
+	.byte %01010000
+	.byte %01000000
+	.byte %10000000
+	.byte %01000100
+	.byte %10000100
+	.byte %10000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00011000
+	.byte %00111111
+	.byte %01011111
+	.byte %11101111
+	.byte %11111111
+	.byte %11110001
+	.byte %11111100
+	.byte %11111110
+	.byte %10110110
+	.byte %11011101
+	.byte %01101110
+	.byte %10111111
+	.byte %10011011
+	.byte %10101101
+	.byte %10101101
+	.byte %00101010
+	.byte %01010011
+	.byte %01000011
+	.byte %01100101
+	.byte %01100101
+	.byte %11010101
+	.byte %10010001
+	.byte %10010001
+	.byte %11001011
+	.byte %01000010
+	.byte %10000100
+	.byte %10000101
+	.byte %00000101
+	.byte %10001100
+	.byte %00011000
+	.byte %00010000
+	.byte %00100000
+	.byte %11111000
+	.byte %00001100
+	.byte %00111110
+	.byte %11111111
+	.byte %00111011
+	.byte %11100111
+	.byte %11011111
+	.byte %11110111
+	.byte %11011101
+	.byte %11101101
+	.byte %01011011
+	.byte %10110101
+	.byte %11001100
+	.byte %01011001
+	.byte %11110010
+	.byte %10110010
+	.byte %10110101
+	.byte %11010001
+	.byte %10011001
+	.byte %11001100
+	.byte %10011000
+	.byte %11011001
+	.byte %10011001
+	.byte %10010101
+	.byte %00010001
+	.byte %00011001
+	.byte %00110000
+	.byte %01100001
+	.byte %01000000
+	.byte %00100001
+	.byte %00110000
+	.byte %00000000
+	.byte %01111000
+	.byte %00111111
+	.byte %00011110
+	.byte %00110111
+	.byte %01100011
+	.byte %11000000
+	.byte %00000000
+	.byte %00000001
+	.byte %00000011
+	.byte %00000010
+	.byte %00000011
+	.byte %00000111
+	.byte %00001010
+	.byte %00001011
+	.byte %00010010
+	.byte %00010001
+	.byte %00011001
+	.byte %00010001
+	.byte %00010011
+	.byte %00100001
+	.byte %00010011
+	.byte %00010001
+	.byte %00000001
+	.byte %00000010
+	.byte %00000010
+	.byte %00000001
+	.byte %01000010
+	.byte %01000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+
+CampfireColors:
+	.byte $f2
+	.byte $f0
+	.byte $f2
+	.byte $f2
+	.byte $f0
+	.byte $f0
+	.byte $f2
+	.byte $42
+	.byte $42
+	.byte $40
+	.byte $36
+	.byte $40
+	.byte $42
+	.byte $42
+	.byte $40
+	.byte $36
+	.byte $40
+	.byte $fe
+	.byte $42
+	.byte $40
+	.byte $40
+	.byte $36
+	.byte $42
+	.byte $fe
+	.byte $36
+	.byte $fe
+	.byte $40
+	.byte $40
+	.byte $36
+	.byte $40
+	.byte $fe
+	.byte $40
+	.byte $f0
+	.byte $f2
+	.byte $f0
+	.byte $f0
+	.byte $f2
+	.byte $f2
+	.byte $f0
+	.byte $40
+	.byte $36
+	.byte $42
+	.byte $40
+	.byte $42
+	.byte $40
+	.byte $36
+	.byte $40
+	.byte $40
+	.byte $42
+	.byte $38
+	.byte $40
+	.byte $36
+	.byte $fe
+	.byte $42
+	.byte $40
+	.byte $36
+	.byte $42
+	.byte $36
+	.byte $fe
+	.byte $40
+	.byte $42
+	.byte $42
+	.byte $40
+	.byte $40
+
 	ORG $EC00
 	RORG $FC00
 
@@ -872,18 +1071,173 @@ EEnemyGraphicsLowLookup: ;Stores the low bytes of the pointers to enemy graphics
 	.byte (SmallTestEnemyGraphics & $FF)
 	.byte (MediumTestEnemyGraphics & $FF)
 	.byte (LargeTestEnemyGraphics & $FF)
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte (CampfireGraphics & $FF)
+
 EEnemyGraphicsHighLookup: ;Stores the high bytes of the pointers to enemy graphics ordered by enemyID
 	.byte (SmallTestEnemyGraphics >> 8 & $FF)
 	.byte (MediumTestEnemyGraphics >> 8 & $FF)
 	.byte (LargeTestEnemyGraphics >> 8 & $FF)
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte (CampfireGraphics >> 8 & $FF)
+
 EEnemyColorsLowLookup: ;Stores the low bytes of the pointers to enemy color information ordered by enemyID
 	.byte (SmallTestEnemyColors & $FF)
 	.byte (MediumTestEnemyColors & $FF)
 	.byte (LargeTestEnemyColors & $FF)
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte (CampfireColors & $FF)
+
 EEnemyColorsHighLookup: ;Stores the high bytes of the pointers to enemy color information ordered by enemyID
 	.byte (SmallTestEnemyColors >> 8 & $FF)
 	.byte (MediumTestEnemyColors >> 8 & $FF)
 	.byte (LargeTestEnemyColors >> 8 & $FF)
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte (CampfireColors >> 8 & $FF)
 
 	ORG $EF00
 	RORG $FF00
@@ -892,6 +1246,42 @@ EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1
 	.byte 0
 	.byte 1
 	.byte 2
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte 2 ;Campfire
 
 	ORG $EFA3
 	RORG $EFA3

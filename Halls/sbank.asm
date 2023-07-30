@@ -37,6 +37,7 @@ SSkipSeeding:
 	sta currentInput
 	sta previousInput
 
+	;Temp testing code that will be removed much, much later
 	jsr SClearMazeData
 	jsr SGenerateMazeData
 	jsr SGenerateMazeDataHotDrop
@@ -48,12 +49,11 @@ SSkipSeeding:
 	jsr SGenerateMazeDataHotDrop
 	jsr SGenerateMazeDataHotDrop
 
-	lda #3
+	lda #0
 	sta playerX
-	lda #4
+	lda #0
 	sta playerY
 
-	;Temp testing code that will be removed much, much later
 	lda #$33
 	sta char1
 	lda #F
@@ -271,6 +271,14 @@ STryEnterCampfire:
 	bne SDidNotTriggerCampfire
 	lda #TRANSITIONING_TO_CAMPFIRE
 	jsr SSetupTransitionEffect
+	lda #$27 ;"Enemy" ID for Campfire
+	sta enemyID
+	lda #$FF
+	sta enemyID+1
+	sta enemyID+2
+	sta enemyID+3
+	ldy #3 ;LLoadEnemyHP
+	jsr SRunFunctionInLBank
 	jmp SPartyDidNotMove
 
 SMazeLogicOverscan:

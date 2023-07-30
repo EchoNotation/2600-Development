@@ -71,7 +71,12 @@ $FD THE MAZE AWAITS (next button press ends the battle, and moves to the next fl
 $FE Game completed! (player must reset)
 $FF (next button press ends the battle)
 
-
+--- ENEMY IDs ---
+$00 Small test (ZOMBIE)
+$01 Medium test (GIANT)
+$02 Large test (DRAGON)
+$27 Campfire
+$FF No enemy
 
 --- MENU IDs ---
 $80 Showing battle options to select (in battle) | Changing party positions (in maze)

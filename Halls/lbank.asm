@@ -86,9 +86,6 @@ LProcessCharacterAdvancement:
 	jmp .LCheckForNewSpells
 
 .LGoToNextFloor:
-	;Exit battle, generate new maze, position player within maze. Probably shouldn't happen from within this function, so just set a flag?
-	lda #$00
-	sta inBattle
 	lda flags
 	ora #NEED_NEW_MAZE
 	sta flags
@@ -103,7 +100,18 @@ LProcessCharacterAdvancement:
 	sta (tempPointer1),y
 	dey
 	bpl .LClearMazeLoop
-	rts
+
+	lda mazeAndPartyLevel
+	and #$0F
+	sta temp1
+	lda mazeAndPartyLevel
+	and #$F0
+	clc
+	adc #$10
+	ora temp1
+	sta mazeAndPartyLevel
+	jmp .LExitBattleViaVictory
+
 .LPartyDown:
 	lda #$FC
 	sta inBattle
@@ -122,6 +130,12 @@ LProcessCharacterAdvancement:
 	sta inBattle
 	sta currentEffect
 	sta currentBattler ;Needed for maze mode menuing
+
+	ldx #7
+.LClearBattlerStatus:
+	sta battlerStatus,x
+	dex
+	bpl .LClearBattlerStatus
 	rts
 
 .LCheckPartyXP:
@@ -1144,6 +1158,12 @@ LProcessRunning:
 	sta inBattle
 	sta currentEffect
 	sta currentBattler ;Needed for maze mode menuing
+
+	ldx #7
+.LClearStatusRun:
+	sta battlerStatus,x
+	dex
+	bpl .LClearStatusRun
 	rts
 
 LProcessGuarding:
@@ -1357,9 +1377,19 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 	lda battlerStatus,x
 	and #SHIELDED_MASK
 	bne .LHasShield
+.LAlliedSpellsNotBlocked:
 	lda #0
 	rts
 .LHasShield:
+	;Make sure that allied spells are not blocked
+	txa
+	and #$40
+	sta temp5
+	lda currentBattler
+	and #$40
+	eor temp5
+	beq .LAlliedSpellsNotBlocked
+
 	lda battlerStatus,x
 	and #TIMER_MASK
 	beq .LShieldBreaks
@@ -2044,6 +2074,42 @@ LEnemyHP:
 	.byte #10 ;Zombie
 	.byte #40 ;Giant
 	.byte #150 ;Dragon
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte 1 ;Campfire
  
 ;Format is LPFIHEPR
 ;L : Legendary (bosses), P : Physical, F : Fire, I : Ice, H : Holy, E : Electric, P : Poison, R : isRanged (prevents riposte)
