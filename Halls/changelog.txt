@@ -519,11 +519,11 @@
 7/6/23
 	-Fixed bug where ending battles through level up required more button presses than it ought to.
 	-Fixed bug where martials could still "learn" spells even though they have none
+7/29/23
+	-Fixed bug where player would appear in room with no exits after beating boss
 
 Known Bugs:
-	-Number of inputs required to exit battle is frequently one higher than intended
-		-Seems to happen regardless of whether or not a level up occurred
-	-Multiple occurence bug on 7/4/23 where the player would appear in a room with no exits after beating a boss. Not been able to reproduce it since
+	-Runtime for single maze generation instance is too long
 
 TODO:
 	REQUIRES LOGIC:
@@ -563,7 +563,7 @@ TODO:
 			-Character advancement - 100%
 			-Mana implementation - 100%
 		-Additional maze logic
-			-Moving between floors - 35%
+			-Moving between floors - 45%
 			-Encounter generation - 65%
 				-Bosses - 50%
 			-Campfires - 95% (Need to add actual campfire enemy type)
@@ -591,6 +591,7 @@ TODO:
 		-Battle system improvements:
 			-Introduce random value offsets based on party level (attack and healing amounts)
 			-Make party members gain delta HP, delta MP when leveling up
+				-If doing this, store delta values in separate tables or avoid using LGetBattlerStat
 			-Add resistances to party members?
 				-Add damage types to enemy basic attacks
 			-Consider refactoring X LOSES Y HP to X TAKES Y DMG

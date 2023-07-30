@@ -73,7 +73,7 @@ EEffectFrequency:
 	.byte #30
 	.byte #10
 	.byte #10
-	.byte #10
+	.byte #10 ;Sadge
 	.byte #30
 	.byte #4
 	.byte #30

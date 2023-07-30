@@ -234,7 +234,7 @@ MESSAGE COMPONENTS:
 25: FELL
 26: ASLEEP
 27: IS
-28: IS ON
+28: IS ON - This could be removed, as it is only used for X IS ON GUARD
 29: FADES
 2A: EXILED
 2B: GAME
@@ -243,7 +243,7 @@ MESSAGE COMPONENTS:
 2E: THE
 2F: MAZE
 30: AWAITS
-31: GUARD
+31: GUARD - This could be removed, as it is only used for X IS ON GUARD
 32: BLOCKS
 33: HP UP
 34: MP UP
@@ -317,7 +317,7 @@ SPELL LISTING
 8: CHAOS : Deals damage of a random element to each enemy, also has a chance to inflict status
 9: HEAL : Heals a single ally, removes blight instead of healing if blighted
 A: SMITE : Deals damage to target based on attack and magic power
-B: POISON : Deals physical/poison damage to target based on magic and attack
+B: POISON : Deals physical/poison damage to target based on attack and magic
 C: SHARP : Doubles attack power of ally
 D: BLIGHT : Attempts to apply poisoned status to enemy
 E: TRIAGE : Heals all allies

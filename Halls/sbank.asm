@@ -46,6 +46,7 @@ SSkipSeeding:
 	jsr SGenerateMazeDataHotDrop
 	jsr SGenerateMazeDataHotDrop
 	jsr SGenerateMazeDataHotDrop
+	jsr SGenerateMazeDataHotDrop
 
 	lda #3
 	sta playerX
@@ -361,7 +362,7 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 	lda effectCountdown
 	cmp #$0A
 	beq .SFirstGeneration
-	cmp #$3
+	cmp #$2 ;Formerly 2/3
 	bcs .SUsualGeneration
 .SPlaceObjectives
 	;Need to position player, exit, and campfire
@@ -472,12 +473,29 @@ SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate 
 SUpdateSound:
 	rts
 
+SInlineExits:
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 1
+	.byte 1
+	.byte 1
+
+SAdjacentExits:
+	.byte 0
+	.byte 0
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 0
+	.byte 0
+	.byte 0
+
 SGenerateMazeData: SUBROUTINE ;Will use the iterative algorithm I designed in order to generate a maze of size specified by #MAZE_WIDTH.
 							 ;Make sure to clear maze data before use.
 	;battleActions will act as X, battleActions+1 as Y, battleActions+2 as direction, battleActions+3 as squaresRemaining, enemyHP+3 as the squaresRemaining generator
-	lda #64
-	sta enemyHP+1 ;The number of squares left in the whole maze
-
 	lda #0
 	sta battleActions
 	sta battleActions+1
@@ -488,20 +506,15 @@ SGenerateMazeData: SUBROUTINE ;Will use the iterative algorithm I designed in or
 	lsr
 	sta battleActions+3
 SGenerateMazeDataHotDrop:
+	lda #7
+	sta enemyHP+1 ;The number of squares to do this iteration
 .SMazeGenerationLoop:
-	;This code is reached exactly 64 times when generating a maze
-
-	lda #1
-	sta tempPointer4 ;inlineExit
-	sta tempPointer5 ;adjacentExit
-
-	ldx battleActions
-	ldy battleActions+1
-
-	lda battleActions+3
+	lda battleActions+3 ;squaresRemaining
 	cmp #1
 	bne .SNotCorner
-	lda battleActions+2
+	ldx battleActions ;X
+	ldy battleActions+1 ;Y
+	lda battleActions+2 ;direction
 	beq .SEastCorner
 	cmp #2
 	beq .SWestCorner
@@ -520,29 +533,15 @@ SGenerateMazeDataHotDrop:
 
 .SNotCorner:
 	jsr SRandom ;The new random number is in A after returning
-	and #$01
-	bne .SSkipInlineExit
-	sta tempPointer4 ;A is 0
-.SSkipInlineExit:
-	jsr SRandom
-	and #$01
-	bne .SSkipAdjacentExit
-	sta tempPointer5 ;A is 0
-.SSkipAdjacentExit
-	and tempPointer4
-	beq .SAtLeast1Exit
-	jsr SRandom
-	and #$01
-	beq .SSaveInline
-.SSaveAdjacent:
-	lda #0
+	and #$07
+	tay
+	lda SAdjacentExits,y
 	sta tempPointer5
-	beq .SAtLeast1Exit
-.SSaveInline:
-	sta tempPointer4
-.SAtLeast1Exit
-	lda tempPointer4
+	lda SInlineExits,y
+
 	bne .SNoInlineExit
+	ldx battleActions
+	ldy battleActions+1
 	lda battleActions+2
 	beq .SEastInline
 	cmp #$1
@@ -603,8 +602,6 @@ SGenerateMazeDataHotDrop:
 	lsr
 	sta battleActions+3
 .SSkipTurning
-	ldx battleActions
-	ldy battleActions+1
 	lda battleActions+2
 	beq .SMoveEast
 	cmp #$1
@@ -612,22 +609,18 @@ SGenerateMazeDataHotDrop:
 	cmp #$2
 	beq .SMoveWest
 .SMoveNorth:
-	dey
+	dec battleActions+1
 	bpl .SNextIteration
 .SMoveEast:
-	inx
+	inc battleActions
 	bpl .SNextIteration
 .SMoveSouth:
-	iny
+	inc battleActions+1
 	bpl .SNextIteration
 .SMoveWest:
-	dex
+	dec battleActions
 .SNextIteration:
-	stx battleActions
-	sty battleActions+1
 	dec enemyHP+1
-	lda enemyHP+1
-	and #$07
 	beq .SMazeChunkFinished
 	jmp .SMazeGenerationLoop
 .SMazeChunkFinished
