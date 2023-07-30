@@ -521,17 +521,15 @@
 	-Fixed bug where martials could still "learn" spells even though they have none
 7/29/23
 	-Fixed bug where player would appear in room with no exits after beating boss
-
-Known Bugs:
-	-Runtime for single maze generation instance is too long
+	-Maze generation now runs at an acceptable speed when transitioning out of a boss battle!
 
 TODO:
 	REQUIRES LOGIC:
-		-Fix runtime issue with generating new mazes
 		-Optimize R bank somehow, in order to add some more messages and hopefully support the startup screen
 		-Make startup screen
 		-Write enemy AI handling
 		-Write basic encounter generation
+		-Placing player and exit in new maze when it is generated
 		-Add graphics for campfire (probably a large enemy)
 		-Fix allied spells being blocked by shields
 		-Write sound effect routines
@@ -567,7 +565,7 @@ TODO:
 			-Encounter generation - 65%
 				-Bosses - 50%
 			-Campfires - 95% (Need to add actual campfire enemy type)
-		-Transitioning between maze and battles - 90%
+		-Transitioning between maze and battles - 100%
 
 		-Advanced effect system - 80% (mostly used by spells)
 			-No routine for setting a visual effect

@@ -627,30 +627,26 @@ SGenerateMazeDataHotDrop:
 .SMazeComplete:
 	rts
 
-SRemoveVEdge: SUBROUTINE ;Removes the specified vertical edge from the maze, using X and Y as x and y.
-	lda #vEdges
-	bne .SRemoveEdge ;RAM is located between $80 and $FF, so this is always true, and saves a byte over jmp
-SRemoveHEdge:
-	lda #hEdges
-.SRemoveEdge:
-	sta tempPointer1
-	lda #0
-	sta tempPointer1+1
-	lda (tempPointer1),y ;Gets the relevant row of vertical edges
-	sta temp6
-	lda #1
-.SShiftingLoop:
-	cpx #0
-	beq .SAfterShifting
-	asl
-	dex
-	bpl .SShiftingLoop ;Should always be true, just saves a byte over jmp
-.SAfterShifting:
-	;A now contains a decoded x value
-	eor #$FF
-	;A now contains all 1s, except for a 0 in the correct spot for the edge to be removed
-	and temp6
-	sta (tempPointer1),y
+SEdgeRemoverLookup:
+	.byte $FE
+	.byte $FD
+	.byte $FB
+	.byte $F7
+	.byte $EF
+	.byte $DF
+	.byte $BF
+	.byte $7F
+
+SRemoveHEdge: SUBROUTINE
+	lda hEdges,y
+	and SEdgeRemoverLookup,x
+	sta hEdges,y
+	rts
+
+SRemoveVEdge: SUBROUTINE
+	lda vEdges,y
+	and SEdgeRemoverLookup,x
+	sta vEdges,y
 	rts
 
 SClearMazeData: SUBROUTINE ;Sets all the vertical and horizontal edges of the maze to 1 (walls).
