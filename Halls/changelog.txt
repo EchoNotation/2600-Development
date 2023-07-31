@@ -526,10 +526,19 @@
 	-Status effects are now cleared when exiting battle
 	-Allied spells are not blocked by spell shields
 	-Added campfire graphics
+7/30/23
+	-Massive messaging relocation to E bank in order to support the addition of more in-battle text
+		-Successful transplant! Even avoiding tracking class, spell, and enemy colors in multiple banks
+		-There should now also be enough room for the startup screen rendering to be handled in the R bank.
 
 TODO:
+	Text preferences:
+		INTO
+		CASTLE
+		CRYPT
+		ABYSS
+
 	REQUIRES LOGIC:
-		-Optimize R bank somehow, in order to add some more messages and hopefully support the startup screen
 		-Make startup screen
 		-Write enemy AI handling
 		-Write basic encounter generation
@@ -593,4 +602,5 @@ TODO:
 			-Add resistances to party members?
 				-Add damage types to enemy basic attacks
 			-Consider refactoring X LOSES Y HP to X TAKES Y DMG
+			-Refactor THE MAZE AWAITS to INTO THE CASTLE/CRYPT/ABYSS
 		-Hear a "roar" when getting near the boss?

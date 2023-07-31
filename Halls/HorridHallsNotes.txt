@@ -207,7 +207,7 @@ MESSAGE COMPONENTS:
 05: SHOOTS
 06: SLAMS
 07: BITES
-08: RUSHES
+08: RUSHES - SLICES?
 09: CASTS
 0A: HEALS
 0B: LOSES
@@ -232,7 +232,7 @@ MESSAGE COMPONENTS:
 1E: TO RUN
 1F: NO
 20: EFFECT
-21: CANNOT
+21: CANNOT - This could be removed, message could be changed to NO ESCAPE instead of X CANNOT ESCAPE
 22: ESCAPE
 23: GUARDS
 24: ATTACK
@@ -240,7 +240,7 @@ MESSAGE COMPONENTS:
 26: ASLEEP
 27: IS
 28: IS ON - This could be removed, as it is only used for X IS ON GUARD
-29: FADES
+29: FADES - This could be removed, message could be changed to X SHIELD DOWN instead of X SHIELD FADES
 2A: EXILED
 2B: GAME
 2C: CLEAR

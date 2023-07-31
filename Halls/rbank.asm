@@ -92,7 +92,7 @@ RGoToDrawMazeNoFire:
 	;40 cycles between sta WSYNC and stx PF2 in order to maintain proper maze functionality
 
 RStoreFireMazeHeight:
-	sta fireMazeHeight
+	sta fireMazeHeightAndMessageLine
 	lda #3
 	sta charIndex
 RDrawMazePreFire:
@@ -119,7 +119,7 @@ RDrawMazePreFire:
 	lda #3
 	sta charIndex
 	dey
-	cpy fireMazeHeight
+	cpy fireMazeHeightAndMessageLine
 	bcs RDrawMazePreFire
 	jmp (tempPointer1)
 RDrawMazeFarFire:
@@ -539,39 +539,37 @@ RColorLoaded:
 	jmp RDrawBattleMenuLoop
 
 RShowSpecialOptions:
-	lda menuLines,x
-	and #$1F
-	tay
-	lda RSpecialLines,y
-	sta tempPointer1
-	lda #(RSpellsText >> 8 & $FF)
-	sta tempPointer1+1
 	lda #TEXT_HIGHLIGHTED_COLOR
 	cpx highlightedLineAndSteps
 	beq RUseSpecialColor
 	lda #TEXT_COLOR
 RUseSpecialColor:
-	jsr RDrawBattleMenuLine
+	sta COLUP0
+	sta COLUP1
+	lda menuLines,x
+	and #$1F
+	clc
+	adc #52 ;The number of string constants by ID between STABS and Empty (this is done in order to avoid reentering all the already constructed messages)
+	tax
+	jsr RLoadString
+	jsr RSetTextPointers
+	jsr RDrawText
 	jmp RDrawBattleMenuLoop
 
 RDrawBattleText:
 	lda #0
-	sta WSYNC
-	jsr RSetBattleMessage
-	jsr RSetTextPointers
-	jsr RDrawText
+	sta fireMazeHeightAndMessageLine
 
-	lda #1
+RDrawBattleTextLoop:
 	sta WSYNC
 	jsr RSetBattleMessage
+RAfterSettingBattleMessage:
 	jsr RSetTextPointers
 	jsr RDrawText
-
-	lda #2
-	sta WSYNC
-	jsr RSetBattleMessage
-	jsr RSetTextPointers
-	jsr RDrawText
+	inc fireMazeHeightAndMessageLine
+	lda fireMazeHeightAndMessageLine
+	cmp #3
+	bcc RDrawBattleTextLoop
 
 RPostDrawingBattleText:
 	sta WSYNC
@@ -828,7 +826,7 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	sty COLUP0
 	sty COLUP1
 	clc
-	adc currentMessage 
+	adc currentMessage
 	adc currentMessage
 	adc currentMessage ;Calculate the correct offset
 	tax
@@ -856,16 +854,8 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	jmp .RHPCount
 
 .RGeneralMessageStructure:
-	lda RMessagesLowLookup,x
-	sta tempPointer1
-	lda #(RStabsText >> 8 & $FF)
-	cpx #$17
-	bcc .RNormalMessagePage
-.ROtherMessagePage:
-	lda #(RToRunText >> 8 & $FF)
-.RNormalMessagePage:
-	sta tempPointer1+1
-	jmp .RSetTempVariables
+	jsr RLoadString
+	rts
 .RSourceBattlerName:
 	ldx currentBattler
 	cpx #4
@@ -1506,402 +1496,8 @@ RShiftText:
 	.byte #T
 	.byte #EMPTY
 
-RWastesText:
-	.byte #W
-	.byte #A
-	.byte #S
-	.byte #T
-	.byte #E ;Shared, saving 1 byte
-RStabsText:
-	.byte #S
-	.byte #T
-	.byte #A
-	.byte #B
-	.byte #S
-	.byte #EMPTY
-RShootsText:
-	.byte #S
-	.byte #H
-	.byte #O
-	.byte #O
-	.byte #T
-	.byte #S
-RBashesText:
-	.byte #B 
-	.byte #A
-	.byte #S
-	.byte #H
-	.byte #E
-	.byte #S
-RBitesText:
-	.byte #B
-	.byte #I
-	.byte #T
-	.byte #E
-	.byte #S
-	.byte #EMPTY
-RRushesText:
-	.byte #R
-	.byte #U
-	.byte #S
-	.byte #H
-	.byte #E
-	.byte #S
-RCastsText:
-	.byte #C
-	.byte #A
-	.byte #S
-	.byte #T
-	.byte #S
-	.byte #EMPTY
-RHealsText:
-	.byte #H
-	.byte #E
-	.byte #A
-	.byte #L
-	.byte #S
-	.byte #EMPTY
-RLosesText:
-	.byte #L
-	.byte #O
-	.byte #S
-	.byte #E
-	.byte #S
-	.byte #EMPTY
-RMissesText:
-	.byte #M
-	.byte #I
-	.byte #S
-	.byte #S
-	.byte #E
-	.byte #S
-RLevelsText:
-	.byte #L
-	.byte #E
-	.byte #V
-	.byte #E
-	.byte #L
-	.byte #S
-RUpText:
-	.byte #U
-	.byte #P
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-RMovesText:
-	.byte #M
-	.byte #O
-	.byte #V
-	.byte #E
-	.byte #S
-	.byte #EMPTY
-RBacksText:
-	.byte #B
-	.byte #A
-	.byte #C
-	.byte #K
-	.byte #S
-	.byte #EMPTY
-RLearnsText:
-	.byte #L
-	.byte #E
-	.byte #A
-	.byte #R
-	.byte #N
-RShieldMessageText:
-	.byte #S
-	.byte #H
-	.byte #I
-	.byte #E
-	.byte #L
-	.byte #D
-RHasAText:
-	.byte #H
-	.byte #A
-	.byte #S
-	.byte #EMPTY
-	.byte #A
-	.byte #EMPTY
-RPartyText:
-	.byte #P
-	.byte #A
-	.byte #R
-	.byte #T
-	.byte #Y
-	.byte #EMPTY
-RDownText:
-	.byte #D
-	.byte #O
-	.byte #W
-	.byte #N
-	.byte #EMPTY
-	.byte #EMPTY
-RAwayText:
-	.byte #A
-	.byte #W
-	.byte #A
-	.byte #Y
-	.byte #EMPTY
-	.byte #EMPTY
-RWakesText:
-	.byte #W
-	.byte #A
-	.byte #K
-	.byte #E
-	.byte #S
-	.byte #EMPTY
-RWasText:
-	.byte #W
-	.byte #A
-	.byte #S
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-RCuredText:
-	.byte #C
-	.byte #U
-	.byte #R
-	.byte #E
-	.byte #D
-	.byte #EMPTY
-
 	ORG $CA00 ;Used to hold more text data
 	RORG $FA00
-
-RFleesText:
-	.byte #F
-	.byte #L
-	.byte #E
-	.byte #E
-	.byte #S
-	.byte #EMPTY
-RWinsText:
-	.byte #W
-	.byte #I
-	.byte #N
-	.byte #S
-	.byte #EMPTY
-	.byte #EMPTY
-RTriesText:
-	.byte #T
-	.byte #R
-	.byte #I
-	.byte #E
-	.byte #S
-	.byte #EMPTY
-RToRunText:
-	.byte #T
-	.byte #O
-	.byte #EMPTY
-	.byte #R
-	.byte #U
-	.byte #N
-RNoText:
-	.byte #N
-	.byte #O
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-REffectText:
-	.byte #E
-	.byte #F
-	.byte #F
-	.byte #E
-	.byte #C
-	.byte #T
-RCannotText:
-	.byte #C
-	.byte #A
-	.byte #N
-	.byte #N
-	.byte #O
-	.byte #T
-REscapeText:
-	.byte #E
-	.byte #S
-	.byte #C
-	.byte #A
-	.byte #P
-RExiledText:
-	.byte #E
-	.byte #X
-	.byte #I
-	.byte #L
-	.byte #E
-	.byte #D
-RFadesText:
-	.byte #F
-	.byte #A
-	.byte #D
-	.byte #E
-	.byte #S
-	.byte #EMPTY
-RIsOnText:
-	.byte #I
-	.byte #S
-	.byte #EMPTY
-	.byte #O
-	.byte #N
-	.byte #EMPTY
-RIsText:
-	.byte #I
-	.byte #S
-REmptyText:
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-RAttackText:
-	.byte #A
-	.byte #T
-	.byte #T
-	.byte #A
-	.byte #C
-	.byte #K
-RGuardsText:
-	.byte #G
-	.byte #U
-	.byte #A
-	.byte #R
-	.byte #D
-	.byte #S
-RAsleepText:
-	.byte #A
-	.byte #S
-	.byte #L
-	.byte #E
-	.byte #E
-	.byte #P
-RFellText:
-	.byte #F
-	.byte #E
-	.byte #L
-	.byte #L
-	.byte #EMPTY
-	.byte #EMPTY
-RSpellsText:
-	.byte #S
-	.byte #P
-	.byte #E
-	.byte #L
-	.byte #L
-	.byte #S
-RKnownText:
-	.byte #K
-	.byte #N
-	.byte #O
-	.byte #W
-	.byte #N
-	.byte #EMPTY
-RGameText:
-	.byte #G
-	.byte #A
-	.byte #M
-	.byte #E
-	.byte #EMPTY
-	.byte #EMPTY
-ROverText:
-	.byte #O
-	.byte #V
-	.byte #E
-	.byte #R
-	.byte #EMPTY
-	.byte #EMPTY
-RClearText:
-	.byte #C
-	.byte #L
-	.byte #E
-	.byte #A
-	.byte #R
-	.byte #EMPTY
-RTheText:
-	.byte #T
-	.byte #H
-	.byte #E
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-RMazeText:
-	.byte #M
-	.byte #A
-	.byte #Z
-	.byte #E
-	.byte #EMPTY
-	.byte #EMPTY
-RAwaitsText:
-	.byte #A
-	.byte #W
-	.byte #A
-	.byte #I
-	.byte #T
-	.byte #S
-RGuardMessageText:
-	.byte #G
-	.byte #U
-	.byte #A
-	.byte #R
-	.byte #D
-	.byte #EMPTY
-RBlocksText:
-	.byte #B
-	.byte #L
-	.byte #O
-	.byte #C
-	.byte #K
-	.byte #S
-RHPUpText:
-	.byte #H
-	.byte #P
-	.byte #EMPTY
-	.byte #U
-	.byte #P
-	.byte #EMPTY
-RMPUpText:
-	.byte #M
-	.byte #P
-	.byte #EMPTY
-	.byte #U
-	.byte #P
-	.byte #EMPTY
-RFullyText:
-	.byte #F
-	.byte #U
-	.byte #L
-	.byte #L
-	.byte #Y
-	.byte #EMPTY
-RMixedText:
-	.byte #M
-	.byte #I
-	.byte #X
-	.byte #E
-	.byte #D
-	.byte #EMPTY
-RStatusText:
-	.byte #S
-	.byte #T
-	.byte #A
-	.byte #T
-	.byte #U
-	.byte #S
-RCampText:
-	.byte #C
-	.byte #A
-	.byte #M
-	.byte #P
-	.byte #EMPTY
-	.byte #EMPTY
-RLeaveText:
-	.byte #L
-	.byte #E
-	.byte #A
-	.byte #V
-	.byte #E
-	.byte #EMPTY
 
 RClassColors:
 	.byte $8A ;Knight
@@ -1969,60 +1565,6 @@ REnemyColorLookup:
 
 	ORG $CB00 ;Used to hold miscellaneous data/lookup tables and text
 	RORG $FB00
-
-RMessagesLowLookup:
-	.byte (RStabsText & $FF) ;Rogue/Paladin
-	.byte (RShootsText & $FF) ;Wizard/Ranger
-	.byte (RBashesText & $FF) ;Cleric
-	.byte (RBitesText & $FF)
-	.byte (RRushesText & $FF) ;Knight 
-	.byte (RCastsText & $FF)
-	.byte (RHealsText & $FF)
-	.byte (RLosesText & $FF)
-	.byte (RMissesText & $FF)
-	.byte (RLevelsText & $FF)
-	.byte (RUpText & $FF)
-	.byte (RLearnsText & $FF)
-	.byte (RMovesText & $FF)
-	.byte (RBacksText & $FF)
-	.byte (RDownText & $FF)
-	.byte (RAwayText & $FF)
-	.byte (RWastesText & $FF)
-	.byte (RWasText & $FF)
-	.byte (RCuredText & $FF)
-	.byte (RWakesText & $FF)
-	.byte (RHasAText & $FF)
-	.byte (RShieldMessageText & $FF)
-	.byte (RPartyText & $FF)
-	.byte (RFleesText & $FF)
-	.byte (RWinsText & $FF)
-	.byte (RTriesText & $FF)
-	.byte (RToRunText & $FF)
-	.byte (RNoText & $FF)
-	.byte (REffectText & $FF)
-	.byte (RCannotText & $FF)
-	.byte (REscapeText & $FF)
-	.byte (RGuardsText & $FF)
-	.byte (RAttackText & $FF)
-	.byte (RFellText & $FF)
-	.byte (RAsleepText & $FF)
-	.byte (RIsText & $FF)
-	.byte (RIsOnText & $FF)
-	.byte (RFadesText & $FF)
-	.byte (RExiledText & $FF)
-	.byte (RGameText & $FF)
-	.byte (RClearText & $FF)
-	.byte (ROverText & $FF)
-	.byte (RTheText & $FF)
-	.byte (RMazeText & $FF)
-	.byte (RAwaitsText & $FF)
-	.byte (RGuardMessageText & $FF)
-	.byte (RBlocksText & $FF)
-	.byte (RHPUpText & $FF)
-	.byte (RMPUpText & $FF)
-	.byte (RFullyText & $FF)
-	.byte (RMixedText & $FF)
-	.byte (RStatusText & $FF)
 
 RSpellTextLookupTable:
 	.byte (RBackText & $FF)
@@ -2211,14 +1753,6 @@ RCharacterHighLookupTable: ;Contains the high bytes of the pointers to all the c
 	.byte (RNumber7 >> 8 & $FF)
 	.byte (RNumber8 >> 8 & $FF)
 	.byte (RNumber9 >> 8 & $FF)
-
-RSpecialLines:
-	.byte (REmptyText & $FF)
-	.byte (RNoText & $FF)
-	.byte (RSpellsText & $FF)
-	.byte (RKnownText & $FF)
-	.byte (RCampText & $FF)
-	.byte (RLeaveText & $FF)
 
 RPartyPositionMasks:
 	.byte $01
@@ -3173,6 +2707,19 @@ RFarFire:
 	.byte %00111110 ;9th
 	.byte %11001101 ;6th
 	.byte %01011010 ;3rd
+
+	ORG $CFB0
+	RORG $FFB0
+
+RLoadString:
+	sta $1FF8 ;Go to bank 2
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	rts
 
 	ORG $CFC0
 	RORG $FFC0
