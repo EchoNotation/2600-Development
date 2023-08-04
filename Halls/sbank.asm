@@ -37,8 +37,10 @@ SSkipSeeding:
 	sta currentInput
 	sta previousInput
 
-	;Temp testing code that will be removed much, much later
 	jsr SClearMazeData
+
+#if BUILD_DEBUG
+	;Temp testing code that will be removed much, much later
 	jsr SGenerateMazeData
 	jsr SGenerateMazeDataHotDrop
 	jsr SGenerateMazeDataHotDrop
@@ -120,6 +122,7 @@ SSkipSeeding:
 	sta hp4
 	lda #$04
 	sta mp4
+#endif
 
 	ldy #2 ;Subroutine ID for LUpdateAvatars
 	jsr SRunFunctionInLBank
@@ -132,7 +135,7 @@ SSkipSeeding:
 	;sta currentMenu
 	lda #$FF
 	;sta hasAction
-
+	sta currentMenu
 	sta aoeValueAndCampfireControl
 	;sta enemyID+1
 	;sta enemyID+2
@@ -168,6 +171,9 @@ SStartOfFrame:
 
 	lda inBattle
 	bne SBattleLogicVBlank ;Skip this logic if we are not in maze mode...
+	lda currentMenu
+	cmp #$FF
+	beq SWaitForVblankTimer ;Skip all VBlank logic if on the setup screen
 
 SMazeLogicVBlank:
 	jsr SUpdateCampfireRendering
@@ -282,6 +288,10 @@ STryEnterCampfire:
 	jmp SPartyDidNotMove
 
 SMazeLogicOverscan:
+	lda currentMenu
+	cmp #$FF
+	beq SSetupLogicOverscan
+SMazeLogicWithoutSetupCheck:
 	lda flags
 	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)
 	bne SPartyDidNotMove ;Party cannot move if in a transition
@@ -326,6 +336,34 @@ SPartyDidNotMove:
 	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)
 	beq SNotTransitioning
 	jsr SPerformTransitionLogic
+	jmp SWaitForOverscanTimer
+
+SSetupLogicOverscan:
+	lda currentInput
+	and #$08
+	beq STryStartGame
+	jsr SMoveSetupCursor
+	jsr SUpdateBallPosition
+	jsr SCheckCursorChange
+
+	jmp SWaitForOverscanTimer
+
+STryStartGame:
+	ldy cursorIndexAndMessageY
+	cpy #24 ;The ready button
+	bne SWaitForOverscanTimer
+	;If here, that means that the button was pressed when on the ready option
+	lda #NEED_NEW_MAZE
+	ora flags
+	sta flags
+	lda #0
+	sta currentMenu
+	lda #TRANSITIONING_TO_MAZE
+	jsr SSetupTransitionEffect
+	lda #$0A
+	sta effectCountdown
+	dec effectCounter
+	jmp SMazeLogicWithoutSetupCheck
 
 SNotTransitioning:
 
@@ -335,6 +373,154 @@ SWaitForOverscanTimer:
 
 	sta WSYNC
 	jmp SStartOfFrame
+
+SMoveSetupCursor: SUBROUTINE
+	lda currentInput
+	cmp previousInput
+	beq .SReturn
+	lda currentInput
+	bpl .SRightPressed
+	asl
+	bpl .SLeftPressed
+	rts
+.SRightPressed:
+	ldy cursorIndexAndMessageY
+	cpy #24
+	beq .SReturn
+	iny
+	sty cursorIndexAndMessageY
+	rts
+.SLeftPressed:
+	ldy cursorIndexAndMessageY
+	beq .SReturn
+	dey
+	sty cursorIndexAndMessageY
+.SReturn
+	rts
+
+SCheckCursorChange: SUBROUTINE
+	lda #0
+	sta temp5
+	sta temp6
+	ldy cursorIndexAndMessageY
+	cpy #24
+	bcs .SReturn ;Just return if on the ready button
+	lda currentInput
+	cmp previousInput
+	beq .SReturn
+	ldy enemyID ;The ID of the party member who's data is being modified
+	and #UP_MASK
+	beq .SUpPressed
+	lda currentInput
+	and #DOWN_MASK
+	beq .SDownPressed
+.SReturn:
+	rts
+.SDownPressed:
+	lda #1
+	ldx enemyID+2
+	beq .SIncrementClass
+.SIncrementName:
+	sta temp5
+	bne .SApplyDelta
+.SIncrementClass:
+	sta temp6
+	beq .SApplyDelta ;sta does not affect processor flags
+.SUpPressed:
+	lda #$FF
+	ldx enemyID+2
+	beq .SDecrementClass
+.SDecrementName:
+	sta temp5
+	bne .SApplyDelta
+.SDecrementClass:
+	sta temp6
+.SApplyDelta:
+.SApplyNameDelta:
+	ldx enemyID+2
+	dex
+	lda SNameLocations,x
+	sta tempPointer1
+	lda #0
+	sta tempPointer1+1
+	lda (tempPointer1),y
+	clc
+	adc temp5
+	bmi .SNameUnderflow
+	cmp #27
+	bcs .SNameOverflow
+.SStoreName:
+	sta (tempPointer1),y
+	jmp .SApplyClassDelta
+.SNameOverflow:
+	lda #0
+	beq .SStoreName
+.SNameUnderflow:
+	lda #26
+	bne .SStoreName
+.SApplyClassDelta:
+	lda char1,y
+	and #$0F
+	clc
+	adc temp6
+	bmi .SClassUnderflow
+	cmp #6
+	bcs .SClassOverflow
+.SStoreClass:
+	sta temp1
+	lda char1,y
+	and #$F0
+	ora temp1
+	sta char1,y
+	rts
+.SClassOverflow:
+	lda #0
+	beq .SStoreClass
+.SClassUnderflow:
+	lda #5
+	bne .SStoreClass
+
+SNameLocations:
+	.byte (name1)
+	.byte (name2)
+	.byte (name3)
+	.byte (name4)
+	.byte (name5)
+
+SBallFineCoarsePositions:
+	.byte $F4
+	.byte $65
+	.byte $E5
+	.byte $56
+	.byte $D6
+	.byte $47
+
+SUpdateBallPosition: SUBROUTINE
+	lda #0
+	sta enemyID ;Used for which line the cursor should appear on
+	lda cursorIndexAndMessageY
+	cmp #24
+	beq .SOnReadyButton
+.SPlaceBallLoop:
+	sec
+	sbc #6
+	bmi .SExitLoop
+	inc enemyID
+	bpl .SPlaceBallLoop
+.SExitLoop:
+	clc
+	adc #6
+	tay
+	lda SBallFineCoarsePositions,y
+	sta enemyID+1
+	sty enemyID+2 ;The x id of the character that is being changed
+	rts
+.SOnReadyButton:
+	lda #$E5
+	sta enemyID+1
+	lda #4
+	sta enemyID
+	rts
 
 SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each transition based on transition type.
 	cmp #TRANSITIONING_TO_BATTLE

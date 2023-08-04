@@ -494,28 +494,13 @@ EGenerateEncounter: SUBROUTINE ;Sets the enemyIDs to be an appropriate battle fo
 	sta enemyID+3
 	rts
 
-	;TODO figure this out
 	jsr ERandom
 	and #$03
 	tax
 	inx 
 	stx temp1 ;Number of enemies to put in this encounter (1-4)
-	lda EEnemyCounts,y
-	sta temp2 ;Number of unique enemies that can randomly appear on this floor
-.EGenerateEncounterOuterLoop:
-	jsr ERandom
-.EGenerateEncounterInnerLoop:
-	sec
-	sbc temp2
-
-
+	
 	rts
-
-EEnemyCounts:
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
 
 EGroundsEnemies:
 	.byte $00
@@ -603,6 +588,10 @@ ELoadString: SUBROUTINE ;Copies the string of ID X into temp1-temp6
 	jmp EAfterLoadingString
 
 EMessagesLowLookup:
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
 	.byte (EStabsText & $FF) ;Rogue/Paladin
 	.byte (EShootsText & $FF) ;Wizard/Ranger
 	.byte (EBashesText & $FF) ;Cleric
@@ -661,8 +650,16 @@ EMessagesLowLookup:
 	.byte (EKnownText & $FF)
 	.byte (ECampText & $FF)
 	.byte (ELeaveText & $FF)
+	.byte (EFormText & $FF)
+	.byte (EYourText & $FF)
+	.byte (ETeamText & $FF)
+	.byte (EReadyText & $FF)
 
 EMessagesHighLookup:
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
 	.byte (EStabsText >> 8 & $FF) ;Rogue/Paladin
 	.byte (EShootsText >> 8 & $FF) ;Wizard/Ranger
 	.byte (EBashesText >> 8 & $FF) ;Cleric
@@ -721,6 +718,10 @@ EMessagesHighLookup:
 	.byte (EKnownText >> 8 & $FF)
 	.byte (ECampText >> 8 & $FF)
 	.byte (ELeaveText >> 8 & $FF)
+	.byte (EFormText >> 8 & $FF)
+	.byte (EYourText >> 8 & $FF)
+	.byte (ETeamText >> 8 & $FF)
+	.byte (EReadyText >> 8 & $FF)
 
 	ORG $E400
 	RORG $F400
@@ -1123,7 +1124,32 @@ ELeaveText:
 	.byte #A
 	.byte #V
 	.byte #E
+EFormText:
 	.byte #EMPTY
+	.byte #F
+	.byte #O
+	.byte #R
+	.byte #M
+EYourText:
+	.byte #EMPTY
+	.byte #Y
+	.byte #O
+	.byte #U
+	.byte #R
+ETeamText:
+	.byte #EMPTY
+	.byte #T
+	.byte #E
+	.byte #A
+	.byte #M
+	.byte #EMPTY
+EReadyText:
+	.byte #R
+	.byte #E
+	.byte #A
+	.byte #D
+	.byte #Y
+	.byte EMPTY
 
 	ORG $E700
 	RORG $F700

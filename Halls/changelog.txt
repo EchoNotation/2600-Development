@@ -530,13 +530,25 @@
 	-Massive messaging relocation to E bank in order to support the addition of more in-battle text
 		-Successful transplant! Even avoiding tracking class, spell, and enemy colors in multiple banks
 		-There should now also be enough room for the startup screen rendering to be handled in the R bank.
+	-Lots of design work around enemy archetypes and names
+7/31/23
+	-Started work on the startup screen kernel
+8/2/23
+	-Redid the font with the drawing tool. Not added into game yet.
+		-Also drew an inverted version of the font for potential use on the setup screen
+	-Added BUILD_DEBUG switch for debugging use once the setup screen is fully realized
+	-Being on the setup screen no longer runs all the game logic as if in the maze view
+	-Added logic allowing the player to mostly start the game
+	-Experimenting with ball-style logic for the cursor.
+		-How to show this with the READY/PLAY button?
+8/3/23
+	-Added ability for the player to change their party member's names and classes through the setup screen
+		-Might be really obnoxious on controller though
+	-Added underline behavior for the READY/PLAY button, which looks pretty nice
+	-Corrected message/string loading index discrepancy
 
 TODO:
-	Text preferences:
-		INTO
-		CASTLE
-		CRYPT
-		ABYSS
+	-Last party member learning a spell was interrupted by THE MAZE AWAITS?
 
 	REQUIRES LOGIC:
 		-Make startup screen
@@ -547,9 +559,11 @@ TODO:
 		-Add load a visual effect routine
 
 	DOESN'T REQUIRE LOGIC:
+		-Add more text & messages
 		-Create all enemy graphics
 		-Create all enemy AI tables
 		-Create all visual effects
+			-Make effect visualizer?
 		-Create all sound effects
 			-Make sound effect tracker?
 

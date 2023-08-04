@@ -12,9 +12,15 @@ RMainPicture:
 	stx VBLANK ;Disable blanking
 
 	;Draw picture to the screen
+	lda currentMenu
+	cmp #$FF
+	beq RGoToRenderSetupScreen
 	lda inBattle
 	beq RRenderMazeView
 	jmp RBattleRendering
+
+RGoToRenderSetupScreen
+	jmp RRenderSetupScreen
 
 RRenderMazeView:
 RPlaceCompass:
@@ -612,7 +618,116 @@ RAfterRendering:
 	sta VBLANK ;Enable blanking
 	jmp RGoToOverscan
 
+RRenderSetupScreen:
+	ldx #25
+RWaitToDrawSetupScreenLoop:
+	sta WSYNC
+	dex
+	bne RWaitToDrawSetupScreenLoop
 
+	lda enemyID+1
+	and #$F0
+	sta HMBL
+	lda enemyID+1
+	and #$0F
+	tay
+.RWaitToPlaceBallLoop:
+	dey
+	bne .RWaitToPlaceBallLoop
+	sta RESBL
+
+	lda #SETUP_CURSOR_COLOR
+	sta COLUPF
+
+	sta WSYNC
+	ldx #$03 ;Triplicate
+	stx NUSIZ0 ;Set both duplication registers to triplicate the sprites.
+	stx NUSIZ1
+	stx VDELP0
+	stx VDELP1
+
+	ldx #$10 ;Moves one color clock to the left.
+
+	;Need some sort of delay here in order to more or less center this data.
+	lda #0
+	sta GRP0
+	jsr RSpinWheels
+	nop
+	nop
+	sta RESP0
+	sta RESP1
+	
+	sta GRP1
+	stx HMP1
+
+	sta WSYNC
+	sta HMOVE
+
+	ldx #$3E ;FORM
+	jsr RLoadString
+	jsr RSetTextPointers
+	jsr RDrawText
+	sta WSYNC
+	ldx #$3F ;YOUR
+	jsr RLoadString
+	jsr RSetTextPointers
+	jsr RDrawText
+	sta WSYNC
+	ldx #$40 ;TEAM
+	jsr RLoadString
+	jsr RSetTextPointers
+	jsr RDrawText
+	
+
+	ldx #0
+RDrawSetupScreenLoop:
+	stx charIndex
+
+	sta WSYNC
+	sta WSYNC
+
+	jsr RDrawMinimalCharacterInfo
+	ldx charIndex
+	inx
+	cpx #4
+	bcc RDrawSetupScreenLoop
+
+	lda #TEXT_HIGHLIGHTED_COLOR
+	sta COLUP0
+	sta COLUP1
+
+	sta WSYNC
+	sta WSYNC
+	sta WSYNC
+
+	ldx #$41 ;READY
+	jsr RLoadString
+	jsr RSetTextPointers
+	jsr RDrawText
+
+	sta WSYNC
+
+	lda enemyID
+	cmp #4
+	bne RDontUnderlineReady
+	lda #$FF
+	sta GRP0
+	sta GRP1
+	sta GRP0
+	sta GRP1
+RDontUnderlineReady:
+	sta WSYNC
+	sta WSYNC
+
+	lda #0
+	sta NUSIZ0
+	sta NUSIZ1
+	sta VDELP0
+	sta VDELP1
+	sta GRP0
+	sta GRP1
+
+	jmp RAfterRendering
 
 
 
@@ -854,6 +969,10 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	jmp .RHPCount
 
 .RGeneralMessageStructure:
+	inx
+	inx
+	inx
+	inx
 	jsr RLoadString
 	rts
 .RSourceBattlerName:
@@ -1203,6 +1322,7 @@ RDrawMinimalCharacterInfo: SUBROUTINE
 	sta temp5
 	lda name5,x
 	sta temp6
+
 	jsr RSetTextPointers
 
 	lda #(RAvatarHappy & $FF)
@@ -1211,7 +1331,15 @@ RDrawMinimalCharacterInfo: SUBROUTINE
 	sta tempPointer1+1
 	jsr RDrawText
 
+	sta WSYNC
+
 	ldx charIndex
+	cpx enemyID
+	bne .RDontEnableBall
+	lda #2
+	sta ENABL
+.RDontEnableBall
+
 	lda char1,x
 	and #$0F
 	tay
@@ -1240,6 +1368,10 @@ RDrawMinimalCharacterInfo: SUBROUTINE
 	sta temp6
 
 	jsr RSetTextPointers
+
+	lda #0
+	sta ENABL
+
 	jsr RDrawText
 
 	rts
@@ -1327,8 +1459,8 @@ RIndexToEnemyPosition: SUBROUTINE ;Converts the position of a menu cursor into t
 .RDone
 	rts ;Y is the correct offset into the enemyID array
 
-	ORG $C810 ;Used to hold enemy names, nothing else can go in this section
-	RORG $F810
+	ORG $C910 ;Used to hold enemy names, nothing else can go in this section
+	RORG $F910
 
 RZombieText:
 	.byte #Z
@@ -1352,8 +1484,8 @@ RDragonText:
 	.byte #O
 	.byte #N
 
-	ORG $C900 ;Used to hold text.
-	RORG $F900
+	ORG $CA00 ;Used to hold text.
+	RORG $FA00
 
 RBackText:
 	.byte #B
@@ -1496,9 +1628,6 @@ RShiftText:
 	.byte #T
 	.byte #EMPTY
 
-	ORG $CA00 ;Used to hold more text data
-	RORG $FA00
-
 RClassColors:
 	.byte $8A ;Knight
 	.byte $46 ;Rogue
@@ -1562,6 +1691,8 @@ REnemyColorLookup:
 	.byte $D6 ;Zombie
 	.byte $EA ;Giant
 	.byte $C8 ;Dragon
+
+	;Only around 8 more bytes can fit here...
 
 	ORG $CB00 ;Used to hold miscellaneous data/lookup tables and text
 	RORG $FB00
@@ -2017,6 +2148,8 @@ RNearFire:
 	.byte %00100000 ;R4
 	.byte $FF ;----
 
+	;33 bytes here
+
 	ORG $CD00 ;Used for holding the letters of the alphabet
 	RORG $FD00
 
@@ -2281,6 +2414,8 @@ RCalculateDigitIndices: SUBROUTINE ;Will interpret whatever is in A when called 
 	tay ;Character index corresponding to high digit of the specified decimal value is now in the y register.
 	rts
 
+	;21 more bytes can fit here
+
 	ORG $CE00 ;Used to hold maze rendering data
 	RORG $FE00
 
@@ -2529,6 +2664,8 @@ RNoFarDoor: ;Used for PF2
 	.byte #%00000000
 	.byte #%00000000
 	.byte #%00000000
+
+	;22 more bytes here
 
 	ORG $CF00 ;Used to hold additional maze rendering data
 	RORG $FF00

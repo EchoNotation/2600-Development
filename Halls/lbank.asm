@@ -2071,9 +2071,9 @@ LEnemyMagic:
 	.byte 0 ;Giant
 	.byte 20 ;Dragon
 LEnemyHP:
-	.byte #10 ;Zombie
-	.byte #40 ;Giant
-	.byte #150 ;Dragon
+	.byte 10 ;Zombie
+	.byte 40 ;Giant
+	.byte 150 ;Dragon
 	.byte $00
 	.byte $00
 	.byte $00
@@ -2473,7 +2473,7 @@ LChaosElements:
 	.byte POISON_RESIST_MASK
 	.byte $FF ;Non-elemental
 
-LIsClassRanged: ;This section used to be 6 nops, but this can be stored here instead!
+LIsClassRanged:
 	.byte $0 ;Knight
 	.byte $0 ;Rogue
 	.byte $0 ;Cleric
