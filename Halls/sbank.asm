@@ -123,10 +123,6 @@ SSkipSeeding:
 	lda #$04
 	sta mp4
 #endif
-
-	ldy #2 ;Subroutine ID for LUpdateAvatars
-	jsr SRunFunctionInLBank
-
 	lda #$44
 	sta exitLocation
 
@@ -342,10 +338,31 @@ SSetupLogicOverscan:
 	lda currentInput
 	and #$08
 	beq STryStartGame
+
+	;More advanced input logic
+	lda currentInput
+	cmp previousInput
+	beq SSameInputAsLastFrame
+	sta battleActions ;If different, use the current one for 1 frame
+	lda #25
+	sta effectCountdown
+	bne SAfterInputControl
+SSameInputAsLastFrame:
+	ldx effectCountdown
+	beq SInputTimerOver
+	dex
+	stx effectCountdown
+	lda #$F8
+	sta battleActions ;Nothing is pressed 
+	bne SAfterInputControl
+SInputTimerOver:
+	sta battleActions
+	ldx #6
+	stx effectCountdown
+SAfterInputControl:
 	jsr SMoveSetupCursor
 	jsr SUpdateBallPosition
 	jsr SCheckCursorChange
-
 	jmp SWaitForOverscanTimer
 
 STryStartGame:
@@ -353,6 +370,18 @@ STryStartGame:
 	cpy #24 ;The ready button
 	bne SWaitForOverscanTimer
 	;If here, that means that the button was pressed when on the ready option
+	lda #$01 ;Maze level 1, party level 1
+	sta mazeAndPartyLevel
+
+	ldx #3
+SForceHappyMood:
+	lda char1,x
+	and #$0F
+	ora #$30
+	sta char1,x
+	dex
+	bpl SForceHappyMood
+
 	lda #NEED_NEW_MAZE
 	ora flags
 	sta flags
@@ -375,10 +404,7 @@ SWaitForOverscanTimer:
 	jmp SStartOfFrame
 
 SMoveSetupCursor: SUBROUTINE
-	lda currentInput
-	cmp previousInput
-	beq .SReturn
-	lda currentInput
+	lda battleActions
 	bpl .SRightPressed
 	asl
 	bpl .SLeftPressed
@@ -405,13 +431,11 @@ SCheckCursorChange: SUBROUTINE
 	ldy cursorIndexAndMessageY
 	cpy #24
 	bcs .SReturn ;Just return if on the ready button
-	lda currentInput
-	cmp previousInput
-	beq .SReturn
+	lda battleActions
 	ldy enemyID ;The ID of the party member who's data is being modified
 	and #UP_MASK
 	beq .SUpPressed
-	lda currentInput
+	lda battleActions
 	and #DOWN_MASK
 	beq .SDownPressed
 .SReturn:
@@ -560,6 +584,9 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 	bcs .SUsualGeneration
 .SPlaceObjectives
 	;Need to position player, exit, and campfire
+	ldy #5 ;LLoadPlayerVars
+	jsr SRunFunctionInLBank
+
 	lda flags
 	and #(~NEED_NEW_MAZE) ;Finished generating new maze!
 	sta flags
@@ -573,7 +600,6 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 .SSkipMazeGeneration
 	lda currentEffect
 	bne .SEffectStillPlaying
-	;TODO change this to support maze generation when necessary
 .SSharedExit:
 	lda flags
 	and #(~(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)) ;Disable all transition flags

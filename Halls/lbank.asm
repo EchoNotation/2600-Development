@@ -1799,6 +1799,22 @@ LSetTotalAoETgtsDefensive: SUBROUTINE ;Sets the aoeTargetsRemaining byte to the 
 	sty aoeTargetsRemaining
 	rts
 
+LLoadPlayerVars: SUBROUTINE
+	ldx #3
+.LLoadPlayerVarsLoop:
+	stx charIndex
+	jsr LGetBattlerMaxHP
+	jsr LBinaryToDecimal
+	ldx charIndex
+	sta hp1,x
+	jsr LGetBattlerMaxMP
+	jsr LBinaryToDecimal
+	ldx charIndex
+	sta mp1,x
+	dex
+	bpl .LLoadPlayerVarsLoop
+	rts
+
 LGetBattlerStat: SUBROUTINE ;Returns the appropriate stat of battlerID X in A
 LGetBattlerAttack:
 	ldy #0
@@ -2506,6 +2522,7 @@ LLowLabelBytes:
 	.byte (LUpdateAvatars & $FF)
 	.byte (LLoadEnemyHP & $FF)
 	.byte (LEnterBattleSetup & $FF)
+	.byte (LLoadPlayerVars & $FF)
 
 LHighLabelBytes:
 	.byte (LDoBattle >> 8 & $FF)
@@ -2513,6 +2530,7 @@ LHighLabelBytes:
 	.byte (LUpdateAvatars >> 8 & $FF)
 	.byte (LLoadEnemyHP >> 8 & $FF)
 	.byte (LEnterBattleSetup >> 8 & $FF)
+	.byte (LLoadPlayerVars >> 8 & $FF)
 
 	ORG $DFB0
 	RORG $FFB0

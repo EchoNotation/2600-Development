@@ -546,17 +546,19 @@
 		-Might be really obnoxious on controller though
 	-Added underline behavior for the READY/PLAY button, which looks pretty nice
 	-Corrected message/string loading index discrepancy
+	-Improved setup screen input scheme
 
 TODO:
 	-Last party member learning a spell was interrupted by THE MAZE AWAITS?
 
 	REQUIRES LOGIC:
-		-Make startup screen
 		-Write enemy AI handling
 		-Write basic encounter generation
 		-Placing player, campfire, and exit in new maze when it is generated
 		-Write sound effect routines
 		-Add load a visual effect routine
+		-Setup screen logo?? Would be nice if space allows
+			-Can change message to FORM A TEAM in order to reduce text size
 
 	DOESN'T REQUIRE LOGIC:
 		-Add more text & messages
@@ -597,9 +599,10 @@ TODO:
 			
 		-Sound engine - 0%
 		
-		-Name entry and class selection screen - 0%
+		-Name entry and class selection screen v1 - 100%
 
 	Version 1.1 considerations:
+		-Setup screen logo?
 		-Maze input behavior:
 			-Make it so that the button enters into the menu when in maze view?
 			-Make back button move you backwards while maintaining facing direction??

@@ -106,6 +106,7 @@ $01 - LDetermineNextBattler
 $02 - LUpdateAvatars
 $03 - LLoadEnemyHP
 $04 - LEnterBattleSetup
+$05 - LLoadPlayerVars
 
 --- BATTLE ACTIONS --- (STTIIIII) S: is Spell, TT: target ID, I: index.
 0TT00000 : FIGHT --- Targeted basic physical attack using battler's Attack stat.
@@ -329,7 +330,7 @@ SPELL LISTING
 4: DRAIN : Deals non-elemental damage to a single target, then heals the caster by the damage dealt 
 5: THUNDR : Deals electric damage to the highest health enemy
 6: SHIELD : Gives one ally a shield
-7: METEOR : Deals physical damage to one enemy, then fire damage to the two surrounding/other enemies
+7: METEOR : Deals physical damage to one enemy, then fire damage to all other enemies
 8: CHAOS : Deals damage of a random element to each enemy, also has a chance to inflict status
 9: HEAL : Heals a single ally, removes blight instead of healing if blighted
 A: SMITE : Deals damage to target based on attack and magic power

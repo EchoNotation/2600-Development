@@ -1,7 +1,7 @@
 	processor 6502
 	include "vcs.h"
 
-BUILD_DEBUG = 1
+BUILD_DEBUG = 0
 
 ; --- Constants ---
 ;Kernel related

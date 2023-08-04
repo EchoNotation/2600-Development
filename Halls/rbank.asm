@@ -555,7 +555,7 @@ RUseSpecialColor:
 	lda menuLines,x
 	and #$1F
 	clc
-	adc #52 ;The number of string constants by ID between STABS and Empty (this is done in order to avoid reentering all the already constructed messages)
+	adc #56
 	tax
 	jsr RLoadString
 	jsr RSetTextPointers
