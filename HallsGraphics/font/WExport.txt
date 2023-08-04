@@ -1,0 +1,19 @@
+	.byte 0
+
+	.byte %01100010
+	.byte %01110110
+	.byte %01101010
+	.byte %01100010
+	.byte %01100010
+	.byte %01100010
+	.byte %01100010
+	.byte %01100010
+
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
