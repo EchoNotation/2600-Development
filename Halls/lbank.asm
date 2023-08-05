@@ -110,7 +110,11 @@ LProcessCharacterAdvancement:
 	adc #$10
 	ora temp1
 	sta mazeAndPartyLevel
-	jmp .LExitBattleViaVictory
+	lda #$21 ;THE MAZE AWAITS
+	sta currentMessage
+	lda #$FF
+	sta inBattle
+	rts
 
 .LPartyDown:
 	lda #$FC
@@ -269,8 +273,6 @@ LProcessCharacterAdvancement:
 	and #$0F
 	cmp #MAX_MAZE_LEVEL
 	bcs .LMarkGameComplete
-	lda #$21 ;THE MAZE AWAITS
-	sta currentMessage
 	lda #$FD
 	sta inBattle
 	rts
@@ -1280,6 +1282,8 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	sta inBattle
 	rts
 LEnterBattleSetup:
+	lda #0
+	sta hasAction
 .LUpdateHasAction:
 	ldx #7
 .LSetHasActionLoop:

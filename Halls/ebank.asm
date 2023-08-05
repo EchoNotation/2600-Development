@@ -154,8 +154,9 @@ EStorePlayfieldColor:
 	and #$3F
 	tax
 	lda EEnemySizes,x
-	beq EPrepSmallEnemy
 	cmp #1
+	beq EPrepSmallEnemy
+	cmp #2
 	beq EPrepMediumEnemy
 	jmp EPrepLargeEnemy
 EPrepSmallEnemy:
@@ -486,72 +487,57 @@ EGenerateEncounter: SUBROUTINE ;Sets the enemyIDs to be an appropriate battle fo
 	bpl .ECopyBossBattleLoop
 	rts
 .ESetupNormalEncounter:
-	lda #0
-	sta enemyID
 	lda #$FF
+	sta enemyID
 	sta enemyID+1
 	sta enemyID+2
 	sta enemyID+3
-	rts
+	lda #0
+	sta temp2
 
 	jsr ERandom
 	and #$03
 	tax
-	inx 
-	stx temp1 ;Number of enemies to put in this encounter (1-4)
-	
+	lda EEncounterSizes,x
+	sta temp1 ;Amount of space to use in this encounter (2-4)
+	lda mazeAndPartyLevel
+	and #$F0
+	clc
+	adc #(EGroundsEnemies & $FF)
+	sta tempPointer1
+	lda #(EGroundsEnemies >> 8 & $FF)
+	sta tempPointer1+1
+.EEncounterGenLoop:
+	jsr ERandom
+	and #$0F
+	tay
+	lda (tempPointer1),y
+	tax ;X now contains the enemy ID to try
+	lda temp1
+	cmp EEnemySizes,x
+	bcs .EEnemyFits
+.EEnemyDoesNotFit
+	iny
+	lda (tempPointer1),y
+	tax
+.EEnemyFits:
+	;X now contains the enemyID that will be added to the encounter next
+	ldy temp2
+	stx enemyID,y
+
+	lda temp2
+	clc
+	adc EEnemySizes,x
+	sta temp2
+
+	lda temp1
+	sec
+	sbc EEnemySizes,x
+	sta temp1
+	cmp #1
+	bcs .EEncounterGenLoop ;If there is at least one space left, continue
+.EEncounterComplete:
 	rts
-
-EGroundsEnemies:
-	.byte $00
-ECastleEnemies:
-	.byte $00
-ECatacombsEnemies:
-	.byte $00
-EAbyssEnemies:
-	.byte $00
-
-EBossEncounters:
-	;GROUNDS BOSS 1
-	.byte $00
-	.byte $FF
-	.byte $FF
-	.byte $FF
-	;GROUNDS BOSS 2
-	.byte $00
-	.byte $FF
-	.byte $FF
-	.byte $FF
-	;CASTLE BOSS 1
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	;CASTLE BOSS 2
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	;CRYPT BOSS 1
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	;CRYPT BOSS 2
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	;ABYSS BOSS 1
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	;ABYSS BOSS 2
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
 
 ERandom: SUBROUTINE ;Ticks the random number generator when called
 	lda rand8
@@ -587,6 +573,11 @@ ELoadString: SUBROUTINE ;Copies the string of ID X into temp1-temp6
 	sta temp6
 	jmp EAfterLoadingString
 
+
+	ORG $E400
+	RORG $F400
+
+	;Only 12 more strings can be added with this particular information in the same bank as the encounter junk
 EMessagesLowLookup:
 	.byte 0
 	.byte 0
@@ -723,8 +714,127 @@ EMessagesHighLookup:
 	.byte (ETeamText >> 8 & $FF)
 	.byte (EReadyText >> 8 & $FF)
 
-	ORG $E400
-	RORG $F400
+EEncounterSizes:
+	.byte 2
+	.byte 3
+	.byte 3
+	.byte 4
+
+	;Encounter tables must ALWAYS end with a small enemy, and every instance of a medium or large enemy MUST be IMMEDIATELY followed by a small enemy
+	;Encounter tables must be a multiple of 2 in size. 16 happens to be the most convenient size.
+EGroundsEnemies:
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+
+ECastleEnemies:
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+
+ECatacombsEnemies:
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+
+EAbyssEnemies:
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+
+EBossEncounters:
+	;GROUNDS BOSS 1
+	.byte $00
+	.byte $FF
+	.byte $FF
+	.byte $FF
+	;GROUNDS BOSS 2
+	.byte $00
+	.byte $FF
+	.byte $FF
+	.byte $FF
+	;CASTLE BOSS 1
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;CASTLE BOSS 2
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;CRYPT BOSS 1
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;CRYPT BOSS 2
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;ABYSS BOSS 1
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;ABYSS BOSS 2
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
 
 	ORG $E500
 	RORG $F500
@@ -1820,9 +1930,9 @@ EEnemyColorsHighLookup: ;Stores the high bytes of the pointers to enemy color in
 	RORG $FF00
 
 EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1 if the enemy is 16x16, 2 if the enemy is 32x32
-	.byte 0
 	.byte 1
 	.byte 2
+	.byte 3
 	.byte $00
 	.byte $00
 	.byte $00
@@ -1858,7 +1968,7 @@ EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1
 	.byte $00
 	.byte $00
 	.byte $00
-	.byte 2 ;Campfire
+	.byte 3 ;Campfire
 
 	ORG $EFA3
 	RORG $FFA3

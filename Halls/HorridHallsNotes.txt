@@ -1,6 +1,5 @@
 --- HORRID HALLS --- (CATACRAWLER?)
-Targeted ROM size: 16-32K
-	-Preferably doesn't need to use Melody board for RAM expansion
+Targeted ROM size: 16K
 
 Each small enemy takes up 16 bytes.
 Each medium enemy takes up 64 bytes.
@@ -136,10 +135,10 @@ $86: Target specific enemy, but hit all (METEOR)
 
 Current system allows for 40 enemies. (May end up cutting down to 32 or 36 to make room for effects)
 Each enemy has 1 byte for its resistances
-	Format is LPFIDEP0 (Legendary, physical, fire, ice, divine, electric, poison)
+	Format is LPFIDEPR (Legendary, physical, fire, ice, divine, electric, poison, rangedness)
 
 5 stats per person:
-Attack : The amount of damage done by physical attacks
+Attack : Physical power
 Magic : Magical power
 Speed : Determines turn order and ability to flee
 HP : Self explanatory
@@ -303,7 +302,7 @@ MESSAGES:
 1F: GAME OVER
 20: GAME CLEAR
 21: THE MAZE AWAITS
-22: X (target) STABS Y (currentBattler)
+22: X (target) STABS Y (currentBattler) --- Any enemy given the parry action needs to accept the STABS message
 23: X BLOCKS
 24: PARTY HP UP
 25: PARTY MP UP
@@ -339,8 +338,8 @@ C: SHARP : Doubles attack power of ally
 D: BLIGHT : Attempts to apply poisoned status to enemy
 E: TRIAGE : Heals all allies
 F: WITHER : Deals poison damage to a single target
-10: BANISH : Attempts to banish all enemies
-11: TRANCE : Self sleep 1, regain mana (1/4 of max?)
+10: BANISH : Attempts to banish all enemies 
+11: TRANCE : Self sleep 1, regain mana (1/4 of max?) (party members only)
 12: WISH : Clear all allies' status, restore allies' HP and MP by half magic power (party members only)
 
 ENEMY ONLY?

@@ -547,14 +547,30 @@
 	-Added underline behavior for the READY/PLAY button, which looks pretty nice
 	-Corrected message/string loading index discrepancy
 	-Improved setup screen input scheme
+	-Fixed bug where THE MAZE AWAITS would interrupt the last message of every battle it occurred in
+8/4/23
+	-Player, exit, and campfire are now placed in the maze whenever it is generated
+	-Implemented random encounter generation
+		-Seems to work well enough, as long as the all the rules about encounter tables are respected
+8/5/23
+	-hasAction is now set correctly when entering a battle
 
 TODO:
-	-Last party member learning a spell was interrupted by THE MAZE AWAITS?
+	-Sleep spell should be low probability against legendary resistance
+	-Revisit POISON & SMITE spell messages
+	-Swap out THE MAZE AWAITS for INTO THE CASTLE/CRYPT/ABYSS
+	-Make enemies flash between their own colors and the color of the damage type when damaged
+		-Fire : orange
+		-Ice : light blue
+		-Electric : yellow
+		-Holy : white
+		-Poison : green
+		-Physical : gray
+		-Non-elemental : black
+	-Improve in-maze campfire graphics to look less squished when they appear
 
 	REQUIRES LOGIC:
 		-Write enemy AI handling
-		-Write basic encounter generation
-		-Placing player, campfire, and exit in new maze when it is generated
 		-Write sound effect routines
 		-Add load a visual effect routine
 		-Setup screen logo?? Would be nice if space allows
@@ -564,33 +580,33 @@ TODO:
 		-Add more text & messages
 		-Create all enemy graphics
 		-Create all enemy AI tables
+		-Create all encounter tables
+		-Tune maze exit tables
 		-Create all visual effects
 			-Make effect visualizer?
 		-Create all sound effects
 			-Make sound effect tracker?
 
-	-How is enemy AI going to be stored?
-		-List of meta-enemyActions, 4 per enemy type
-			-Meta-enemyActions might be along the lines of "attack frontline", "cast heal self", "cast sleep any enemy", etc.
-			-These meta-actions are then converted into actual enemyAction by LDetermineEnemyAI routine
-		-Make AI dependent on health for bosses? If space allows
-
 	Requirements for functional game loop:
-		-Functional combat - 80%
+		-Functional combat - 85%
 			-Control Flow/Battler Selection - 100%
 			-Fighting - 100%
 			-Spellcasting - 100%
 			-Moving - 100%
 			-Running - 100%
 			-Functional status effects - 100%
-			-Enemy AI - 0%
+			-Enemy AI - 20%
 				-Special moves - ??%
+					-Summon
+					-Summon & destruct self
+					-Explode
+					-Fake spell?
 			-Character advancement - 100%
 			-Mana implementation - 100%
 		-Additional maze logic
-			-Moving between floors - 60%
-			-Encounter generation - 65%
-				-Bosses - 50%
+			-Moving between floors - 100%
+			-Encounter generation - 100%
+				-Bosses - 100%
 			-Campfires - 100%
 		-Transitioning between maze and battles - 100%
 
@@ -621,3 +637,7 @@ TODO:
 			-Consider refactoring X LOSES Y HP to X TAKES Y DMG
 			-Refactor THE MAZE AWAITS to INTO THE CASTLE/CRYPT/ABYSS
 		-Hear a "roar" when getting near the boss?
+		-Flesh out victory screen a bit
+			-Add a new "enemy" that looks like a trophy
+				-Shimmering animation?
+			-Play a victory jingle

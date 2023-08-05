@@ -20,18 +20,12 @@ SClear:
 
 	lda #0
 	sta SWACNT
-	sta playerX
-	sta playerY
-	sta playerFacing
 
 	lda INTIM ;Seed the random number generator
 	bne SSkipSeeding
 	lda #$6B ;Extremely random random number generator here
 SSkipSeeding:
 	sta rand8
-
-	lda #$02 ;Maze level 0, party level 2
-	sta mazeAndPartyLevel
 
 	lda #$F8
 	sta currentInput
@@ -40,7 +34,7 @@ SSkipSeeding:
 	jsr SClearMazeData
 
 #if BUILD_DEBUG
-	;Temp testing code that will be removed much, much later
+	;Debug only code, do not include in final version!
 	jsr SGenerateMazeData
 	jsr SGenerateMazeDataHotDrop
 	jsr SGenerateMazeDataHotDrop
@@ -123,16 +117,16 @@ SSkipSeeding:
 	lda #$04
 	sta mp4
 #endif
-	lda #$44
-	sta exitLocation
-
+	ldy #24
+	sty cursorIndexAndMessageY
+	;lda #$02 ;Maze level 0, party level 2
+	;sta mazeAndPartyLevel
 	;lda #$80
 	;sta inBattle
 	;sta currentMenu
 	lda #$FF
 	;sta hasAction
 	sta currentMenu
-	sta aoeValueAndCampfireControl
 	;sta enemyID+1
 	;sta enemyID+2
 	;sta enemyID+3
@@ -370,7 +364,7 @@ STryStartGame:
 	cpy #24 ;The ready button
 	bne SWaitForOverscanTimer
 	;If here, that means that the button was pressed when on the ready option
-	lda #$01 ;Maze level 1, party level 1
+	lda #$09 ;Maze level 1, party level 9
 	sta mazeAndPartyLevel
 
 	ldx #3
@@ -546,6 +540,26 @@ SUpdateBallPosition: SUBROUTINE
 	sta enemyID
 	rts
 
+SMazeEntrances:
+	.byte $10
+	.byte $71
+	.byte $77
+	.byte $06
+	.byte $37
+	.byte $63
+	.byte $46
+	.byte $55
+
+SMazeExits:
+	.byte $76
+	.byte $14
+	.byte $22
+	.byte $50
+	.byte $00
+	.byte $15
+	.byte $11
+	.byte $41
+
 SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each transition based on transition type.
 	cmp #TRANSITIONING_TO_BATTLE
 	beq .SCheckBattleTransitionLogic
@@ -580,15 +594,28 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 	lda effectCountdown
 	cmp #$0A
 	beq .SFirstGeneration
-	cmp #$2 ;Formerly 2/3
+	cmp #$2
 	bcs .SUsualGeneration
 .SPlaceObjectives
-	;Need to position player, exit, and campfire
 	ldy #5 ;LLoadPlayerVars
-	jsr SRunFunctionInLBank
-
+	jsr SRunFunctionInLBank ;This operation restores all party members to max HP and MP
+	;Need to position player, exit, and campfire
+	jsr SRandom
+	and #$77 ;Only 3 bits needed for each of x and y
+	sta campfireLocation
+	jsr SRandom
+	and #$07
+	tay
+	lda SMazeExits,y
+	sta exitLocation
+	lda SMazeEntrances,y
+	and #$0F
+	sta playerY
+	lda SMazeEntrances,y
+	jsr S4Lsr
+	sta playerX
 	lda flags
-	and #(~NEED_NEW_MAZE) ;Finished generating new maze!
+	and #(~(NEED_NEW_MAZE | CAMPFIRE_USED)) ;Finished generating new maze!
 	sta flags
 	rts
 .SFirstGeneration:
@@ -2026,9 +2053,78 @@ SCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in X, a
 	rts
 
 SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
-	lda #$00
+	lda currentBattler
+	and #$03
+	tax
+	lda enemyID,x
+	asl
+	asl
+	sta tempPointer1
+	lda #(SEnemyAI >> 8 & $FF)
+	sta tempPointer1+1
+	jsr SRandom
+	and #$03 ;Only 4 slots per enemy
+	tay
+	lda (tempPointer1),y
+	;A now contains the selected AI card for this particular enemy
+	sta temp3 ;temp3 will hold the pulled card
+	and #$9F ;Copy the spellcasting bit, and the ID over to the final action
+	sta temp4 ;temp4 will hold the constructed action
+
+	lda temp3
+	and #$60 ;Get just the targeting mode
+	beq .SAITgtsFrontline
+	cmp #$20
+	beq .SAITgtsBackline
+	cmp #$40
+	beq .SAITgtsAny
+.SAITgtsSelf:
+	lda currentBattler
+	and #$03
+	jmp .SSetActionTgt
+.SAITgtsFrontline:
+	lda partyBattlePos
+	sta temp2
+	beq .SAITgtsAny ;If no one is in the frontline, use random targeting
+	bne .SFindTargetLoop
+
+.SAITgtsBackline:
+	lda partyBattlePos
+	eor #$0F
+	sta temp2
+	beq .SAITgtsAny ;If no one is in the backline, use random targeting
+
+.SFindTargetLoop:
+	jsr SRandom
+	and #$03
+	tay
+.SFindTgtLoop:
+	lda temp2
+	and SPartyPositionMasks,y
+	bne .SFoundTarget
+	iny
+	cpy #4
+	bcc .SFindTgtLoop
+	ldy #0
+	beq .SFindTgtLoop
+
+.SAITgtsAny:
+	jsr SRandom
+	and #$03
+	jmp .SSetActionTgt
+.SFoundTarget:
+	tya
+.SSetActionTgt:
+	jsr S5Asl
+	ora temp4
 	sta enemyAction
 	rts
+
+SPartyPositionMasks:
+	.byte $01
+	.byte $02
+	.byte $04
+	.byte $08
 
 S4Lsr: SUBROUTINE
 	lsr
@@ -2044,6 +2140,28 @@ S5Asl: SUBROUTINE
 	asl
 	asl
 	rts
+
+	ORG $FE00
+	RORG $FE00
+
+SEnemyAI:
+SZombieAI:
+	.byte $00 ;Attack frontline
+	.byte $00
+	.byte $00
+	.byte $00
+SGiantAI:
+	.byte $20 ;Attack backline
+	.byte $20
+	.byte $20
+	.byte $20
+SDragonAI:
+	.byte $C1 ;Cast fire any
+	.byte $C1
+	.byte $C1
+	.byte $C1
+
+	;~96 more bytes can go here after AI is filled in
 
 	ORG $FF00
 	RORG $FF00
