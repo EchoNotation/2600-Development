@@ -554,6 +554,10 @@
 		-Seems to work well enough, as long as the all the rules about encounter tables are respected
 8/5/23
 	-hasAction is now set correctly when entering a battle
+	-First implementation of enemy AI
+		-Not random enough when targeting front or backline though
+	-Fixed bug where AoE spells cast by enemies also hit enemies
+	-Improved random chance for AI targeting
 
 TODO:
 	-Sleep spell should be low probability against legendary resistance
@@ -568,6 +572,7 @@ TODO:
 		-Physical : gray
 		-Non-elemental : black
 	-Improve in-maze campfire graphics to look less squished when they appear
+	-Add calls for pain and excited avatars
 
 	REQUIRES LOGIC:
 		-Write enemy AI handling
@@ -588,14 +593,14 @@ TODO:
 			-Make sound effect tracker?
 
 	Requirements for functional game loop:
-		-Functional combat - 85%
+		-Functional combat - 90%
 			-Control Flow/Battler Selection - 100%
 			-Fighting - 100%
 			-Spellcasting - 100%
 			-Moving - 100%
 			-Running - 100%
 			-Functional status effects - 100%
-			-Enemy AI - 20%
+			-Enemy AI - 75%
 				-Special moves - ??%
 					-Summon
 					-Summon & destruct self

@@ -2059,6 +2059,8 @@ SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
 	lda enemyID,x
 	asl
 	asl
+	clc
+	adc #(SZombieAI & $FF)
 	sta tempPointer1
 	lda #(SEnemyAI >> 8 & $FF)
 	sta tempPointer1+1
@@ -2067,11 +2069,11 @@ SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
 	tay
 	lda (tempPointer1),y
 	;A now contains the selected AI card for this particular enemy
-	sta temp3 ;temp3 will hold the pulled card
+	sta temp5 ;temp5 will hold the pulled card
 	and #$9F ;Copy the spellcasting bit, and the ID over to the final action
-	sta temp4 ;temp4 will hold the constructed action
+	sta temp6 ;temp6 will hold the constructed action
 
-	lda temp3
+	lda temp5
 	and #$60 ;Get just the targeting mode
 	beq .SAITgtsFrontline
 	cmp #$20
@@ -2084,39 +2086,57 @@ SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
 	jmp .SSetActionTgt
 .SAITgtsFrontline:
 	lda partyBattlePos
-	sta temp2
 	beq .SAITgtsAny ;If no one is in the frontline, use random targeting
-	bne .SFindTargetLoop
+	sta tempPointer4
+	bne .SPickTgtFromList
 
 .SAITgtsBackline:
 	lda partyBattlePos
 	eor #$0F
-	sta temp2
 	beq .SAITgtsAny ;If no one is in the backline, use random targeting
+	sta tempPointer4
+	bne .SPickTgtFromList
 
-.SFindTargetLoop:
+.SAITgtsAny:
+	lda #$0F ;Include all conscious party members, regardless of their position
+	sta tempPointer4
+.SPickTgtFromList:
+	jsr SPopulatePlayerList
+
+	;Prevents infinite loop
+	lda temp1
+	and temp2
+	and temp3
+	and temp4
+	cmp #$FF
+	beq .SAITgtsAny
+
 	jsr SRandom
 	and #$03
 	tay
-.SFindTgtLoop:
-	lda temp2
-	and SPartyPositionMasks,y
-	bne .SFoundTarget
-	iny
-	cpy #4
-	bcc .SFindTgtLoop
-	ldy #0
-	beq .SFindTgtLoop
+	lda temp1,y
+	bpl .SSetActionTgt ;Got our target!
 
-.SAITgtsAny:
 	jsr SRandom
 	and #$03
-	jmp .SSetActionTgt
-.SFoundTarget:
+	tax
+	inx ;X now contains a random number from 1-4
+
+.SPickTgtLoop:
+	iny
 	tya
+	and #$03
+	tay
+	lda temp1,y
+	bmi .SPickTgtLoop
+.SValidTgt:
+	dex
+	bne .SPickTgtLoop
+
+	lda temp1,y
 .SSetActionTgt:
 	jsr S5Asl
-	ora temp4
+	ora temp6
 	sta enemyAction
 	rts
 
@@ -2125,6 +2145,31 @@ SPartyPositionMasks:
 	.byte $02
 	.byte $04
 	.byte $08
+
+SPopulatePlayerList: SUBROUTINE
+	lda #$FF
+	ldx #3
+.SClearMemberList:
+	sta temp1,x
+	dex
+	bpl .SClearMemberList
+
+	inx ;X should always be 0 after this increment
+	ldy #0
+.SFindTargetLoop:
+	lda hp1,x
+	beq .SNextPartyMember
+	lda SPartyPositionMasks,x
+	bit tempPointer4
+	beq .SNextPartyMember
+	txa
+	sta temp1,y
+	iny
+.SNextPartyMember:
+	inx
+	cpx #4
+	bcc .SFindTargetLoop
+	rts
 
 S4Lsr: SUBROUTINE
 	lsr
@@ -2141,8 +2186,8 @@ S5Asl: SUBROUTINE
 	asl
 	rts
 
-	ORG $FE00
-	RORG $FE00
+	ORG $FE60 ;Used for enemy AI, nothing else can go in here
+	RORG $FE60
 
 SEnemyAI:
 SZombieAI:
@@ -2160,8 +2205,6 @@ SDragonAI:
 	.byte $C1
 	.byte $C1
 	.byte $C1
-
-	;~96 more bytes can go here after AI is filled in
 
 	ORG $FF00
 	RORG $FF00

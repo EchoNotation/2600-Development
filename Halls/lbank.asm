@@ -1771,7 +1771,7 @@ LSetTotalAoETgtsOffensive: SUBROUTINE ;Sets the aoeTargetsRemaining byte to the 
 	iny
 .LBattlerDead:
 	inx
-	cpx #8
+	cpx temp3
 	bcc .LTargetingLoop
 	sty aoeTargetsRemaining
 	rts
@@ -1803,7 +1803,7 @@ LSetTotalAoETgtsDefensive: SUBROUTINE ;Sets the aoeTargetsRemaining byte to the 
 	sty aoeTargetsRemaining
 	rts
 
-LLoadPlayerVars: SUBROUTINE
+LLoadPlayerVars: SUBROUTINE ;Loads each party members max HP and MP
 	ldx #3
 .LLoadPlayerVarsLoop:
 	stx charIndex

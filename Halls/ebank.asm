@@ -717,7 +717,7 @@ EMessagesHighLookup:
 EEncounterSizes:
 	.byte 2
 	.byte 3
-	.byte 3
+	.byte 4
 	.byte 4
 
 	;Encounter tables must ALWAYS end with a small enemy, and every instance of a medium or large enemy MUST be IMMEDIATELY followed by a small enemy
