@@ -137,8 +137,10 @@ SSkipSeeding:
 	;sta enemyHP+2
 	;sta enemyHP+3
 	ldy #6 ;Function ID
-	ldx #$0E ;Effect ID
+	ldx #$07 ;Effect ID
 	jsr SRunFunctionInLBank
+	ldx #1 ;Fire sound
+	jsr STryLoadSound
 
 SStartOfFrame:
 	lda #$82
@@ -240,6 +242,8 @@ SOverscan:
 	jsr S4Lsr
 	ora temp1
 	sta currentInput
+
+	jsr SUpdateSound
 
 	lda inBattle
 	beq SMazeLogicOverscan ;Skip the following logic if we are in maze mode...
@@ -704,7 +708,45 @@ SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate 
 	adc temp1 ;mazeLevel * 8 + (3 - effectCounter)
 	bpl .SSharedColorUpdating
 
-SUpdateSound:
+STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
+	cpx currentSound
+	bcc .SDontLoad ;Don't load a sound if ID is lower than one that is already playing
+	stx currentSound
+	lda SSoundLengths,x
+	sta soundOffset
+	lda #1
+	sta soundFrequency
+.SDontLoad:
+	rts
+
+SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
+	ldx currentSound
+	beq .SReturn
+	;Sound is already playing...
+	dec soundFrequency
+	bne .SReturn
+.SNextSample:
+	dec soundOffset
+	bmi .SSoundFinished
+	ldy soundOffset
+	lda SSoundFrequencies,x
+	sta soundFrequency
+	
+	lda SFireVoice,y
+	sta AUDC0
+	lda SFireFrequency,y
+	sta AUDF0
+	lda #4
+	sta AUDV0
+	rts
+.SSoundFinished:
+	ldx #5
+	lda #0
+.SStopSoundLoop:
+	sta AUDC0,x
+	dex
+	bpl .SStopSoundLoop
+.SReturn:
 	rts
 
 SInlineExits:
@@ -2160,40 +2202,6 @@ SPopulatePlayerList: SUBROUTINE
 	bcc .SFindTargetLoop
 	rts
 
-SLoadSoundEffect: SUBROUTINE
-	lda #0
-	sta soundFrequency
-	lda SSoundLengths,x
-	sta soundOffset
-	stx currentSound
-	rts
-
-SUpdateSoundEffects: SUBROUTINE
-	lda currentSound
-	beq .SReturn
-	dec soundFrequency
-	bpl .SReturn
-	dec soundOffset
-	bpl .SStillPlaying
-.SSoundFinished:
-	ldx #5
-	lda #0
-	sta currentSound
-.SDisableSoundLoop:
-	sta AUDC0,x
-	dex
-	bpl .SDisableSoundLoop
-	rts
-.SStillPlaying:
-	ldx currentSound
-	lda SSoundFrequencies,x
-	sta soundFrequency
-
-	;??? How sophisticated can this be?
-
-.SReturn
-	rts
-
 S4Lsr: SUBROUTINE
 	lsr
 	lsr
@@ -2252,9 +2260,30 @@ SRogueBattleTable:
 
 SSoundLengths:
 	.byte 0 ;No sound
+	.byte 8 ;Fire
 
 SSoundFrequencies:
 	.byte 0 ;No sound
+	.byte 10 ;Fire
+
+SFireVoice:
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+SFireFrequency:
+	.byte $1F
+	.byte $18
+	.byte $18
+	.byte $1F
+	.byte $1F
+	.byte $18
+	.byte $1F
+	.byte $18
 
 	ORG $FE60 ;Used for enemy AI, nothing else can go in here
 	RORG $FE60
@@ -2438,7 +2467,7 @@ SLoadSoundEffectFromL:
 	nop
 	nop
 	nop
-	jsr SLoadSoundEffect
+	jsr STryLoadSound
 	sta $1FF7
 	nop
 

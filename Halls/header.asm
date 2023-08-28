@@ -1,7 +1,7 @@
 	processor 6502
 	include "vcs.h"
 
-BUILD_DEBUG = 1
+BUILD_DEBUG = 0
 
 ; --- Constants ---
 ;Kernel related
@@ -80,6 +80,7 @@ TRANSITIONING_TO_BATTLE = $40
 TRANSITIONING_TO_CAMPFIRE = $20
 TRANSITIONING_TO_MAZE = $10
 NEED_NEW_MAZE = $08
+LOAD_SOUND = $04
 
 ;Maze related
 NORTH = $08
