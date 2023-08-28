@@ -1682,7 +1682,7 @@ RBattleOptionsLookupTable:
 	.byte (RGuardText & $FF)
 	.byte (RParryText & $FF)
 
-REnemyNameLookup:
+REnemyNameLookup: ;This table could be turned into a calculation RZombieText + (6 * enemyID)
 	.byte (RZombieText & $FF)
 	.byte (RGiantText & $FF)
 	.byte (RDragonText & $FF)

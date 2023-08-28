@@ -16,28 +16,146 @@ ETestEffect:
 	.byte $70
 	.byte $80
 EFireEffect:
+	.byte $24
 	.byte $26
-	.byte $26
-	.byte $26
-	.byte $28
 	.byte $28
 	.byte $2A
 	.byte $2C
-	.byte $2A
-	.byte $2C
+	.byte $2E
 	.byte $2A
 	.byte $2C
 	.byte $2E
+	.byte $2A
 	.byte $2C
 	.byte $2E
+ESleepEffect:
+	.byte $B0
+	.byte $B2
+	.byte $B4
+	.byte $B6
+	.byte $B8
+	.byte $BA
+	.byte $BA
+	.byte $B6
+EBlizrdEffect:
+	.byte $90
+	.byte $92
+	.byte $94
+	.byte $96
+	.byte $98
+	.byte $9A
+	.byte $9C
+	.byte $9E
+	.byte $9C
 	.byte $0E
+	.byte $9C
+	.byte $9E
 	.byte $0E
-EBasicEffect:
+	.byte $9A
+	.byte $9C
+	.byte $9E
+	.byte $9C
 	.byte $0E
+	.byte $9C
+	.byte $9E
+EDrainEffect:
+	.byte $C0
+	.byte $C6
+	.byte $CA
+	.byte $C8
+	.byte $CA
+	.byte $C8
+	.byte $CA
+	.byte $C8
 	.byte $00
-	.byte $0E
 	.byte $00
+	.byte $00
+	.byte $00
+	.byte $30
+	.byte $36
+	.byte $3C
+	.byte $3A
+	.byte $38
+	.byte $36
+	.byte $3C
+	.byte $3A
+	.byte $38
+	.byte $36
+EThundrEffect:
+	.byte $02
+	.byte $02
+	.byte $04
+	.byte $04
+	.byte $1A
+	.byte $1C
+	.byte $1E
 	.byte $0E
+	.byte $0E
+	.byte $0E
+	.byte $1E
+	.byte $1C
+	.byte $04
+	.byte $04
+	.byte $02
+	.byte $04
+	.byte $04
+	.byte $04
+EShieldEffect:
+	.byte $76
+	.byte $0E
+	.byte $7E
+	.byte $0E
+	.byte $7E
+	.byte $7A
+	.byte $78
+	.byte $76
+EMeteorEffect:
+	.byte $24
+	.byte $2A
+	.byte $FA
+	.byte $2C
+	.byte $2A
+	.byte $FA
+	.byte $2C
+	.byte $2A
+	.byte $FA
+	.byte $2C
+	.byte $2A
+	.byte $FA
+	.byte $2C
+	.byte $2A
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $06
+	.byte $0E
+	.byte $0E
+	.byte $0E
+	.byte $06
+	.byte $00
+	.byte $00
+
+EChaosEffect:
+	.byte $52
+	.byte $56
+	.byte $3A
+	.byte $E6
+	.byte $EA
+	.byte $E6
+	.byte $CA
+	.byte $C6
+	.byte $AA
+	.byte $A6
+	.byte $8A
+	.byte $86
+	.byte $4A
+	.byte $46
+	.byte $5A
+	.byte $56
 
 EEffectLowLookup:
 	.byte 0 ;No effect
@@ -45,9 +163,16 @@ EEffectLowLookup:
 	.byte 0 ;Transition to battle
 	.byte 0 ;Transition to fire
 	.byte 0 ;Transition to maze
+	.byte 0 ;Enemy damage flash
 	.byte (ETestEffect & $FF)
 	.byte (EFireEffect & $FF)
-	.byte (EBasicEffect & $FF)
+	.byte (ESleepEffect & $FF)
+	.byte (EBlizrdEffect & $FF)
+	.byte (EDrainEffect & $FF)
+	.byte (EThundrEffect & $FF)
+	.byte (EShieldEffect & $FF)
+	.byte (EMeteorEffect & $FF)
+	.byte (EChaosEffect & $FF)
 
 EEffectHighLookup:
 	.byte 0 ;No effect
@@ -55,28 +180,49 @@ EEffectHighLookup:
 	.byte 0 ;Transition to battle
 	.byte 0 ;Transition to fire
 	.byte 0 ;Transition to maze
+	.byte 0 ;Enemy damage flash
 	.byte (ETestEffect >> 8 & $FF)
 	.byte (EFireEffect >> 8 & $FF)
-	.byte (EBasicEffect >> 8 & $FF)
+	.byte (ESleepEffect >> 8 & $FF)
+	.byte (EBlizrdEffect >> 8 & $FF)
+	.byte (EDrainEffect >> 8 & $FF)
+	.byte (EThundrEffect >> 8 & $FF)
+	.byte (EShieldEffect >> 8 & $FF)
+	.byte (EMeteorEffect >> 8 & $FF)
+	.byte (EChaosEffect >> 8 & $FF)
 
 EEffectLength:
-	.byte #0
-	.byte #0
-	.byte #0
-	.byte #0
-	.byte #0
-	.byte #8
-	.byte #16
-	.byte #5
+	.byte 0 ;No effect
+	.byte 1 ;Party member highlighting
+	.byte 8 ;Transition to battle
+	.byte 4 ;Transition to fire
+	.byte 4 ;Transition to maze
+	.byte 1 ;Enemy damage flash
+	.byte 8 ;Test effect
+	.byte 12 ;Fire
+	.byte 8 ;Sleep
+	.byte 20 ;Blizrd
+	.byte 22 ;Drain
+	.byte 18 ;Thundr
+	.byte 8 ;Shield
+	.byte 28 ;Meteor
+	.byte 16 ;Chaos
 EEffectFrequency:
-	.byte #0
-	.byte #30
-	.byte #10
-	.byte #10
-	.byte #10 ;Sadge
-	.byte #30
-	.byte #4
-	.byte #30
+	.byte 0
+	.byte 30
+	.byte 10
+	.byte 10
+	.byte 10
+	.byte 30
+	.byte 30
+	.byte 4 ;Fire
+	.byte 6 ;Sleep
+	.byte 4 ;Blizrd
+	.byte 4 ;Drain
+	.byte 3 ;Thundr
+	.byte 4 ;Shield
+	.byte 3 ;Meteor
+	.byte 6 ;Chaos
 
 ERenderEffects:
 	sta WSYNC
@@ -419,6 +565,8 @@ EUpdateEffects: SUBROUTINE
 	ldx currentEffect
 	cpx #$1 ;party member highlighting
 	beq .EHighlightEffect
+	cpx #$5
+	beq .EEnemyDamageFlash
 	cpx #$5 ;Branch if in one of the three transitions
 	bcc .ETransitionEffect
 .ENormalEffect:
@@ -441,6 +589,11 @@ EUpdateEffects: SUBROUTINE
 	sta temp2
 	rts
 .EHighlightEffect:
+	lda #1
+	sta effectCounter
+	sta temp2
+	rts
+.EEnemyDamageFlash:
 	lda #1
 	sta effectCounter
 	sta temp2
@@ -573,9 +726,16 @@ ELoadString: SUBROUTINE ;Copies the string of ID X into temp1-temp6
 	sta temp6
 	jmp EAfterLoadingString
 
+ELoadEffect: SUBROUTINE ;Loads the effect of ID X.
+	stx currentEffect
+	lda EEffectLength,x
+	sta effectCounter
+	lda #1
+	sta effectCountdown
+	jmp EAfterLoadingEffect
 
-	ORG $E400
-	RORG $F400
+	ORG $E500
+	RORG $F500
 
 	;Only 12 more strings can be added with this particular information in the same bank as the encounter junk
 EMessagesLowLookup:
@@ -836,8 +996,8 @@ EBossEncounters:
 	.byte $00
 	.byte $00
 
-	ORG $E500
-	RORG $F500
+	ORG $E600
+	RORG $F600
 
 EWastesText:
 	.byte #W
@@ -999,8 +1159,8 @@ ECuredText:
 	.byte #D
 	.byte #EMPTY
 
-	ORG $E600
-	RORG $F600
+	ORG $E700
+	RORG $F700
 
 EFleesText:
 	.byte #F
@@ -1261,8 +1421,8 @@ EReadyText:
 	.byte #Y
 	.byte EMPTY
 
-	ORG $E700
-	RORG $F700
+	ORG $E800
+	RORG $F800
 
 	ORG $EB00
 	RORG $FB00
@@ -1969,6 +2129,20 @@ EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1
 	.byte $00
 	.byte $00
 	.byte 3 ;Campfire
+
+	ORG $EF90
+	RORG $FF90
+
+ECatchAndLoadEffect:
+	nop
+	nop
+	nop
+	jmp ELoadEffect
+EAfterLoadingEffect:
+	sta $1FF7 ;Go to bank 1
+	nop
+	nop
+	nop
 
 	ORG $EFA3
 	RORG $FFA3

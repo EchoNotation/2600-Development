@@ -1,0 +1,41 @@
+	;Length
+	.byte 4
+
+	;Frequency
+	.byte 8
+
+	;AUDC0
+	.byte $3
+	.byte $3
+	.byte $3
+	.byte $3
+
+	;AUDF0
+	.byte $10
+	.byte $F
+	.byte $E
+	.byte $D
+
+	;AUDV0
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+
+	;AUDC1
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+
+	;AUDF1
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+
+	;AUDV1
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0

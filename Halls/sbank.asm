@@ -117,27 +117,28 @@ SSkipSeeding:
 	lda #$04
 	sta mp4
 #endif
-	ldy #24
+	ldy #0
 	sty cursorIndexAndMessageY
-	;lda #$02 ;Maze level 0, party level 2
-	;sta mazeAndPartyLevel
-	;lda #$80
-	;sta inBattle
-	;sta currentMenu
-	lda #$FF
-	;sta hasAction
+	lda #$02 ;Maze level 0, party level 2
+	sta mazeAndPartyLevel
+	lda #$80
+	sta inBattle
 	sta currentMenu
+	;lda #$FF
+	;sta hasAction
 	;sta enemyID+1
 	;sta enemyID+2
 	;sta enemyID+3
-	;lda #$03
-	;sta menuSize
+	lda #$03
+	sta menuSize
 	;lda #1
 	;sta enemyHP
 	;sta enemyHP+1
 	;sta enemyHP+2
 	;sta enemyHP+3
-	;sta currentEffect
+	ldy #6 ;Function ID
+	ldx #$0E ;Effect ID
+	jsr SRunFunctionInLBank
 
 SStartOfFrame:
 	lda #$82
@@ -634,16 +635,6 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 .SEffectStillPlaying:
 	rts
 
-STransitionEffectIDs:
-	.byte 2
-	.byte 3
-	.byte 4
-
-STransitionEffectLengths:
-	.byte 8
-	.byte 4
-	.byte 4
-
 SSetupTransitionEffect: SUBROUTINE ;Interprets A as the transition flag constant
 	tay
 	ora flags
@@ -656,20 +647,16 @@ SSetupTransitionEffect: SUBROUTINE ;Interprets A as the transition flag constant
 	beq .STransitionToMaze
 	rts
 .STransitionToBattle:
-	ldy #0
-	beq .SLoadEffect
+	ldx #$2
+	bne .SLoadEffect
 .STransitionToCampfire:
-	ldy #1
+	ldx #$3
 	bne .SLoadEffect
 .STransitionToMaze:
-	ldy #2
+	ldx #$4
 .SLoadEffect:
-	lda STransitionEffectIDs,y
-	sta currentEffect
-	lda STransitionEffectLengths,y
-	sta effectCounter
-	lda #1
-	sta effectCountdown
+	ldy #6 ;LLoadEffect
+	jsr SRunFunctionInLBank
 	rts
 
 SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate value based on the current game state
@@ -1258,8 +1245,9 @@ SUpdatePlayerMovement: SUBROUTINE
 	sta currentMenu
 	lda #3
 	sta menuSize
-	lda #1
-	sta currentEffect
+	ldx #1
+	ldy #6 ;LLoadEffect
+	jsr SRunFunctionInLBank
 	rts	
 .SRightPressed:
 	ldy playerFacing
@@ -1741,6 +1729,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	sta inBattle
 	lda #0
 	sta currentMenu
+	sta currentEffect
 	rts
 
 SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSteps according to the current menu state
@@ -2171,6 +2160,40 @@ SPopulatePlayerList: SUBROUTINE
 	bcc .SFindTargetLoop
 	rts
 
+SLoadSoundEffect: SUBROUTINE
+	lda #0
+	sta soundFrequency
+	lda SSoundLengths,x
+	sta soundOffset
+	stx currentSound
+	rts
+
+SUpdateSoundEffects: SUBROUTINE
+	lda currentSound
+	beq .SReturn
+	dec soundFrequency
+	bpl .SReturn
+	dec soundOffset
+	bpl .SStillPlaying
+.SSoundFinished:
+	ldx #5
+	lda #0
+	sta currentSound
+.SDisableSoundLoop:
+	sta AUDC0,x
+	dex
+	bpl .SDisableSoundLoop
+	rts
+.SStillPlaying:
+	ldx currentSound
+	lda SSoundFrequencies,x
+	sta soundFrequency
+
+	;??? How sophisticated can this be?
+
+.SReturn
+	rts
+
 S4Lsr: SUBROUTINE
 	lsr
 	lsr
@@ -2186,10 +2209,57 @@ S5Asl: SUBROUTINE
 	asl
 	rts
 
+SSpellTargetingLookup:
+	.byte $0 ;BACK
+	.byte $1 ;FIRE
+	.byte $1 ;SLEEP
+	.byte $82 ;BLIZRD
+	.byte $1 ;DRAIN
+	.byte $5 ;THUNDR
+	.byte $3 ;SHIELD
+	.byte $86 ;METEOR
+	.byte $82 ;CHAOS
+	.byte $3 ;HEAL
+	.byte $1 ;SMITE
+	.byte $1 ;POISON
+	.byte $3 ;SHARP
+	.byte $1 ;BLIGHT
+	.byte $84 ;TRIAGE
+	.byte $1 ;WITHER
+	.byte $82 ;BANISH
+	.byte $0 ;TRANCE
+	.byte $84 ;WISH
+	.byte $82 ;SHIFT
+
+SNormalBattleTable:
+	.byte $80
+	.byte $81
+	.byte $82
+	.byte $83
+SKnightBattleTable:
+	.byte $80
+	.byte $84
+	.byte $82
+	.byte $83
+SRogueBattleTable:
+	.byte $80
+	.byte $85
+	.byte $82
+	.byte $83
+
+	ORG $FD80
+	RORG $FD80
+
+SSoundLengths:
+	.byte 0 ;No sound
+
+SSoundFrequencies:
+	.byte 0 ;No sound
+
 	ORG $FE60 ;Used for enemy AI, nothing else can go in here
 	RORG $FE60
 
-SEnemyAI:
+SEnemyAI: ;This table must be in order by enemy ID
 SZombieAI:
 	.byte $00 ;Attack frontline
 	.byte $00
@@ -2286,22 +2356,6 @@ SArrowReflectionLookup:
 	.byte #%00001000
 	.byte #%00001000
 
-SNormalBattleTable:
-	.byte $80
-	.byte $81
-	.byte $82
-	.byte $83
-SKnightBattleTable:
-	.byte $80
-	.byte $84
-	.byte $82
-	.byte $83
-SRogueBattleTable:
-	.byte $80
-	.byte $85
-	.byte $82
-	.byte $83
-
 SBattleTables:
 	.byte (SKnightBattleTable & $FF)
 	.byte (SRogueBattleTable & $FF)
@@ -2377,27 +2431,16 @@ SEmptySpellList:
 	.byte #$FF
 	.byte #$FF
 
-SSpellTargetingLookup:
-	.byte $0 ;BACK
-	.byte $1 ;FIRE
-	.byte $1 ;SLEEP
-	.byte $82 ;BLIZRD
-	.byte $1 ;DRAIN
-	.byte $5 ;THUNDR
-	.byte $3 ;SHIELD
-	.byte $86 ;METEOR
-	.byte $82 ;CHAOS
-	.byte $3 ;HEAL
-	.byte $1 ;SMITE
-	.byte $1 ;POISON
-	.byte $3 ;SHARP
-	.byte $1 ;BLIGHT
-	.byte $84 ;TRIAGE
-	.byte $1 ;WITHER
-	.byte $82 ;BANISH
-	.byte $0 ;TRANCE
-	.byte $84 ;WISH
-	.byte $82 ;SHIFT
+	ORG $FF80
+	RORG $FF80
+
+SLoadSoundEffectFromL:
+	nop
+	nop
+	nop
+	jsr SLoadSoundEffect
+	sta $1FF7
+	nop
 
 	ORG $FFA3 ;Bankswitching nonsense
 	RORG $FFA3

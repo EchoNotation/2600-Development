@@ -21,12 +21,19 @@ LBattleProcessHighBytes:
 	.byte (LProcessParrying >> 8 & $FF)
 	.byte (LProcessSpecial >> 8 & $FF)
 
-LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.	
+LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.
+	lda currentEffect
+	bne .LReturn
+	lda currentSound
+	bne .LReturn ;Do not advance battle logic if either a visual effect or sound is playing!
+
 	ldx currentBattler
 	cpx #4
 	bcs .LNeedEnemyAction
 	lda battleActions,x
 	jmp .LGotCurrentAction
+.LReturn
+	rts
 
 .LGoToAdvanceBattlerStatus:
 	jmp LAdvanceBattlerStatus
@@ -173,7 +180,7 @@ LProcessCharacterAdvancement:
 	bcc .LLeveledUp
 	sta experienceToNextLevel
 	jmp .LGoToCheckTypeOfConclusion
-.LLeveledUp: ;THIS WHOLE SECTION NEEDS TO BE TESTED
+.LLeveledUp:
 	sta experienceToNextLevel
 	lda mazeAndPartyLevel
 	and #$F0
@@ -1303,7 +1310,7 @@ LEnterBattleSetup:
 	sta inBattle
 	sta currentMenu
 	ldx #1
-	stx currentEffect
+	jsr LLoadEffect
 	dex
 	stx cursorIndexAndMessageY
 	stx battleActions
@@ -2059,6 +2066,24 @@ L4Asl:
 	asl
 	rts
 
+LLoadEnemyHP: SUBROUTINE ;Loads the correct starting HP values for all enemies based on enemyID. DO NOT CALL IF ENEMYIDs ARE NOT SET! 
+	ldx #3
+.LLoadEnemyHPLoop:
+	lda enemyID,x
+	cmp #$FF
+	beq .LBlankSpace
+	tay
+	lda LEnemyHP,y
+	sta enemyHP,x
+	bne .LNextIteration
+.LBlankSpace:
+	lda #0
+	sta enemyHP,x
+.LNextIteration:
+	dex
+	bpl .LLoadEnemyHPLoop
+	rts
+
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
 	RORG $FD00
 
@@ -2501,24 +2526,34 @@ LIsClassRanged:
 	.byte $1 ;Ranger
 	.byte $0 ;Paladin
 
-LLoadEnemyHP: SUBROUTINE ;Loads the correct starting HP values for all enemies based on enemyID. DO NOT CALL IF ENEMYIDs ARE NOT SET! 
-	ldx #3
-.LLoadEnemyHPLoop:
-	lda enemyID,x
-	cmp #$FF
-	beq .LBlankSpace
-	tay
-	lda LEnemyHP,y
-	sta enemyHP,x
-	bne .LNextIteration
-.LBlankSpace:
-	lda #0
-	sta enemyHP,x
-.LNextIteration:
-	dex
-	bpl .LLoadEnemyHPLoop
+	ORG $DF80
+	RORG $FF80
+
+LLoadSoundInS:
+	sta $1FF9 ;Go to bank 3
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 	rts
 
+	ORG $DF90
+	RORG $FF90
+
+LLoadEffect:
+	sta $1FF8 ;Go to bank 2
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	rts
+	nop
+	nop
+	nop
 
 LLowLabelBytes:
 	.byte (LDoBattle & $FF)
@@ -2527,6 +2562,7 @@ LLowLabelBytes:
 	.byte (LLoadEnemyHP & $FF)
 	.byte (LEnterBattleSetup & $FF)
 	.byte (LLoadPlayerVars & $FF)
+	.byte (LLoadEffect & $FF)
 
 LHighLabelBytes:
 	.byte (LDoBattle >> 8 & $FF)
@@ -2535,6 +2571,7 @@ LHighLabelBytes:
 	.byte (LLoadEnemyHP >> 8 & $FF)
 	.byte (LEnterBattleSetup >> 8 & $FF)
 	.byte (LLoadPlayerVars >> 8 & $FF)
+	.byte (LLoadEffect >> 8 & $FF)
 
 	ORG $DFB0
 	RORG $FFB0
@@ -2555,9 +2592,6 @@ LReturnLocation:
 	jmp (temp6) ;22
 	sta returnValue ;24
 	sta $1FF9 ;Return to S bank ;27
-	nop ;28
-
-	;46 bytes in here
 
 	ORG $DFFA
 	RORG $FFFA

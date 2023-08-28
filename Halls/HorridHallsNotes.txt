@@ -93,8 +93,16 @@ $01 - Party member highlighting (also highlighting enemies if current menu = $81
 $02 - Transitioning into battle
 $03 - Transitioning to campfire
 $04 - Transitioning to maze
-$05 - Test effect
-$06 - Firey test effect
+$05 - Enemy damage flash
+$06 - Test effect
+$07 - FIRE effect
+$08 - SLEEP effect
+$09 - BLIZRD effect
+$0A - DRAIN effect
+$0B - THUNDR effect
+$0C - SHIELD effect
+$0D - METEOR effect
+$0E - CHAOS effect
 
 --- SOUND EFFECTS ---
 $00 - No sound
@@ -106,6 +114,7 @@ $02 - LUpdateAvatars
 $03 - LLoadEnemyHP
 $04 - LEnterBattleSetup
 $05 - LLoadPlayerVars
+$06 - LLoadEffect
 
 --- BATTLE ACTIONS --- (STTIIIII) S: is Spell, TT: target ID, I: index.
 0TT00000 : FIGHT --- Targeted basic physical attack using battler's Attack stat.

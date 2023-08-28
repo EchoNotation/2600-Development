@@ -183,6 +183,7 @@ menuLines ds 3
 highlightedLineAndSteps ds 1
 currentSound ds 1
 soundOffset ds 1
+soundFrequency ds 1
 currentEffect ds 1
 effectCounter ds 1
 effectCountdown ds 1
