@@ -106,6 +106,22 @@ $0E - CHAOS effect
 
 --- SOUND EFFECTS ---
 $00 - No sound
+$01 - FIRE
+$02 - SLEEP
+$03 - BLIZRD
+$04 - DRAIN
+$05 - THUNDR
+$06 - SHIELD
+$07 - METEOR
+$08 - CHAOS
+$09 - HEAL spell
+$0A - SMITE
+$0B - reserved for POISON, currently empty
+$0C - SHARP
+$0D - BLIGHT spell
+$0E - TRIAGE
+$0F - WITHER
+$10 - BANISH spell
 
 --- SUBROUTINE IDs ---
 $00 - LDoBattle

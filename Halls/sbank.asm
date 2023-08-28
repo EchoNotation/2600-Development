@@ -44,81 +44,17 @@ SSkipSeeding:
 	jsr SGenerateMazeDataHotDrop
 	jsr SGenerateMazeDataHotDrop
 	jsr SGenerateMazeDataHotDrop
-
-	lda #0
-	sta playerX
-	lda #0
-	sta playerY
-
-	lda #$33
-	sta char1
-	lda #F
-	sta name1
-	lda #R
-	sta name2
-	lda #E
-	sta name3
-	lda #D
-	sta name4
-	lda #EMPTY
-	sta name5
-	lda #$5
-	sta hp1
-	lda #$23
-	sta mp1
-
-	lda #$35
-	sta char2
-	lda #D
-	sta name1+1
-	lda #A
-	sta name2+1
-	lda #V
-	sta name3+1
-	lda #E
-	sta name4+1
-	lda #EMPTY
-	sta name5+1
-	lda #$17
-	sta hp2
-	lda #$17
-	sta mp2
-
-	lda #$32
-	sta char3
-	lda #T
-	sta name1+2
-	lda #I
-	sta name2+2
-	lda #M
-	sta name3+2
-	lda #EMPTY
-	sta name4+2
-	sta name5+2
-	lda #$45
-	sta hp3
-	lda #$02
-	sta mp3
-
-	lda #$34
-	sta char4
-	lda #J
-	sta name1+3
-	lda #O
-	sta name2+3
-	lda #H
-	sta name3+3
-	lda #N
-	sta name4+3
-	lda #EMPTY
-	sta name5+3
-	lda #$1
-	sta hp4
-	lda #$04
-	sta mp4
 #endif
-	ldy #0
-	sty cursorIndexAndMessageY
+
+	ldx #19
+	lda #A
+SClearNames:
+	sta name1,x
+	dex
+	bpl SClearNames
+
+	;ldy #0
+	;sty cursorIndexAndMessageY
 	lda #$02 ;Maze level 0, party level 2
 	sta mazeAndPartyLevel
 	lda #$80
@@ -131,16 +67,18 @@ SSkipSeeding:
 	;sta enemyID+3
 	lda #$03
 	sta menuSize
-	;lda #1
-	;sta enemyHP
-	;sta enemyHP+1
-	;sta enemyHP+2
-	;sta enemyHP+3
+	lda #1
+	sta enemyHP
+	sta enemyHP+1
+	sta enemyHP+2
+	sta enemyHP+3
 	ldy #6 ;Function ID
 	ldx #$07 ;Effect ID
 	jsr SRunFunctionInLBank
-	ldx #1 ;Fire sound
+	ldx #$10
 	jsr STryLoadSound
+	;lda #$FF
+	;sta currentMenu
 
 SStartOfFrame:
 	lda #$82
@@ -708,47 +646,6 @@ SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate 
 	adc temp1 ;mazeLevel * 8 + (3 - effectCounter)
 	bpl .SSharedColorUpdating
 
-STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
-	cpx currentSound
-	bcc .SDontLoad ;Don't load a sound if ID is lower than one that is already playing
-	stx currentSound
-	lda SSoundLengths,x
-	sta soundOffset
-	lda #1
-	sta soundFrequency
-.SDontLoad:
-	rts
-
-SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
-	ldx currentSound
-	beq .SReturn
-	;Sound is already playing...
-	dec soundFrequency
-	bne .SReturn
-.SNextSample:
-	dec soundOffset
-	bmi .SSoundFinished
-	ldy soundOffset
-	lda SSoundFrequencies,x
-	sta soundFrequency
-	
-	lda SFireVoice,y
-	sta AUDC0
-	lda SFireFrequency,y
-	sta AUDF0
-	lda #4
-	sta AUDV0
-	rts
-.SSoundFinished:
-	ldx #5
-	lda #0
-.SStopSoundLoop:
-	sta AUDC0,x
-	dex
-	bpl .SStopSoundLoop
-.SReturn:
-	rts
-
 SInlineExits:
 	.byte 0
 	.byte 0
@@ -1256,15 +1153,6 @@ SUpdateCampfireRendering: SUBROUTINE
 .SStoreAndReturn:
 	sta aoeValueAndCampfireControl
 	rts
-
-STurnLeft:
-	.byte 3
-	.byte 0
-STurnRight:
-	.byte 1
-	.byte 2
-	.byte 3
-	.byte 0
 
 SUpdatePlayerMovement: SUBROUTINE
 	lda currentMenu
@@ -2171,13 +2059,7 @@ SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
 	sta enemyAction
 	rts
 
-SPartyPositionMasks:
-	.byte $01
-	.byte $02
-	.byte $04
-	.byte $08
-
-SPopulatePlayerList: SUBROUTINE
+SPopulatePlayerList: SUBROUTINE ;Helper routine for enemy AI targeting
 	lda #$FF
 	ldx #3
 .SClearMemberList:
@@ -2202,6 +2084,9 @@ SPopulatePlayerList: SUBROUTINE
 	bcc .SFindTargetLoop
 	rts
 
+	ORG $FC40
+	RORG $FC40
+
 S4Lsr: SUBROUTINE
 	lsr
 	lsr
@@ -2215,6 +2100,472 @@ S5Asl: SUBROUTINE
 	asl
 	asl
 	asl
+	rts
+
+SPartyPositionMasks:
+	.byte $01
+	.byte $02
+	.byte $04
+	.byte $08
+
+SNormalBattleTable:
+	.byte $80
+	.byte $81
+	.byte $82
+	.byte $83
+SKnightBattleTable:
+	.byte $80
+	.byte $84
+	.byte $82
+	.byte $83
+SRogueBattleTable:
+	.byte $80
+	.byte $85
+	.byte $82
+	.byte $83
+
+SVoices:
+	.byte 0
+	.byte (SFireVoices & $FF)
+	.byte (SSleepVoices & $FF)
+	.byte (SBlizrdVoices & $FF)
+	.byte (SDrainVoices & $FF)
+	.byte (SThundrVoices & $FF)
+	.byte (SShieldVoices & $FF)
+	.byte (SMeteorVoices & $FF)
+	.byte (SChaosVoices & $FF)
+	.byte (SHealSpellVoices & $FF)
+	.byte (SSmiteVoices & $FF)
+	.byte 0
+	.byte (SSharpVoices & $FF)
+	.byte (SBlightSpellVoices & $FF)
+	.byte (STriageVoices & $FF)
+	.byte (SWitherVoices & $FF)
+	.byte (SBanishSpellVoices & $FF)
+
+SFireVoices:
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+SSleepVoices:
+	.byte $C
+	.byte $C
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+SBlizrdVoices:
+	.byte $8
+	.byte $8
+	.byte $4
+	.byte $4
+	.byte $8
+	.byte $8
+	.byte $4
+	.byte $4
+	.byte $8
+	.byte $8
+	.byte $4
+	.byte $8
+	.byte $8
+SDrainVoices:
+	.byte $3
+	.byte $3
+	.byte $3
+	.byte $3
+	.byte $3
+	.byte $3
+SThundrVoices:
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $3
+	.byte $3
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+SShieldVoices:
+	.byte $7
+	.byte $A
+	.byte $7
+	.byte $A
+	.byte $7
+	.byte $A
+	.byte $7
+	.byte $A
+SMeteorVoices:
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
+SChaosVoices:
+	.byte $D
+	.byte $D
+	.byte $D
+	.byte $6
+	.byte $6
+	.byte $F
+	.byte $F
+	.byte $3
+	.byte $3
+	.byte $7
+	.byte $7
+SHealSpellVoices:
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+SSmiteVoices:
+	.byte $3
+	.byte $3
+	.byte $3
+	.byte $8
+	.byte $0
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+SSharpVoices:
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $0
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+SBlightSpellVoices:
+	.byte $E
+	.byte $E
+	.byte $E
+	.byte $E
+	.byte $E
+	.byte $0
+	.byte $0
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $C
+STriageVoices:
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $0
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+SWitherVoices:
+	.byte $7
+	.byte $7
+	.byte $7
+	.byte $F
+	.byte $F
+	.byte $F
+	.byte $F
+	.byte $F
+	.byte $F
+SBanishSpellVoices:
+	.byte $3
+	.byte $F
+	.byte $3
+	.byte $3
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+
+	ORG $FD00
+	RORG $FD00
+
+SSoundLengths:
+	.byte 0 ;No sound
+	.byte 8 ;FIRE
+	.byte 6 ;SLEEP
+	.byte 13 ;BLIZRD
+	.byte 6 ;DRAIN
+	.byte 10 ;THUNDR
+	.byte 8 ;SHIELD
+	.byte 16 ;METEOR
+	.byte 11 ;CHAOS
+	.byte 4 ;HEAL
+	.byte 10 ;SMITE
+	.byte 0 ;POISON??
+	.byte 8 ;SHARP
+	.byte 12 ;BLIGHT spell
+	.byte 9 ;TRIAGE
+	.byte 9 ;WITHER
+	.byte 10 ;BANISH
+
+SSoundFrequencies:
+	.byte 0 ;No sound
+	.byte 10 ;FIRE
+	.byte 8 ;SLEEP
+	.byte 5 ;BLIZRD
+	.byte 4 ;DRAIN
+	.byte 5 ;THUNDR
+	.byte 4 ;SHIELD
+	.byte 5 ;METEOR
+	.byte 4 ;CHAOS
+	.byte 5 ;HEAL
+	.byte 5 ;SMITE
+	.byte 1 ;POISON??
+	.byte 5 ;SHARP
+	.byte 2 ;BLIGHT spell
+	.byte 5 ;TRIAGE
+	.byte 4 ;WITHER
+	.byte 6 ;BANISH
+
+SPitches:
+	.byte 0
+	.byte (SFirePitches & $FF)
+	.byte (SSleepPitches & $FF)
+	.byte (SBlizrdPitches & $FF)
+	.byte (SDrainPitches & $FF)
+	.byte (SThundrPitches & $FF)
+	.byte (SShieldPitches & $FF)
+	.byte (SMeteorPitches & $FF)
+	.byte (SChaosPitches & $FF)
+	.byte (SHealSpellPitches & $FF)
+	.byte (SSmitePitches & $FF)
+	.byte 0
+	.byte (SSharpPitches & $FF)
+	.byte (SBlightSpellPitches & $FF)
+	.byte (STriagePitches & $FF)
+	.byte (SWitherPitches & $FF)
+	.byte (SBanishSpellPitches & $FF)
+
+SFirePitches:
+	.byte $1F
+	.byte $18
+	.byte $18
+	.byte $1F
+	.byte $1F
+	.byte $18
+	.byte $1F
+	.byte $18
+SSleepPitches:
+	.byte $1F
+	.byte $10
+	.byte $6
+	.byte $3
+	.byte $7
+	.byte $4
+SBlizrdPitches:
+	.byte $E
+	.byte $F
+	.byte $6
+	.byte $9
+	.byte $F
+	.byte $E
+	.byte $C
+	.byte $A
+	.byte $E
+	.byte $F
+	.byte $D
+	.byte $E
+	.byte $F
+SDrainPitches:
+	.byte $7
+	.byte $3
+	.byte $2
+	.byte $6
+	.byte $5
+	.byte $1
+SThundrPitches:
+	.byte $C
+	.byte $8
+	.byte $5
+	.byte $3
+	.byte $1
+	.byte $0
+	.byte $1
+	.byte $1E
+	.byte $1F
+	.byte $1D
+SShieldPitches:
+	.byte $3
+	.byte $4
+	.byte $4
+	.byte $6
+	.byte $5
+	.byte $6
+	.byte $7
+	.byte $8
+SMeteorPitches:
+	.byte $F
+	.byte $F
+	.byte $F
+	.byte $F
+	.byte $F
+	.byte $F
+	.byte $F
+	.byte $F
+	.byte $0
+	.byte $17
+	.byte $16
+	.byte $15
+	.byte $14
+	.byte $13
+	.byte $12
+	.byte $11
+SChaosPitches:
+	.byte $3
+	.byte $3
+	.byte $6
+	.byte $7
+	.byte $4
+	.byte $1
+	.byte $3
+	.byte $10
+	.byte $3
+	.byte $1F
+	.byte $5
+SHealSpellPitches:
+	.byte $3
+	.byte $5
+	.byte $6
+	.byte $7
+SSmitePitches:
+	.byte $2
+	.byte $10
+	.byte $1
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $2
+	.byte $1
+	.byte $2
+	.byte $3
+SSharpPitches:
+	.byte $3
+	.byte $3
+	.byte $5
+	.byte $0
+	.byte $3
+	.byte $1
+	.byte $3
+	.byte $1
+SBlightSpellPitches:
+	.byte $1
+	.byte $0
+	.byte $1
+	.byte $0
+	.byte $1
+	.byte $0
+	.byte $0
+	.byte $F
+	.byte $1F
+	.byte $10
+	.byte $F
+	.byte $1F
+STriagePitches:
+	.byte $2
+	.byte $3
+	.byte $4
+	.byte $5
+	.byte $0
+	.byte $3
+	.byte $5
+	.byte $6
+	.byte $7
+SWitherPitches:
+	.byte $14
+	.byte $11
+	.byte $F
+	.byte $C
+	.byte $A
+	.byte $F
+	.byte $C
+	.byte $A
+	.byte $F
+SBanishSpellPitches:
+	.byte $1
+	.byte $5
+	.byte $5
+	.byte $4
+	.byte $3
+	.byte $1
+	.byte $1F
+	.byte $1
+	.byte $1F
+	.byte $1
+
+	ORG $FE00
+	RORG $FE00
+
+STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
+	cpx currentSound
+	bcc .SDontLoad ;Don't load a sound if ID is lower than one that is already playing
+	stx currentSound
+	lda SSoundLengths,x
+	sta soundOffset
+	lda #1
+	sta soundFrequency
+.SDontLoad:
+	rts
+
+SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
+	ldx currentSound
+	beq .SReturn
+	;Sound is already playing...
+	dec soundFrequency
+	bne .SReturn
+.SNextSample:
+	dec soundOffset
+	bmi .SSoundFinished
+	ldy soundOffset
+	lda SSoundFrequencies,x
+	sta soundFrequency
+	
+	lda SVoices,x
+	sta tempPointer1
+	lda #(SFireVoices >> 8 & $FF)
+	sta tempPointer1+1
+	lda (tempPointer1),y
+	sta AUDC0
+
+	lda SPitches,x
+	sta tempPointer1
+	lda #(SFirePitches >> 8 & $FF)
+	sta tempPointer1+1
+	lda (tempPointer1),y
+	sta AUDF0
+	lda #4
+	sta AUDV0
+	rts
+.SSoundFinished:
+	ldx #5
+	lda #0
+.SStopSoundLoop:
+	sta AUDC0,x
+	dex
+	bpl .SStopSoundLoop
+.SReturn:
 	rts
 
 SSpellTargetingLookup:
@@ -2238,52 +2589,6 @@ SSpellTargetingLookup:
 	.byte $0 ;TRANCE
 	.byte $84 ;WISH
 	.byte $82 ;SHIFT
-
-SNormalBattleTable:
-	.byte $80
-	.byte $81
-	.byte $82
-	.byte $83
-SKnightBattleTable:
-	.byte $80
-	.byte $84
-	.byte $82
-	.byte $83
-SRogueBattleTable:
-	.byte $80
-	.byte $85
-	.byte $82
-	.byte $83
-
-	ORG $FD80
-	RORG $FD80
-
-SSoundLengths:
-	.byte 0 ;No sound
-	.byte 8 ;Fire
-
-SSoundFrequencies:
-	.byte 0 ;No sound
-	.byte 10 ;Fire
-
-SFireVoice:
-	.byte $8
-	.byte $8
-	.byte $8
-	.byte $8
-	.byte $8
-	.byte $8
-	.byte $8
-	.byte $8
-SFireFrequency:
-	.byte $1F
-	.byte $18
-	.byte $18
-	.byte $1F
-	.byte $1F
-	.byte $18
-	.byte $1F
-	.byte $18
 
 	ORG $FE60 ;Used for enemy AI, nothing else can go in here
 	RORG $FE60
@@ -2534,13 +2839,15 @@ SGoToUpdateEffects:
 
 SGoToMainPicture:
 	nop $1FF6 ;Go to bank 0, it is time to render the picture
-	nop
-	nop
-	nop
+STurnLeft:
+	.byte 3
+	.byte 0
+STurnRight:
+	.byte 1
 SCatchFromMainPicture:
-	nop
-	nop
-	nop
+	.byte 2
+	.byte 3
+	.byte 0
 	jmp SOverscan
 
 	ORG $FFFA

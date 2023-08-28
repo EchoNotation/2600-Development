@@ -571,6 +571,10 @@
 	-Made Auditori2600, a WinForms application for making and exporting Atari 2600 sound effects.
 8/13-28/23
 	-Made lots of sound effects
+8/28/23
+	-Wrote sound effect loading and playback routines
+		-Still need some consideration on where sound data will live...
+	-Party member names now start as all A's
 
 
 TODO:
@@ -627,8 +631,8 @@ TODO:
 		-Advanced effect system - 100%
 			-Load visual effect routine - 100%
 			
-		-Sound engine - 0%
-			-Load sound effect routine - 0%
+		-Sound engine - 80%
+			-Load sound effect routine - 100%
 		
 		-Name entry and class selection screen v1 - 100%
 			-Logo - 0%
