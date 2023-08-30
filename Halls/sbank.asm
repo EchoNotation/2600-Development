@@ -356,9 +356,6 @@ SMoveSetupCursor: SUBROUTINE
 	rts
 
 SCheckCursorChange: SUBROUTINE
-	lda #0
-	sta temp5
-	sta temp6
 	ldy cursorIndexAndMessageY
 	cpy #24
 	bcs .SReturn ;Just return if on the ready button
@@ -373,46 +370,37 @@ SCheckCursorChange: SUBROUTINE
 	rts
 .SDownPressed:
 	lda #1
-	ldx enemyID+2
-	beq .SIncrementClass
-.SIncrementName:
-	sta temp5
-	bne .SApplyDelta
-.SIncrementClass:
 	sta temp6
-	beq .SApplyDelta ;sta does not affect processor flags
+	ldx enemyID+2 ;The index of the data that is being modified
+	beq .SApplyClassDelta
+	bne .SApplyNameDelta
 .SUpPressed:
 	lda #$FF
-	ldx enemyID+2
-	beq .SDecrementClass
-.SDecrementName:
-	sta temp5
-	bne .SApplyDelta
-.SDecrementClass:
 	sta temp6
-.SApplyDelta:
+	ldx enemyID+2 ;The index of the data that is being modified
+	beq .SApplyClassDelta
 .SApplyNameDelta:
-	ldx enemyID+2
-	dex
+	dex ;X already contains enemyID+2
 	lda SNameLocations,x
 	sta tempPointer1
 	lda #0
 	sta tempPointer1+1
 	lda (tempPointer1),y
 	clc
-	adc temp5
+	adc temp6
 	bmi .SNameUnderflow
 	cmp #27
 	bcs .SNameOverflow
 .SStoreName:
 	sta (tempPointer1),y
-	jmp .SApplyClassDelta
+	rts
 .SNameOverflow:
 	lda #0
 	beq .SStoreName
 .SNameUnderflow:
 	lda #26
 	bne .SStoreName
+
 .SApplyClassDelta:
 	lda char1,y
 	and #$0F
