@@ -164,6 +164,16 @@ $84: Target all allies (TRIAGE, WISH)
 $05: Target highest health enemy (THUNDR)
 $86: Target specific enemy, but hit all (METEOR)
 
+--- MOODS ---
+0: Dead
+1: Sad
+2: Neutral
+3: Happy
+4: Excited
+5: Pain
+6: Sleeping
+7: Sick
+
 Current system allows for 40 enemies. (May end up cutting down to 32 or 36 to make room for effects)
 Each enemy has 1 byte for its resistances
 	Format is LPFIDEPR (Legendary, physical, fire, ice, divine, electric, poison, rangedness)
@@ -271,16 +281,16 @@ MESSAGE COMPONENTS (& strings):
 25: FELL
 26: ASLEEP
 27: IS
-28: IS ON - This could be removed, as it is only used for X IS ON GUARD
+28: CASTLE
 29: FADES - This could be removed, message could be changed to X SHIELD DOWN instead of X SHIELD FADES
 2A: EXILED
 2B: GAME
 2C: CLEAR
 2D: OVER
 2E: THE
-2F: MAZE
-30: AWAITS
-31: GUARD - This could be removed, as it is only used for X IS ON GUARD
+2F: INTO
+30: ABYSS
+31: CRYPT
 32: BLOCKS
 33: HP UP
 34: MP UP
@@ -297,6 +307,7 @@ MESSAGE COMPONENTS (& strings):
 3F: YOUR
 40: TEAM
 41: READY
+42: SMITES
 
 MESSAGES:
 00: X STABS Y
@@ -328,11 +339,11 @@ MESSAGES:
 1A: X ATTACK UP
 1B: X FELL ASLEEP
 1C: X IS ASLEEP
-1D: X IS ON GUARD
+1D: X GUARDS
 1E: X SHIELD FADES
 1F: GAME OVER
 20: GAME CLEAR
-21: THE MAZE AWAITS
+21: Unallocated
 22: X (target) STABS Y (currentBattler) --- Any enemy given the parry action needs to accept the STABS message
 23: X BLOCKS
 24: PARTY HP UP
@@ -342,6 +353,10 @@ MESSAGES:
 28: PARTY STATUS CLEAR
 29: PARTY MIXED UP
 2A: X MP UP
+2B: X SMITES Y
+2C: INTO THE CASTLE
+2D: INTO THE CRYPT
+2E: INTO THE ABYSS
 
 Status Effects:
 Pos:

@@ -580,11 +580,20 @@
 		
 	-1 byte optimization in SPopulatePlayerList loop
 	-Several byte optimization in SClearMazeData
+8/29/23
+	-Optimization and bugfixes in SCheckCursorChange
+	-Battles seem to be behaving strangely, also scanline issue when exiting battle sometimes?
+		-Fixed strangeness bug by hardcoding an exception to still run LDoBattle when the menu confirm sound is playing
+		-Don't currently know the cause of the scanline problem. Doesn't happen everytime
+	-Party members show pain face when damaged
+8/30/23
+	-Sharp spell should no longer affect blight, spellcasting, and parrying in unintended ways.
+		-Hardcoded special case so that SMITE benefits from SHARP.
+	-Legendary resistance makes sleep much less likely (50% -> 12.5%)
+	-Changed SMITE message behavior from X CASTS SMITE to X SMITES Y
+	-Replaced THE MAZE AWAITS with INTO THE CASTLE/CRYPT/ABYSS
 
 TODO:
-	-Sleep spell should be low probability against legendary resistance
-	-Revisit POISON & SMITE spell messages
-	-Swap out THE MAZE AWAITS for INTO THE CASTLE/CRYPT/ABYSS
 	-Make enemies flash between their own colors and the color of the damage type when damaged
 		-Fire : orange
 		-Ice : light blue
@@ -598,6 +607,16 @@ TODO:
 	-Setup screen logo?? Would be nice if space allows
 		-Seems like space does allow, as long as the kernel for drawing the logo is short
 		-Change message to FORM A TEAM in order to reduce text size
+	-Consider booting enemy AI tables, logic, or both into the E bank to make more room for sound effects or battle system logic
+	-Replace POISON spell with VOLLEY? X SHOOTS VOLLEY? X FIRES VOLLEY?
+
+	Additional sounds to consider:
+		-Crackling campfire sound
+		-Footsteps
+		-Monster roar near exit
+		-Battle victory jingle
+		-Game victory jingle
+
 
 	DOESN'T REQUIRE LOGIC:
 		-Add more text & messages
@@ -622,6 +641,8 @@ TODO:
 					-Summon & destruct self (OOZE & SLIME)
 					-Explode (GIFT)
 					-Fake spell?
+					-AoE shield 1??
+					-Death effect??
 			-Character advancement - 100%
 			-Mana implementation - 100%
 		-Additional maze logic - 100%
@@ -651,7 +672,7 @@ TODO:
 		-Battle system quirks:
 			-Avatars are not updated after the last logic frame for a single round, or when exiting battle
 			-Being guarded reduces blight damage.
-			-The sharpened status doubles all damage dealt, possibly blight damage as well??
+				-GUARD could be given the same treatment as the positional modifier and SHARP
 		-Battle system improvements:
 			-Introduce random value offsets based on party level (attack and healing amounts)
 			-Make party members gain delta HP, delta MP when leveling up

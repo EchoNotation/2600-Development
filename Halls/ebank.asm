@@ -779,16 +779,16 @@ EMessagesLowLookup:
 	.byte (EFellText & $FF)
 	.byte (EAsleepText & $FF)
 	.byte (EIsText & $FF)
-	.byte (EIsOnText & $FF)
+	.byte (ECastleText & $FF)
 	.byte (EFadesText & $FF)
 	.byte (EExiledText & $FF)
 	.byte (EGameText & $FF)
 	.byte (EClearText & $FF)
 	.byte (EOverText & $FF)
 	.byte (ETheText & $FF)
-	.byte (EMazeText & $FF)
-	.byte (EAwaitsText & $FF)
-	.byte (EGuardMessageText & $FF)
+	.byte (EIntoText & $FF)
+	.byte (EAbyssText & $FF)
+	.byte (ECryptText & $FF)
 	.byte (EBlocksText & $FF)
 	.byte (EHPUpText & $FF)
 	.byte (EMPUpText & $FF)
@@ -805,6 +805,7 @@ EMessagesLowLookup:
 	.byte (EYourText & $FF)
 	.byte (ETeamText & $FF)
 	.byte (EReadyText & $FF)
+	.byte (ESmitesText & $FF)
 
 EMessagesHighLookup:
 	.byte 0
@@ -847,16 +848,16 @@ EMessagesHighLookup:
 	.byte (EFellText >> 8 & $FF)
 	.byte (EAsleepText >> 8 & $FF)
 	.byte (EIsText >> 8 & $FF)
-	.byte (EIsOnText >> 8 & $FF)
+	.byte (ECastleText >> 8 & $FF)
 	.byte (EFadesText >> 8 & $FF)
 	.byte (EExiledText >> 8 & $FF)
 	.byte (EGameText >> 8 & $FF)
 	.byte (EClearText >> 8 & $FF)
 	.byte (EOverText >> 8 & $FF)
 	.byte (ETheText >> 8 & $FF)
-	.byte (EMazeText >> 8 & $FF)
-	.byte (EAwaitsText >> 8 & $FF)
-	.byte (EGuardMessageText >> 8 & $FF)
+	.byte (EIntoText >> 8 & $FF)
+	.byte (EAbyssText >> 8 & $FF)
+	.byte (ECryptText >> 8 & $FF)
 	.byte (EBlocksText >> 8 & $FF)
 	.byte (EHPUpText >> 8 & $FF)
 	.byte (EMPUpText >> 8 & $FF)
@@ -873,6 +874,7 @@ EMessagesHighLookup:
 	.byte (EYourText >> 8 & $FF)
 	.byte (ETeamText >> 8 & $FF)
 	.byte (EReadyText >> 8 & $FF)
+	.byte (ESmitesText >> 8 & $FF)
 
 EEncounterSizes:
 	.byte 2
@@ -1231,13 +1233,13 @@ EFadesText:
 	.byte #E
 	.byte #S
 	.byte #EMPTY
-EIsOnText:
-	.byte #I
+ECastleText:
+	.byte #C
+	.byte #A
 	.byte #S
-	.byte #EMPTY
-	.byte #O
-	.byte #N
-	.byte #EMPTY
+	.byte #T
+	.byte #L
+	.byte #E
 EIsText:
 	.byte #I
 	.byte #S
@@ -1318,26 +1320,26 @@ ETheText:
 	.byte #EMPTY
 	.byte #EMPTY
 	.byte #EMPTY
-EMazeText:
-	.byte #M
-	.byte #A
-	.byte #Z
-	.byte #E
-	.byte #EMPTY
-	.byte #EMPTY
-EAwaitsText:
-	.byte #A
-	.byte #W
-	.byte #A
+EIntoText:
 	.byte #I
+	.byte #N
 	.byte #T
-	.byte #S
-EGuardMessageText:
-	.byte #G
-	.byte #U
+	.byte #O
+	.byte #EMPTY
+	.byte #EMPTY
+EAbyssText:
 	.byte #A
+	.byte #B
+	.byte #Y
+	.byte #S
+	.byte #S
+	.byte #EMPTY
+ECryptText:
+	.byte #C
 	.byte #R
-	.byte #D
+	.byte #Y
+	.byte #P
+	.byte #T
 	.byte #EMPTY
 EBlocksText:
 	.byte #B
@@ -1420,6 +1422,13 @@ EReadyText:
 	.byte #D
 	.byte #Y
 	.byte EMPTY
+ESmitesText:
+	.byte #S
+	.byte #M
+	.byte #I
+	.byte #T
+	.byte #E
+	.byte #S
 
 	ORG $E800
 	RORG $F800

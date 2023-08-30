@@ -878,10 +878,10 @@ RXIsAsleep:
 	.byte $0
 	.byte $27
 	.byte $26
-RXIsOnGuard:
+RXGuards:
 	.byte $0
-	.byte $28
-	.byte $31
+	.byte $23
+	.byte $FF
 RXShieldFades:
 	.byte $1
 	.byte $19
@@ -894,10 +894,10 @@ RGameClear:
 	.byte $2B
 	.byte $2C
 	.byte $FF
-RTheMazeAwaits:
-	.byte $2E
-	.byte $2F
-	.byte $30
+RSomeDudMessage:
+	.byte $FF
+	.byte $0
+	.byte $FF
 RXStabsYParry:
 	.byte $1
 	.byte $4
@@ -934,7 +934,22 @@ RXMPUp:
 	.byte $1
 	.byte $34
 	.byte $FF
-
+RXSmitesY:
+	.byte $0
+	.byte $42
+	.byte $1
+RIntoTheCastle:
+	.byte $2F
+	.byte $2E
+	.byte $28
+RIntoTheCrypt:
+	.byte $2F
+	.byte $2E
+	.byte $31
+RIntoTheAbyss:
+	.byte $2F
+	.byte $2E
+	.byte $30
 
 RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 values correctly. Interprets A as the line of the message to set.
 	ldy #TEXT_HIGHLIGHTED_COLOR
@@ -1940,14 +1955,32 @@ RAvatarExcited:
 	.byte #%10000001
 	.byte #%11111111
 RAvatarPain:
-	.byte #%11111111
-	.byte #%10011001
-	.byte #%10111101
-	.byte #%10011001
-	.byte #%11000011
-	.byte #%10100101
-	.byte #%10000001
-	.byte #%11111111
+	;.byte #%11111111
+	;.byte #%10011001
+	;.byte #%10111101
+	;.byte #%10011001
+	;.byte #%11000011
+	;.byte #%10100101
+	;.byte #%10000001
+	;.byte #%11111111
+
+	
+	;.byte %11111111
+	;.byte %11111111
+	;.byte %11011011
+	;.byte %11100111
+	;.byte %10111101
+	;.byte %11011011
+	;.byte %11111111
+	;.byte %11111111
+	.byte %11010101
+	.byte %10010100
+	.byte %10011101
+	.byte %11010101
+	.byte %00000000
+	.byte %11101110
+	.byte %10101010
+	.byte %11101010
 RAvatarSleeping:
 	.byte %11100000
 	.byte %10000000

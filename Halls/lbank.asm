@@ -22,11 +22,11 @@ LBattleProcessHighBytes:
 	.byte (LProcessSpecial >> 8 & $FF)
 
 LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.
-	lda currentEffect
-	bne .LReturn
 	lda currentSound
-	bne .LReturn ;Do not advance battle logic if either a visual effect or sound is playing!
-
+	beq .LNoSound
+	cmp #$15 ;Menu confirm sound
+	bne .LReturn ;Do not advance battle logic if a non-UI sound is playing!
+.LNoSound:
 	ldx currentBattler
 	cpx #4
 	bcs .LNeedEnemyAction
@@ -98,13 +98,9 @@ LProcessCharacterAdvancement:
 	sta flags
 	;Clear the mazeData
 	ldy #14
-	lda #vEdges
-	sta tempPointer1
-	lda #0
-	sta tempPointer1+1
 	lda #%11111111
 .LClearMazeLoop:
-	sta (tempPointer1),y
+	sta #vEdges,y
 	dey
 	bpl .LClearMazeLoop
 
@@ -113,11 +109,16 @@ LProcessCharacterAdvancement:
 	sta temp1
 	lda mazeAndPartyLevel
 	and #$F0
+	sta temp2
 	clc
 	adc #$10
 	ora temp1
 	sta mazeAndPartyLevel
-	lda #$21 ;THE MAZE AWAITS
+
+	lda temp2
+	jsr L4Lsr
+	adc #$2C ;offset to get to INTO THE CASTLE
+
 	sta currentMessage
 	lda #$FF
 	sta inBattle
@@ -358,8 +359,22 @@ LProcessCasting:
 	lda temp1
 	and #$1F ;Spell ID
 	tax
+	cmp #$0A ;SMITE
+	beq .LSmiteMessage
+	cmp #$0B ;POISON/VOLLEY
+	beq .LVolleyMessage
 	sta cursorIndexAndMessageY
 	lda #$05 ;X CASTS Y
+	bne .LStoreCastsMessage
+
+.LSmiteMessage:
+	jsr LGetTargetFromActionOffensive
+	stx startingCursorIndexAndTargetID
+	lda #$2B ;X SMITES Y
+	bne .LStoreCastsMessage
+.LVolleyMessage:
+	lda #$05 ;X CASTS Y
+.LStoreCastsMessage:
 	sta currentMessage
 
 	ldy currentBattler
@@ -576,6 +591,7 @@ LProcessCasting:
 	lda LLowSpellLogicLocations,x
 	sta tempPointer1
 	jmp (tempPointer1)
+
 .LFire:
 	ldy #FULL_MAGIC
 	jsr LDetermineSpellPower
@@ -584,11 +600,30 @@ LProcessCasting:
 
 .LSleep:
 	ldx startingCursorIndexAndTargetID
+	jsr LGetBattlerResistances
+	and #LEGENDARY_RESIST_MASK
+	bne .LTryingToPutBossToSleep
+	lda #$01 ;50% for normal enemies
+	bne .LTrySleep
+.LTryingToPutBossToSleep:
+	lda #$07 ;12.5% for bosses
+.LTrySleep:
+	sta temp2
+	jsr LRandom
+	and temp2
+	beq .LSleepFailed
+.LSleepSuccessful:
 	lda #ASLEEP_MASK
 	jsr LApplyStatus
 	lda #$1B ;X FELL ASLEEP
+.LStoreAndLeaveSleep:
 	sta currentMessage
 	bne .LNormalTgtedExit
+.LSleepFailed:
+	lda #$15 ;NO EFFECT
+	bne .LStoreAndLeaveSleep
+
+
 
 .LDrain:
 	;this is a 2-stage maneuver
@@ -673,6 +708,9 @@ LProcessCasting:
 .LSmite:
 	ldy #ATTACK_AND_HALF_MAGIC
 	jsr LDetermineSpellPower
+	sta temp2
+	jsr LApplySharpDamageModifier
+	lda temp2
 	ldy #HOLY_RESIST_MASK
 	bne .LTgtDamage
 
@@ -1052,6 +1090,7 @@ LProcessFighting:
 
 	ldx startingCursorIndexAndTargetID
 	jsr LApplyPositionalDamageModifier
+	jsr LApplySharpDamageModifier
 
 	ldx currentBattler
 	stx startingCursorIndexAndTargetID ;The person who initiated the attack
@@ -1072,13 +1111,13 @@ LProcessFighting:
 
 	ldx currentBattler
 	jsr LApplyPositionalDamageModifier
+	jsr LApplySharpDamageModifier
 
 	jsr LGetTargetFromActionOffensive ;Returns the target in X
 	stx startingCursorIndexAndTargetID
 .LApplyFightDamage:
 	ldy #PHYSICAL_RESIST_MASK
-	lda temp2
-	jsr LApplyDamage
+	jsr LApplyDamageNoStoring ;Use temp2 as the damage value
 	beq .LBattlerSurvived
 .LBattlerDied:
 	lda #$91
@@ -1190,7 +1229,7 @@ LProcessGuarding:
 LProcessParrying:
 	lda #$81
 	sta inBattle
-	lda #$1D ;X IS ON GUARD
+	lda #$1D ;X GUARDS
 	sta currentMessage
 	lda #PARRYING_MASK
 	ldx currentBattler
@@ -1504,11 +1543,10 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 .LAtLeast1Damage:
 	inc temp2
 .LNoDamageClampNeeded:
-	lda temp2 ;Damage to deal in binary
 	ldx currentBattler
 	stx startingCursorIndexAndTargetID
 	ldy #POISON_RESIST_MASK
-	jsr LApplyDamage
+	jsr LApplyDamageNoStoring ;Use temp2 as the damage to deal
 	sta temp3
 
 	lda temp2 ;Actual damage dealt by LApplyDamage
@@ -1552,27 +1590,25 @@ LApplyPositionalDamageModifier: SUBROUTINE ;Treats X as the absolute ID of the a
 .LFullDamage:
 	rts
 
+LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, and doubles their damage if so
+	lda battlerStatus,x
+	and #SHARPENED_MASK
+	beq .LNoSharp
+	asl temp2
+.LNoSharp:
+	rts
+
 LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
 	sta temp2
+LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
 	stx temp3
 	sty temp4
 	cpy #$FF
-	beq .LDamageNotResisted
+	beq .LCheckIfGuarded
 	jsr LGetBattlerResistances
 	and temp4
-	beq .LDamageNotResisted
+	beq .LCheckIfGuarded
 	lsr temp2
-	jmp .LCheckDamageModifiers
-.LDamageNotResisted:
-	lda temp2
-.LCheckDamageModifiers:
-	ldx currentBattler
-	lda battlerStatus,x
-	and #SHARPENED_MASK
-	beq .LSharpInactive
-.LSharpActive:
-	asl temp2
-.LSharpInactive:
 .LCheckIfGuarded:
 	ldx temp3
 	lda battlerStatus,x
@@ -1581,7 +1617,6 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 	lsr temp2
 	lsr temp2
 .LNotGuarded:
-
 	lda temp2 ;A now contains the final binary damage that should be dealt to target X
 	bne .LNonZeroDamage
 	lda #1
@@ -1593,7 +1628,11 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 .LDealDamageToAlly:
 	jsr LBinaryToDecimal
 	sta temp4
+
+	ldy #PAIN
 	ldx temp3
+	jsr LOverrideAvatar
+
 	lda battlerHP,x
 	sed
 	sec
@@ -2036,14 +2075,14 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 	inc charIndex
 	rts
 
-LOverrideAvatar: SUBROUTINE ;Sets party member Y's mood to X. 17 bytes
-	lda char1,y
+LOverrideAvatar: SUBROUTINE ;Sets party member X's mood to X. 17 bytes
+	lda char1,x
 	and #$0F ;Get just the class
 	sta temp6
-	txa
+	tya
 	jsr L4Asl
 	ora temp6
-	sta char1,y
+	sta char1,x
 	rts
 
 L6Lsr: ;7 bytes
