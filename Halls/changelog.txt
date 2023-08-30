@@ -575,7 +575,11 @@
 	-Wrote sound effect loading and playback routines
 		-Still need some consideration on where sound data will live...
 	-Party member names now start as all A's
-
+	-Started adding sound effects to ROM
+		-Will need to get more space from somewhere...
+		
+	-1 byte optimization in SPopulatePlayerList loop
+	-Several byte optimization in SClearMazeData
 
 TODO:
 	-Sleep spell should be low probability against legendary resistance
@@ -591,7 +595,6 @@ TODO:
 		-Non-elemental : black
 	-Improve in-maze campfire graphics to look less squished when they appear
 	-Add calls for pain and excited avatars
-	-Write sound effect routines
 	-Setup screen logo?? Would be nice if space allows
 		-Seems like space does allow, as long as the kernel for drawing the logo is short
 		-Change message to FORM A TEAM in order to reduce text size
@@ -631,7 +634,7 @@ TODO:
 		-Advanced effect system - 100%
 			-Load visual effect routine - 100%
 			
-		-Sound engine - 80%
+		-Sound engine - 100%
 			-Load sound effect routine - 100%
 		
 		-Name entry and class selection screen v1 - 100%

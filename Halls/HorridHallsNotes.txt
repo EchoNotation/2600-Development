@@ -122,6 +122,12 @@ $0D - BLIGHT spell
 $0E - TRIAGE
 $0F - WITHER
 $10 - BANISH spell
+$11 - TRANCE
+$12 - WISH
+$13 - SHIFT
+$14 - Menu move
+$15 - Menu confirm
+$16 - Menu nope
 
 --- SUBROUTINE IDs ---
 $00 - LDoBattle
@@ -140,7 +146,7 @@ $06 - LLoadEffect
 00000100 : PARRY --- User will evade all physical attacks for the remainder of the round, and retort against any attackers with a basic attack of their own.
 ?????101 : SPECIAL --- Defined per enemy ID
 00000111 : ???
-1TTIIIII : Casting a spell
+1TTIIIII : CAST --- Casting a spell
 
 --- ENEMY AI ---
 -Attack

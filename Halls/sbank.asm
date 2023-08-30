@@ -35,15 +35,6 @@ SSkipSeeding:
 
 #if BUILD_DEBUG
 	;Debug only code, do not include in final version!
-	jsr SGenerateMazeData
-	jsr SGenerateMazeDataHotDrop
-	jsr SGenerateMazeDataHotDrop
-	jsr SGenerateMazeDataHotDrop
-	jsr SGenerateMazeDataHotDrop
-	jsr SGenerateMazeDataHotDrop
-	jsr SGenerateMazeDataHotDrop
-	jsr SGenerateMazeDataHotDrop
-	jsr SGenerateMazeDataHotDrop
 #endif
 
 	ldx #19
@@ -55,30 +46,29 @@ SClearNames:
 
 	;ldy #0
 	;sty cursorIndexAndMessageY
-	lda #$02 ;Maze level 0, party level 2
-	sta mazeAndPartyLevel
-	lda #$80
-	sta inBattle
-	sta currentMenu
+	;lda #$02 ;Maze level 0, party level 2
+	;sta mazeAndPartyLevel
+	;lda #$80
+	;sta inBattle
+	;sta currentMenu
 	;lda #$FF
 	;sta hasAction
 	;sta enemyID+1
 	;sta enemyID+2
 	;sta enemyID+3
-	lda #$03
-	sta menuSize
-	lda #1
-	sta enemyHP
-	sta enemyHP+1
-	sta enemyHP+2
-	sta enemyHP+3
-	ldy #6 ;Function ID
-	ldx #$07 ;Effect ID
-	jsr SRunFunctionInLBank
-	ldx #$10
-	jsr STryLoadSound
-	;lda #$FF
-	;sta currentMenu
+	;lda #$03
+	;sta menuSize
+	;lda #1
+	;sta enemyHP
+	;sta enemyHP+1
+	;sta enemyHP+2
+	;sta enemyHP+3
+	;ldy #6 ;Function ID
+	;ldx #$07 ;Effect ID
+	;jsr SRunFunctionInLBank
+	;ldx #$14
+	;jsr STryLoadSound
+	dec currentMenu ;Should now be $FF
 
 SStartOfFrame:
 	lda #$82
@@ -193,7 +183,14 @@ SBattleLogicOverscan:
 	eor previousInput
 	and #$F0
 	beq SNoMenuMovement
+	ldy cursorIndexAndMessageY ;This code kinda stinks
+	sty temp1
 	jsr SUpdateMenuCursorPos
+	ldy cursorIndexAndMessageY
+	cpy temp1
+	beq SNoMenuMovement
+	ldx #$14
+	jsr STryLoadSound
 SNoMenuMovement:
 	lda currentInput
 	eor previousInput
@@ -234,10 +231,7 @@ SMazeLogicWithoutSetupCheck:
 	;Need to check for the maze exit and campfire location
 	;Need to determine if a random encounter occurs
 	lda playerX
-	asl
-	asl
-	asl
-	asl
+	jsr S4Asl
 	ora playerY
 	cmp campfireLocation
 	beq STryEnterCampfire
@@ -608,16 +602,9 @@ SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate 
 	tay
 	lda flags
 	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)
-	cmp #TRANSITIONING_TO_BATTLE
-	beq .STransitioningToBattle
-	cmp #TRANSITIONING_TO_CAMPFIRE
-	beq .STransitioningToCampfire
+	beq .SNoTransition
 	cmp #TRANSITIONING_TO_MAZE
 	beq .STransitioningToMaze
-	;Otherwise not in any transition, so just show normal colors
-	lda SMazeColors,y
-	sta mazeColor
-	rts
 .STransitioningToBattle:
 .STransitioningToCampfire:
 	tya
@@ -645,17 +632,16 @@ SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate 
 	clc
 	adc temp1 ;mazeLevel * 8 + (3 - effectCounter)
 	bpl .SSharedColorUpdating
+.SNoTransition:
+	;Otherwise not in any transition, so just show normal colors
+	lda SMazeColors,y
+	sta mazeColor
+	rts
 
 SInlineExits:
 	.byte 0
 	.byte 0
 	.byte 0
-	.byte 0
-	.byte 0
-	.byte 1
-	.byte 1
-	.byte 1
-
 SAdjacentExits:
 	.byte 0
 	.byte 0
@@ -824,13 +810,9 @@ SRemoveVEdge: SUBROUTINE
 
 SClearMazeData: SUBROUTINE ;Sets all the vertical and horizontal edges of the maze to 1 (walls).
 	ldy #14
-	lda #vEdges
-	sta tempPointer1
-	lda #0
-	sta tempPointer1+1
 	lda #%11111111
 .SClearMazeLoop:
-	sta (tempPointer1),y
+	sta #vEdges,y
 	dey
 	bpl .SClearMazeLoop
 	rts
@@ -915,7 +897,7 @@ SMazeBackwardMask:
 	.byte %00000010
 	.byte %00000100
 
-SUpdateMazeRenderingPointers: SUBROUTINE
+SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point to maze graphics information. Use immediately before rendering maze view!
 	ldx playerX
 	ldy playerY
 	lda playerFacing
@@ -1076,7 +1058,7 @@ SUpdateMazeRenderingPointers: SUBROUTINE
 	sta temp4
 	rts
 
-SUpdateCampfireRendering: SUBROUTINE
+SUpdateCampfireRendering: SUBROUTINE ;Updates the campfire control variable according to the player and campfire information
 	lda flags
 	and #CAMPFIRE_USED
 	bne .SCampfireNotVisible ;Do not show the campfire if it has already been used!
@@ -1154,7 +1136,7 @@ SUpdateCampfireRendering: SUBROUTINE
 	sta aoeValueAndCampfireControl
 	rts
 
-SUpdatePlayerMovement: SUBROUTINE
+SUpdatePlayerMovement: SUBROUTINE ;Checks the joystick input to see if the player should move in the maze
 	lda currentMenu
 	cmp #$80
 	beq .SInPositionSwapMenu
@@ -1389,6 +1371,8 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SReturn:
 	rts
 .SContinue:
+	ldx #$15 ;Menu confirm
+	jsr STryLoadSound
 	lda currentMenu
 	beq .SReturn
 	ldx currentBattler
@@ -1598,7 +1582,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	cpx #2
 	bcs .SNeedToTargetSpell
 	;Only one enemy, so auto-target this spell
-	ldx currentBattler ;Changed by LCheckEnemies
+	ldx currentBattler ;X is changed by SCheckEnemies
 	tya
 	jsr S5Asl
 	ora battleActions,x
@@ -2061,13 +2045,12 @@ SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
 
 SPopulatePlayerList: SUBROUTINE ;Helper routine for enemy AI targeting
 	lda #$FF
-	ldx #3
+	ldx #4
 .SClearMemberList:
-	sta temp1,x
 	dex
-	bpl .SClearMemberList
+	sta temp1,x
+	bne .SClearMemberList
 
-	inx ;X should always be 0 after this increment
 	ldy #0
 .SFindTargetLoop:
 	lda hp1,x
@@ -2084,8 +2067,8 @@ SPopulatePlayerList: SUBROUTINE ;Helper routine for enemy AI targeting
 	bcc .SFindTargetLoop
 	rts
 
-	ORG $FC40
-	RORG $FC40
+	ORG $FC20
+	RORG $FC20
 
 S4Lsr: SUBROUTINE
 	lsr
@@ -2096,6 +2079,7 @@ S4Lsr: SUBROUTINE
 
 S5Asl: SUBROUTINE
 	asl
+S4Asl:
 	asl
 	asl
 	asl
@@ -2142,6 +2126,12 @@ SVoices:
 	.byte (STriageVoices & $FF)
 	.byte (SWitherVoices & $FF)
 	.byte (SBanishSpellVoices & $FF)
+	.byte (STranceVoices & $FF)
+	.byte (SWishVoices & $FF)
+	.byte (SShiftVoices & $FF)
+	.byte (SMenuMoveVoices & $FF)
+	.byte (SMenuMoveVoices & $FF) ;Confirm and move are the same length using the same voices
+	.byte (SWitherVoices & $FF) ;Menu nope only uses 1 sample of voice 7
 
 SFireVoices:
 	.byte $8
@@ -2298,6 +2288,34 @@ SBanishSpellVoices:
 	.byte $8
 	.byte $8
 	.byte $8
+STranceVoices:
+	.byte $E
+	.byte $E
+	.byte $E
+	.byte $E
+	.byte $0
+	.byte $E
+	.byte $E
+	.byte $E
+SWishVoices:
+	.byte $C
+	.byte $C
+	.byte $5
+	.byte $5
+	.byte $5
+	.byte $C
+	.byte $C
+	.byte $C
+SShiftVoices:
+	.byte $7
+	.byte $7
+	.byte $7
+	.byte $7
+	.byte $7
+	.byte $7
+SMenuMoveVoices:
+	.byte $C
+	.byte $C
 
 	ORG $FD00
 	RORG $FD00
@@ -2320,6 +2338,12 @@ SSoundLengths:
 	.byte 9 ;TRIAGE
 	.byte 9 ;WITHER
 	.byte 10 ;BANISH
+	.byte 8 ;TRANCE
+	.byte 8 ;WISH
+	.byte 6 ;SHIFT
+	.byte 2 ;Menu move
+	.byte 2 ;Menu confirm
+	.byte 1 ;Menu nope
 
 SSoundFrequencies:
 	.byte 0 ;No sound
@@ -2339,6 +2363,12 @@ SSoundFrequencies:
 	.byte 5 ;TRIAGE
 	.byte 4 ;WITHER
 	.byte 6 ;BANISH
+	.byte 6 ;TRANCE
+	.byte 6 ;WISH
+	.byte 6 ;SHIFT
+	.byte 4 ;Menu move
+	.byte 4 ;Menu confirm
+	.byte 8 ;Menu nope
 
 SPitches:
 	.byte 0
@@ -2358,6 +2388,12 @@ SPitches:
 	.byte (STriagePitches & $FF)
 	.byte (SWitherPitches & $FF)
 	.byte (SBanishSpellPitches & $FF)
+	.byte (STrancePitches & $FF)
+	.byte (SWishPitches & $FF)
+	.byte (SShiftPitches & $FF)
+	.byte (SMenuMovePitches & $FF)
+	.byte (SMenuConfirmPitches & $FF)
+	.byte (SMenuNopePitches & $FF)
 
 SFirePitches:
 	.byte $1F
@@ -2514,9 +2550,42 @@ SBanishSpellPitches:
 	.byte $1
 	.byte $1F
 	.byte $1
+STrancePitches:
+	.byte $A
+	.byte $9
+	.byte $4
+	.byte $2
+	.byte $0
+	.byte $2
+	.byte $2
+	.byte $7
+SWishPitches:
+	.byte $3
+	.byte $5
+	.byte $D
+	.byte $F
+	.byte $11
+	.byte $9
+	.byte $7
+	.byte $7
+SShiftPitches:
+	.byte $E
+	.byte $F
+	.byte $E
+	.byte $D
+	.byte $E
+	.byte $F
+SMenuMovePitches:
+	.byte $5
+	.byte $4
+SMenuConfirmPitches:
+	.byte $3
+	.byte $7
+SMenuNopePitches:
+	.byte $7
 
-	ORG $FE00
-	RORG $FE00
+	ORG $FDFE
+	RORG $FDFE
 
 STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
 	cpx currentSound
@@ -2555,12 +2624,13 @@ SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
 	sta tempPointer1+1
 	lda (tempPointer1),y
 	sta AUDF0
-	lda #4
+	lda #3
 	sta AUDV0
 	rts
 .SSoundFinished:
 	ldx #5
 	lda #0
+	sta currentSound
 .SStopSoundLoop:
 	sta AUDC0,x
 	dex
