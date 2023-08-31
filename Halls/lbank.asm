@@ -359,11 +359,11 @@ LProcessCasting:
 	lda temp1
 	and #$1F ;Spell ID
 	tax
+	sta cursorIndexAndMessageY
 	cmp #$0A ;SMITE
 	beq .LSmiteMessage
-	cmp #$0B ;POISON/VOLLEY
+	cmp #$0B ;VOLLEY
 	beq .LVolleyMessage
-	sta cursorIndexAndMessageY
 	lda #$05 ;X CASTS Y
 	bne .LStoreCastsMessage
 
@@ -373,7 +373,7 @@ LProcessCasting:
 	lda #$2B ;X SMITES Y
 	bne .LStoreCastsMessage
 .LVolleyMessage:
-	lda #$05 ;X CASTS Y
+	lda #$21 ;X SHOT A Y
 .LStoreCastsMessage:
 	sta currentMessage
 
@@ -559,6 +559,7 @@ LProcessCasting:
 	;Need to check if this spell should miss or not
 	jsr LCheckSpellHit
 	bpl .LSpellConnects
+.LNoEffect:
 	lda #$15 ;NO EFFECT
 	sta currentMessage
 	bne .LGoToNormalTgtedExit
@@ -679,6 +680,7 @@ LProcessCasting:
 	lda #TIMER_MASK
 	jsr LApplyStatus
 	lda #$10 ;X HAS A SHIELD
+.LNormalTgtedExitSaveMessage:
 	sta currentMessage
 .LNormalTgtedExit:
 	lda #$81
@@ -712,12 +714,6 @@ LProcessCasting:
 	jsr LApplySharpDamageModifier
 	lda temp2
 	ldy #HOLY_RESIST_MASK
-	bne .LTgtDamage
-
-.LPoison:
-	ldy #ATTACK_AND_HALF_MAGIC
-	jsr LDetermineSpellPower
-	ldy #POISON_RESIST_MASK
 	bne .LTgtDamage
 
 .LSharp:
@@ -854,7 +850,7 @@ LProcessCasting:
 	ldy #HALF_MAGIC
 	jsr LDetermineSpellPower
 	ldy #FIRE_RESIST_MASK
-	bne .LAoEDamage
+	jmp .LAoEDamage
 .LHitWithMeteor:
 	ldy #FULL_MAGIC
 	jsr LDetermineSpellPower
@@ -929,6 +925,12 @@ LProcessCasting:
 	sta currentMessage
 	bne .LTryNextTgt
 
+.LVolley:
+	ldx currentBattler
+	jsr LGetBattlerAttack
+	lsr
+	ldy #PHYSICAL_RESIST_MASK
+
 .LAoEDamage:
 	ldx startingCursorIndexAndTargetID
 	jsr LApplyDamage
@@ -968,7 +970,7 @@ LHighSpellLogicLocations:
 	.byte (.LChaos >> 8 & $FF)
 	.byte (.LHeal >> 8 & $FF)
 	.byte (.LSmite >> 8 & $FF)
-	.byte (.LPoison >> 8 & $FF)
+	.byte (.LVolley >> 8 & $FF)
 	.byte (.LSharp >> 8 & $FF)
 	.byte (.LBlight >> 8 & $FF)
 	.byte (.LTriage >> 8 & $FF)
@@ -990,7 +992,7 @@ LLowSpellLogicLocations:
 	.byte (.LChaos & $FF)
 	.byte (.LHeal & $FF)
 	.byte (.LSmite & $FF)
-	.byte (.LPoison & $FF)
+	.byte (.LVolley & $FF)
 	.byte (.LSharp & $FF)
 	.byte (.LBlight & $FF)
 	.byte (.LTriage & $FF)
@@ -1237,8 +1239,82 @@ LProcessParrying:
 	rts
 
 LProcessSpecial:
-	lda #$81
-	sta inBattle
+	ldx currentBattler
+	lda battleActions,x ;battleActions is 4 bytes before enemyID
+	cmp #$10 ;TODO replace with LICH id
+	beq .LLichSpecial
+	cmp #$20 ;TODO replace with JESTER id
+	beq .LJesterSpecial
+	cmp #$30 ;TODO replace with GIFT id
+	beq .LGiftSpecial
+	cmp #$40 ;TODO replace with OOZE id
+	beq .LOozeSpecial
+	cmp #$50 ;TODO replace with SLIME id
+	beq .LSlimeSpecial
+	rts
+
+.LLichSpecial:
+	jsr LFindNextEmptySpot
+	cpx #$FF
+	beq .LCantSummon
+	lda #$9D ;TODO X CALLS Y
+	sta temp2
+	lda rand8
+	bpl .LSummonZombie
+.LSummonSkeleton:
+	lda #1 ;TODO SKLTON id
+	ldy LSkltonHP
+	bne .LSummon
+.LSummonZombie:
+	lda #0 ;TODO ZOMBIE id
+	ldy LZombieHP
+	bne .LSummon
+
+.LJesterSpecial:
+	jsr LFindNextEmptySpot
+	cpx #$FF
+	beq .LCantSummon
+	lda #$9C ;TODO X LEAVES Y
+	sta temp2
+	lda #3 ;TODO GIFT id
+	ldy #30 ;TODO GIFT hp
+.LSummon:
+	sta enemyID,x
+	tya
+	sta enemyHP,x
+	jsr L4INX
+	stx startingCursorIndexAndTargetID
+	lda temp2 ;The correct message
+	jmp .LNormalTgtedExitSaveMessage
+
+.LCantSummon:
+	lda #$81 ;TODO X CANNOT SUMMON
+	jmp .LNormalTgtedExitSaveMessage
+
+.LGiftSpecial:
+	lda #$FE ;TODO X BLOWS UP
+	sta currentMessage
+	lda #$83 ;Cast BLIZRD (can't tell the difference between this and FIRE)
+	sta temp1 ;Inject the new enemyAction
+	jmp .LIsOffensive ;Jumps into the relevant part of AoE spell setup code
+
+.LOozeSpecial:
+	rts
+
+.LSlimeSpecial:
+	rts
+
+LFindNextEmptySpot: SUBROUTINE ;Starting from position X, returns the first empty spot in X. #$FF if no spot exists
+	ldx #2
+.LFindNextEmptySpotLoop:
+	lda enemyHP,x
+	bmi .LGotIt
+	inx
+	cpx #4
+	bcc .LFindNextEmptySpotLoop
+.LNoTarget:
+	ldx #$FF
+.LGotIt:
 	rts
 
 LDetermineSpellPower: SUBROUTINE ;Interprets Y as the damage formula to follow, and returns the appropriate value based on the battler's Attack & Magic
@@ -1598,6 +1674,12 @@ LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, 
 .LNoSharp:
 	rts
 
+LApplyRandomModifier: SUBROUTINE
+	lda mazeAndPartyLevel
+	and #$0F
+	
+	rts
+
 LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
 	sta temp2
 LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
@@ -1914,6 +1996,7 @@ LSetStatPointers:
 	lda enemyID,x
 	tay
 	lda (temp4),y
+L4INX:
 	inx
 	inx
 	inx
@@ -2155,6 +2238,8 @@ LEnemyMagic:
 	.byte 0 ;Giant
 	.byte 20 ;Dragon
 LEnemyHP:
+LZombieHP:
+LSkltonHP:
 	.byte 10 ;Zombie
 	.byte 40 ;Giant
 	.byte 150 ;Dragon
@@ -2442,7 +2527,7 @@ LPaladinSpellList:
 LRangerSpellList:
 	.byte #$0 ;BACK
 	.byte #$FF
-	.byte #$B ;POISON
+	.byte #$B ;VOLLEY
 	.byte #$FF
 	.byte #$9 ;HEAL
 	.byte #$FF
@@ -2472,7 +2557,7 @@ LSpellTargetingLookup:
 	.byte $82 ;CHAOS
 	.byte $3 ;HEAL
 	.byte $1 ;SMITE
-	.byte $1 ;POISON
+	.byte $82 ;VOLLEY
 	.byte $3 ;SHARP
 	.byte $1 ;BLIGHT
 	.byte $84 ;TRIAGE
@@ -2494,7 +2579,7 @@ LSpellManaLookup:
 	.byte 1 ;CHAOS
 	.byte 1 ;HEAL
 	.byte 1 ;SMITE
-	.byte 1 ;POISON
+	.byte 1 ;VOLLEY
 	.byte 1 ;SHARP
 	.byte 1 ;BLIGHT
 	.byte 1 ;TRIAGE

@@ -247,7 +247,7 @@ MESSAGE COMPONENTS (& strings):
 03: Y HP
 04: STABS
 05: SHOOTS
-06: SLAMS
+06: BASHES
 07: BITES
 08: RUSHES - SLICES?
 09: CASTS
@@ -272,7 +272,7 @@ MESSAGE COMPONENTS (& strings):
 1C: WINS
 1D: TRIES
 1E: TO RUN
-1F: NO
+1F: Unallocated
 20: EFFECT
 21: CANNOT - This could be removed, message could be changed to NO ESCAPE instead of X CANNOT ESCAPE
 22: ESCAPE
@@ -303,11 +303,12 @@ MESSAGE COMPONENTS (& strings):
 3B: KNOWN
 3C: CAMP
 3D: LEAVE
-3E: FORM
-3F: YOUR
+3E: FORM A
+3F: Unallocated
 40: TEAM
-41: READY
+41: PLAY
 42: SMITES
+43: SHOT A
 
 MESSAGES:
 00: X STABS Y
@@ -343,7 +344,7 @@ MESSAGES:
 1E: X SHIELD FADES
 1F: GAME OVER
 20: GAME CLEAR
-21: Unallocated
+21: X SHOT A VOLLEY
 22: X (target) STABS Y (currentBattler) --- Any enemy given the parry action needs to accept the STABS message
 23: X BLOCKS
 24: PARTY HP UP
@@ -379,7 +380,7 @@ SPELL LISTING
 8: CHAOS : Deals damage of a random element to each enemy, also has a chance to inflict status
 9: HEAL : Heals a single ally, removes blight instead of healing if blighted
 A: SMITE : Deals damage to target based on attack and magic power
-B: POISON : Deals physical/poison damage to target based on attack and magic
+B: VOLLEY : Deals half attack physical damage to all enemies
 C: SHARP : Doubles attack power of ally
 D: BLIGHT : Attempts to apply poisoned status to enemy
 E: TRIAGE : Heals all allies

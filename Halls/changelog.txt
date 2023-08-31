@@ -592,8 +592,16 @@
 	-Legendary resistance makes sleep much less likely (50% -> 12.5%)
 	-Changed SMITE message behavior from X CASTS SMITE to X SMITES Y
 	-Replaced THE MAZE AWAITS with INTO THE CASTLE/CRYPT/ABYSS
+	-Replaced POISON spell with VOLLEY, which is an AoE physical attack for half attack power
+	-Repacked text literals in E bank to be more space efficient, and to prepare for mathematical pointer generation
+	-Started working on the first special abilities
+		-Mostly complete (though untested) LICH, JESTER, and GIFT specials, with summoning helper function
+	-Changed title screen from FORM YOUR TEAM to FORM A TEAM
+	-Changed string literal pointers to be generated from their IDs instead of stored, saving over 120 bytes!!
+		-Modified RSetBattleMessage and setup screen rendering to account for the increased time.
 
 TODO:
+	-Implement enemy special abilities
 	-Make enemies flash between their own colors and the color of the damage type when damaged
 		-Fire : orange
 		-Ice : light blue
@@ -605,10 +613,7 @@ TODO:
 	-Improve in-maze campfire graphics to look less squished when they appear
 	-Add calls for pain and excited avatars
 	-Setup screen logo?? Would be nice if space allows
-		-Seems like space does allow, as long as the kernel for drawing the logo is short
-		-Change message to FORM A TEAM in order to reduce text size
 	-Consider booting enemy AI tables, logic, or both into the E bank to make more room for sound effects or battle system logic
-	-Replace POISON spell with VOLLEY? X SHOOTS VOLLEY? X FIRES VOLLEY?
 
 	Additional sounds to consider:
 		-Crackling campfire sound
@@ -616,6 +621,9 @@ TODO:
 		-Monster roar near exit
 		-Battle victory jingle
 		-Game victory jingle
+
+	Make enemies with legendary resistance take 50% less damage from all sources
+		-Preferably don't factor this in when showing damage messages
 
 
 	DOESN'T REQUIRE LOGIC:

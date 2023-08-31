@@ -183,7 +183,7 @@ currentBattler ds 1
 vEdges ds 8 ;Vertical edges of the maze   0xxxxxxx
 hEdges ds 7 ;Horizontal edges of the maze xxxxxxxx
 
-battleActions ds 4
+battleActions ds 4 ;Must be directly ahead of enemyID
 enemyID ds 4
 battlerStatus ds 8 ;TGSSlPAB - T:Shield timer, G:Guard flag, S:Shield flag, Sl:Sleep timer, P:Parrying, A:Sharpened, B:Blighted
 enemyAction ds 1

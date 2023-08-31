@@ -2638,7 +2638,7 @@ SSpellTargetingLookup:
 	.byte $82 ;CHAOS
 	.byte $3 ;HEAL
 	.byte $1 ;SMITE
-	.byte $1 ;POISON
+	.byte $82 ;VOLLEY
 	.byte $3 ;SHARP
 	.byte $1 ;BLIGHT
 	.byte $84 ;TRIAGE
@@ -2805,7 +2805,7 @@ SPaladinSpellList:
 SRangerSpellList:
 	.byte #$0 ;BACK
 	.byte #$FF
-	.byte #$B ;POISON
+	.byte #$B ;VOLLEY
 	.byte #$FF
 	.byte #$9 ;HEAL
 	.byte #$FF
@@ -2864,7 +2864,7 @@ SSpellManaLookup:
 	.byte 1 ;CHAOS
 	.byte 1 ;HEAL
 	.byte 1 ;SMITE
-	.byte 1 ;POISON
+	.byte 1 ;VOLLEY
 	.byte 1 ;SHARP
 	.byte 1 ;BLIGHT
 	.byte 1 ;TRIAGE

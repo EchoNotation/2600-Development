@@ -567,7 +567,7 @@ RDrawBattleText:
 	sta fireMazeHeightAndMessageLine
 
 RDrawBattleTextLoop:
-	sta WSYNC
+	;sta WSYNC
 	jsr RSetBattleMessage
 RAfterSettingBattleMessage:
 	jsr RSetTextPointers
@@ -619,7 +619,7 @@ RAfterRendering:
 	jmp RGoToOverscan
 
 RRenderSetupScreen:
-	ldx #25
+	ldx #37
 RWaitToDrawSetupScreenLoop:
 	sta WSYNC
 	dex
@@ -663,16 +663,10 @@ RWaitToDrawSetupScreenLoop:
 	sta WSYNC
 	sta HMOVE
 
-	ldx #$3E ;FORM
+	ldx #$3E ;FORM A
 	jsr RLoadString
 	jsr RSetTextPointers
 	jsr RDrawText
-	sta WSYNC
-	ldx #$3F ;YOUR
-	jsr RLoadString
-	jsr RSetTextPointers
-	jsr RDrawText
-	sta WSYNC
 	ldx #$40 ;TEAM
 	jsr RLoadString
 	jsr RSetTextPointers
@@ -698,9 +692,8 @@ RDrawSetupScreenLoop:
 
 	sta WSYNC
 	sta WSYNC
-	sta WSYNC
 
-	ldx #$41 ;READY
+	ldx #$41 ;PLAY
 	jsr RLoadString
 	jsr RSetTextPointers
 	jsr RDrawText
@@ -847,7 +840,7 @@ RXTriesToRun:
 	.byte $1D
 	.byte $1E
 RNoEffect:
-	.byte $1F
+	.byte $39
 	.byte $20
 	.byte $FF
 RXCannotEscape:
@@ -894,10 +887,10 @@ RGameClear:
 	.byte $2B
 	.byte $2C
 	.byte $FF
-RSomeDudMessage:
-	.byte $FF
+RXShotAVolley:
 	.byte $0
-	.byte $FF
+	.byte $43
+	.byte $02
 RXStabsYParry:
 	.byte $1
 	.byte $4
@@ -962,32 +955,22 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	tax
 	lda RMessageConstructors,x ;Find what needs to be shown on this exact line
 	bmi .RGoToAllEmpty
+	cmp #4
+	bcs .RGeneralMessageStructure
+	sta WSYNC
 	tax
-	beq .RGoToSourceBattlerName
+	beq .RSourceBattlerName
 	dex
-	beq .RGoToTargetBattlerName
+	beq .RTargetBattlerName
 	dex
-	beq .RGoToSpellName
-	dex
-	beq .RGoToHPCount
-	dex
-	jmp .RGeneralMessageStructure
-.RGoToAllEmpty:
-	jmp .RAllEmpty
-.RGoToSourceBattlerName:
-	jmp .RSourceBattlerName
-.RGoToTargetBattlerName:
-	jmp .RTargetBattlerName
-.RGoToSpellName:
-	jmp .RSpellName
-.RGoToHPCount:
+	beq .RSpellName
 	jmp .RHPCount
 
+.RGoToAllEmpty:
+	jmp .RAllEmpty
+
 .RGeneralMessageStructure:
-	inx
-	inx
-	inx
-	inx
+	tax
 	jsr RLoadString
 	rts
 .RSourceBattlerName:
@@ -995,6 +978,8 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	cpx #4
 	bcs .REnemySourceBattlerName
 .RAllySourceBattlerName:
+.RAllyIsTargeted:
+	sta WSYNC
 	lda char1,x
 	and #$0F
 	tay
@@ -1033,27 +1018,7 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 .RTargetBattlerName:
 	ldx startingCursorIndexAndTargetID
 	cpx	#4
-	bcs .REnemyIsTargeted
-.RAllyIsTargeted:
-	lda char1,x
-	and #$0F
-	tay
-	lda RClassColors,y
-	sta COLUP0
-	sta COLUP1
-	lda name1,x
-	sta temp1
-	lda name2,x
-	sta temp2
-	lda name3,x
-	sta temp3
-	lda name4,x
-	sta temp4
-	lda name5,x
-	sta temp5
-	lda #EMPTY
-	sta temp6
-	rts
+	bcc .RAllyIsTargeted
 .REnemyIsTargeted:
 	dex
 	dex
@@ -1070,7 +1035,6 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	lda #(RZombieText >> 8 & $FF)
 	sta tempPointer1+1
 	bne .RSetTempVariables ;Should always be true, just saves a byte over jmp
-	rts
 .RSpellName:
 	ldx cursorIndexAndMessageY
 	lda RSpellTextLookupTable,x
@@ -1082,6 +1046,7 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	sta tempPointer1+1
 	bne .RSetTempVariables ;Should always be true, just saves a byte over jmp
 .RHPCount:
+	sta WSYNC
 	lda cursorIndexAndMessageY
 	jsr RCalculateDigitIndices
 	sty temp1
@@ -1117,13 +1082,13 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 .RAllEmpty:
 	sta WSYNC
 	sta WSYNC
+
 	lda #EMPTY
-	sta temp1
-	sta temp2
-	sta temp3
-	sta temp4
-	sta temp5
-	sta temp6
+	ldx #7
+.RSetEmptyLoop:
+	sta temp1,x
+	dex
+	bpl .RSetEmptyLoop
 	rts
 
 RDrawCharacterInfo: SUBROUTINE
@@ -1579,13 +1544,13 @@ RSmiteText:
 	.byte #T
 	.byte #E
 	.byte #EMPTY
-RPoisonText:
-	.byte #P
+RVolleyText:
+	.byte #V
 	.byte #O
-	.byte #I
-	.byte #S
-	.byte #O
-	.byte #N
+	.byte #L
+	.byte #L
+	.byte #E
+	.byte #Y
 RSharpText:
 	.byte #S
 	.byte #H
@@ -1671,7 +1636,7 @@ RSpellColors:
 	.byte $5A ;CHAOS
 	.byte $C8 ;HEAL
 	.byte $1C ;SMITE
-	.byte $DC ;POISON
+	.byte $0E ;VOLLEY
 	.byte $A8 ;SHARP
 	.byte $CE ;BLIGHT
 	.byte $9A ;TRIAGE
@@ -1724,7 +1689,7 @@ RSpellTextLookupTable:
 	.byte (RChaosText & $FF)
 	.byte (RHealText & $FF)
 	.byte (RSmiteText & $FF)
-	.byte (RPoisonText & $FF)
+	.byte (RVolleyText & $FF)
 	.byte (RSharpText & $FF)
 	.byte (RBlightText & $FF)
 	.byte (RTriageText & $FF)

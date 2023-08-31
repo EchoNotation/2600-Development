@@ -702,11 +702,27 @@ ERandom: SUBROUTINE ;Ticks the random number generator when called
 	rts
 
 ELoadString: SUBROUTINE ;Copies the string of ID X into temp1-temp6
-	lda EMessagesLowLookup,x
-	sta tempPointer1
-	lda EMessagesHighLookup,x
+	lda #(EStabsText >> 8 & $FF)
 	sta tempPointer1+1
-	ldy #0
+	txa
+	sec
+	sbc #4
+	cmp #42
+	bcc .ENoSubtractionNecessary
+	sec
+	sbc #42
+	inc tempPointer1+1
+.ENoSubtractionNecessary:
+	sta tempPointer1
+	ldy #5
+.EAdditionLoop:
+	clc
+	adc tempPointer1
+	dey
+	bne .EAdditionLoop
+	sta tempPointer1
+
+	;Y should be 0 here.
 	lda (tempPointer1),y
 	sta temp1
 	iny
@@ -736,145 +752,6 @@ ELoadEffect: SUBROUTINE ;Loads the effect of ID X.
 
 	ORG $E500
 	RORG $F500
-
-	;Only 12 more strings can be added with this particular information in the same bank as the encounter junk
-EMessagesLowLookup:
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte (EStabsText & $FF) ;Rogue/Paladin
-	.byte (EShootsText & $FF) ;Wizard/Ranger
-	.byte (EBashesText & $FF) ;Cleric
-	.byte (EBitesText & $FF)
-	.byte (ERushesText & $FF) ;Knight 
-	.byte (ECastsText & $FF)
-	.byte (EHealsText & $FF)
-	.byte (ELosesText & $FF)
-	.byte (EMissesText & $FF)
-	.byte (ELevelsText & $FF)
-	.byte (EUpText & $FF)
-	.byte (ELearnsText & $FF)
-	.byte (EMovesText & $FF)
-	.byte (EBacksText & $FF)
-	.byte (EDownText & $FF)
-	.byte (EAwayText & $FF)
-	.byte (EWastesText & $FF)
-	.byte (EWasText & $FF)
-	.byte (ECuredText & $FF)
-	.byte (EWakesText & $FF)
-	.byte (EHasAText & $FF)
-	.byte (EShieldMessageText & $FF)
-	.byte (EPartyText & $FF)
-	.byte (EFleesText & $FF)
-	.byte (EWinsText & $FF)
-	.byte (ETriesText & $FF)
-	.byte (EToRunText & $FF)
-	.byte (ENoText & $FF)
-	.byte (EEffectText & $FF)
-	.byte (ECannotText & $FF)
-	.byte (EEscapeText & $FF)
-	.byte (EGuardsText & $FF)
-	.byte (EAttackText & $FF)
-	.byte (EFellText & $FF)
-	.byte (EAsleepText & $FF)
-	.byte (EIsText & $FF)
-	.byte (ECastleText & $FF)
-	.byte (EFadesText & $FF)
-	.byte (EExiledText & $FF)
-	.byte (EGameText & $FF)
-	.byte (EClearText & $FF)
-	.byte (EOverText & $FF)
-	.byte (ETheText & $FF)
-	.byte (EIntoText & $FF)
-	.byte (EAbyssText & $FF)
-	.byte (ECryptText & $FF)
-	.byte (EBlocksText & $FF)
-	.byte (EHPUpText & $FF)
-	.byte (EMPUpText & $FF)
-	.byte (EFullyText & $FF)
-	.byte (EMixedText & $FF)
-	.byte (EStatusText & $FF)
-	.byte (EEmptyText & $FF)
-	.byte (ENoText & $FF)
-	.byte (ESpellsText & $FF)
-	.byte (EKnownText & $FF)
-	.byte (ECampText & $FF)
-	.byte (ELeaveText & $FF)
-	.byte (EFormText & $FF)
-	.byte (EYourText & $FF)
-	.byte (ETeamText & $FF)
-	.byte (EReadyText & $FF)
-	.byte (ESmitesText & $FF)
-
-EMessagesHighLookup:
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte (EStabsText >> 8 & $FF) ;Rogue/Paladin
-	.byte (EShootsText >> 8 & $FF) ;Wizard/Ranger
-	.byte (EBashesText >> 8 & $FF) ;Cleric
-	.byte (EBitesText >> 8 & $FF)
-	.byte (ERushesText >> 8 & $FF) ;Knight 
-	.byte (ECastsText >> 8 & $FF)
-	.byte (EHealsText >> 8 & $FF)
-	.byte (ELosesText >> 8 & $FF)
-	.byte (EMissesText >> 8 & $FF)
-	.byte (ELevelsText >> 8 & $FF)
-	.byte (EUpText >> 8 & $FF)
-	.byte (ELearnsText >> 8 & $FF)
-	.byte (EMovesText >> 8 & $FF)
-	.byte (EBacksText >> 8 & $FF)
-	.byte (EDownText >> 8 & $FF)
-	.byte (EAwayText >> 8 & $FF)
-	.byte (EWastesText >> 8 & $FF)
-	.byte (EWasText >> 8 & $FF)
-	.byte (ECuredText >> 8 & $FF)
-	.byte (EWakesText >> 8 & $FF)
-	.byte (EHasAText >> 8 & $FF)
-	.byte (EShieldMessageText >> 8 & $FF)
-	.byte (EPartyText >> 8 & $FF)
-	.byte (EFleesText >> 8 & $FF)
-	.byte (EWinsText >> 8 & $FF)
-	.byte (ETriesText >> 8 & $FF)
-	.byte (EToRunText >> 8 & $FF)
-	.byte (ENoText >> 8 & $FF)
-	.byte (EEffectText >> 8 & $FF)
-	.byte (ECannotText >> 8 & $FF)
-	.byte (EEscapeText >> 8 & $FF)
-	.byte (EGuardsText >> 8 & $FF)
-	.byte (EAttackText >> 8 & $FF)
-	.byte (EFellText >> 8 & $FF)
-	.byte (EAsleepText >> 8 & $FF)
-	.byte (EIsText >> 8 & $FF)
-	.byte (ECastleText >> 8 & $FF)
-	.byte (EFadesText >> 8 & $FF)
-	.byte (EExiledText >> 8 & $FF)
-	.byte (EGameText >> 8 & $FF)
-	.byte (EClearText >> 8 & $FF)
-	.byte (EOverText >> 8 & $FF)
-	.byte (ETheText >> 8 & $FF)
-	.byte (EIntoText >> 8 & $FF)
-	.byte (EAbyssText >> 8 & $FF)
-	.byte (ECryptText >> 8 & $FF)
-	.byte (EBlocksText >> 8 & $FF)
-	.byte (EHPUpText >> 8 & $FF)
-	.byte (EMPUpText >> 8 & $FF)
-	.byte (EFullyText >> 8 & $FF)
-	.byte (EMixedText >> 8 & $FF)
-	.byte (EStatusText >> 8 & $FF)
-	.byte (EEmptyText >> 8 & $FF)
-	.byte (ENoText >> 8 & $FF)
-	.byte (ESpellsText >> 8 & $FF)
-	.byte (EKnownText >> 8 & $FF)
-	.byte (ECampText >> 8 & $FF)
-	.byte (ELeaveText >> 8 & $FF)
-	.byte (EFormText >> 8 & $FF)
-	.byte (EYourText >> 8 & $FF)
-	.byte (ETeamText >> 8 & $FF)
-	.byte (EReadyText >> 8 & $FF)
-	.byte (ESmitesText >> 8 & $FF)
 
 EEncounterSizes:
 	.byte 2
@@ -1001,12 +878,6 @@ EBossEncounters:
 	ORG $E600
 	RORG $F600
 
-EWastesText:
-	.byte #W
-	.byte #A
-	.byte #S
-	.byte #T
-	.byte #E ;Shared, saving 1 byte
 EStabsText:
 	.byte #S
 	.byte #T
@@ -1084,6 +955,13 @@ EUpText:
 	.byte #EMPTY
 	.byte #EMPTY
 	.byte #EMPTY
+ELearnsText:
+	.byte #L
+	.byte #E
+	.byte #A
+	.byte #R
+	.byte #N
+	.byte #S
 EMovesText:
 	.byte #M
 	.byte #O
@@ -1097,33 +975,6 @@ EBacksText:
 	.byte #C
 	.byte #K
 	.byte #S
-	.byte #EMPTY
-ELearnsText:
-	.byte #L
-	.byte #E
-	.byte #A
-	.byte #R
-	.byte #N
-EShieldMessageText:
-	.byte #S
-	.byte #H
-	.byte #I
-	.byte #E
-	.byte #L
-	.byte #D
-EHasAText:
-	.byte #H
-	.byte #A
-	.byte #S
-	.byte #EMPTY
-	.byte #A
-	.byte #EMPTY
-EPartyText:
-	.byte #P
-	.byte #A
-	.byte #R
-	.byte #T
-	.byte #Y
 	.byte #EMPTY
 EDownText:
 	.byte #D
@@ -1139,13 +990,13 @@ EAwayText:
 	.byte #Y
 	.byte #EMPTY
 	.byte #EMPTY
-EWakesText:
+EWastesText:
 	.byte #W
 	.byte #A
-	.byte #K
+	.byte #S
+	.byte #T
 	.byte #E
 	.byte #S
-	.byte #EMPTY
 EWasText:
 	.byte #W
 	.byte #A
@@ -1160,10 +1011,34 @@ ECuredText:
 	.byte #E
 	.byte #D
 	.byte #EMPTY
-
-	ORG $E700
-	RORG $F700
-
+EWakesText:
+	.byte #W
+	.byte #A
+	.byte #K
+	.byte #E
+	.byte #S
+	.byte #EMPTY
+EHasAText:
+	.byte #H
+	.byte #A
+	.byte #S
+	.byte #EMPTY
+	.byte #A
+	.byte #EMPTY
+EShieldMessageText:
+	.byte #S
+	.byte #H
+	.byte #I
+	.byte #E
+	.byte #L
+	.byte #D
+EPartyText:
+	.byte #P
+	.byte #A
+	.byte #R
+	.byte #T
+	.byte #Y
+	.byte #EMPTY
 EFleesText:
 	.byte #F
 	.byte #L
@@ -1192,9 +1067,9 @@ EToRunText:
 	.byte #R
 	.byte #U
 	.byte #N
-ENoText:
-	.byte #N
-	.byte #O
+EUnallocatedText:
+	.byte #EMPTY
+	.byte #EMPTY
 	.byte #EMPTY
 	.byte #EMPTY
 	.byte #EMPTY
@@ -1219,19 +1094,41 @@ EEscapeText:
 	.byte #C
 	.byte #A
 	.byte #P
-EExiledText:
 	.byte #E
-	.byte #X
-	.byte #I
+EGuardsText:
+	.byte #G
+	.byte #U
+	.byte #A
+	.byte #R
+	.byte #D
+	.byte #S
+EAttackText:
+	.byte #A
+	.byte #T
+	.byte #T
+	.byte #A
+	.byte #C
+	.byte #K
+EFellText:
+	.byte #F
+	.byte #E
+	.byte #L
+	.byte #L
+	.byte #EMPTY
+	.byte #EMPTY
+EAsleepText:
+	.byte #A
+	.byte #S
 	.byte #L
 	.byte #E
-	.byte #D
-EFadesText:
-	.byte #F
-	.byte #A
-	.byte #D
 	.byte #E
+	.byte #P
+EIsText:
+	.byte #I
 	.byte #S
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
 	.byte #EMPTY
 ECastleText:
 	.byte #C
@@ -1240,70 +1137,25 @@ ECastleText:
 	.byte #T
 	.byte #L
 	.byte #E
-EIsText:
-	.byte #I
-	.byte #S
-EEmptyText:
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-EAttackText:
-	.byte #A
-	.byte #T
-	.byte #T
-	.byte #A
-	.byte #C
-	.byte #K
-EGuardsText:
-	.byte #G
-	.byte #U
-	.byte #A
-	.byte #R
-	.byte #D
-	.byte #S
-EAsleepText:
-	.byte #A
-	.byte #S
-	.byte #L
-	.byte #E
-	.byte #E
-	.byte #P
-EFellText:
+EFadesText:
 	.byte #F
+	.byte #A
+	.byte #D
 	.byte #E
-	.byte #L
-	.byte #L
-	.byte #EMPTY
-	.byte #EMPTY
-ESpellsText:
 	.byte #S
-	.byte #P
+	.byte #EMPTY
+EExiledText:
 	.byte #E
+	.byte #X
+	.byte #I
 	.byte #L
-	.byte #L
-	.byte #S
-EKnownText:
-	.byte #K
-	.byte #N
-	.byte #O
-	.byte #W
-	.byte #N
-	.byte #EMPTY
+	.byte #E
+	.byte #D
 EGameText:
 	.byte #G
 	.byte #A
 	.byte #M
 	.byte #E
-	.byte #EMPTY
-	.byte #EMPTY
-EOverText:
-	.byte #O
-	.byte #V
-	.byte #E
-	.byte #R
 	.byte #EMPTY
 	.byte #EMPTY
 EClearText:
@@ -1313,6 +1165,17 @@ EClearText:
 	.byte #A
 	.byte #R
 	.byte #EMPTY
+EOverText:
+	.byte #O
+	.byte #V
+	.byte #E
+	.byte #R
+	.byte #EMPTY
+	.byte #EMPTY
+
+	ORG $E700
+	RORG $F700
+
 ETheText:
 	.byte #T
 	.byte #H
@@ -1383,6 +1246,34 @@ EStatusText:
 	.byte #T
 	.byte #U
 	.byte #S
+EEmptyText:
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+ENoText:
+	.byte #N
+	.byte #O
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+ESpellsText:
+	.byte #S
+	.byte #P
+	.byte #E
+	.byte #L
+	.byte #L
+	.byte #S
+EKnownText:
+	.byte #K
+	.byte #N
+	.byte #O
+	.byte #W
+	.byte #N
+	.byte #EMPTY
 ECampText:
 	.byte #C
 	.byte #A
@@ -1396,18 +1287,21 @@ ELeaveText:
 	.byte #A
 	.byte #V
 	.byte #E
-EFormText:
 	.byte #EMPTY
+EFormAText:
 	.byte #F
 	.byte #O
 	.byte #R
 	.byte #M
-EYourText:
 	.byte #EMPTY
-	.byte #Y
-	.byte #O
-	.byte #U
-	.byte #R
+	.byte #A
+EUnallocated2Text:
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
 ETeamText:
 	.byte #EMPTY
 	.byte #T
@@ -1415,11 +1309,11 @@ ETeamText:
 	.byte #A
 	.byte #M
 	.byte #EMPTY
-EReadyText:
-	.byte #R
-	.byte #E
+EPlayText:
+	.byte #EMPTY
+	.byte #P
+	.byte #L
 	.byte #A
-	.byte #D
 	.byte #Y
 	.byte EMPTY
 ESmitesText:
@@ -1429,6 +1323,13 @@ ESmitesText:
 	.byte #T
 	.byte #E
 	.byte #S
+EShotAText:
+	.byte #S
+	.byte #H
+	.byte #O
+	.byte #T
+	.byte #EMPTY
+	.byte #A
 
 	ORG $E800
 	RORG $F800
