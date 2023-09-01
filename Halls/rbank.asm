@@ -593,6 +593,8 @@ RWaitToDrawPlayerText:
 	bne RWaitToDrawPlayerText
 
 RDrawPartyInfoBattle:
+	lda #0
+	sta charIndex
 	jsr RDrawCharacterInfo
 	inc charIndex
 	jsr RDrawCharacterInfo
@@ -1871,6 +1873,8 @@ RPartyPositionMasks:
 	.byte $04
 	.byte $08
 
+	;86 bytes in here...
+
 	ORG $CC00 ;Used to hold more graphics data
 	RORG $FC00
 
@@ -1919,17 +1923,7 @@ RAvatarExcited:
 	.byte #%10100101
 	.byte #%10000001
 	.byte #%11111111
-RAvatarPain:
-	;.byte #%11111111
-	;.byte #%10011001
-	;.byte #%10111101
-	;.byte #%10011001
-	;.byte #%11000011
-	;.byte #%10100101
-	;.byte #%10000001
-	;.byte #%11111111
-
-	
+RAvatarPain:	
 	;.byte %11111111
 	;.byte %11111111
 	;.byte %11011011
@@ -1938,6 +1932,7 @@ RAvatarPain:
 	;.byte %11011011
 	;.byte %11111111
 	;.byte %11111111
+
 	.byte %11010101
 	.byte %10010100
 	.byte %10011101
@@ -2146,7 +2141,7 @@ RNearFire:
 	.byte %00100000 ;R4
 	.byte $FF ;----
 
-	;33 bytes here
+	;32 bytes here
 
 	ORG $CD00 ;Used for holding the letters of the alphabet
 	RORG $FD00

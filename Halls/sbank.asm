@@ -46,7 +46,7 @@ SClearNames:
 
 	;ldy #0
 	;sty cursorIndexAndMessageY
-	;lda #$02 ;Maze level 0, party level 2
+	;lda #$09 ;Maze level 0, party level 9
 	;sta mazeAndPartyLevel
 	;lda #$80
 	;sta inBattle
@@ -58,8 +58,12 @@ SClearNames:
 	;sta enemyID+3
 	;lda #$03
 	;sta menuSize
+	;lda #0
+	;sta enemyID
+	;sta enemyID+2
 	;lda #1
 	;sta enemyHP
+	;sta enemyHP+2
 	;sta enemyHP+1
 	;sta enemyHP+2
 	;sta enemyHP+3

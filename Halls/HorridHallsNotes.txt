@@ -18,11 +18,6 @@ total = 256 + 1024 + 1536 + 80 + 40 = 2936 bytes of enemy data,
 		There does seem to currently be enough room for this...
 	-Encounter generation bank needs access to enemy size information
 
-All small enemies graphics and colors go in the same page
-Medium enemies graphics and colors are split across 4 pages
-Large enemy graphics take up 4 pages, colors take up 2 pages
-
-
 If each spell effect is <=32 unique frames long, the total would be <=512 bytes of data.
 So it should be possible to have this enemy configuration with unique spell effects.
 Maybe spell effects can be updated every other frame, or every 4 frames, to create spells that could be longer.

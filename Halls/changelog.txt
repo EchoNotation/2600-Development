@@ -598,18 +598,16 @@
 		-Mostly complete (though untested) LICH, JESTER, and GIFT specials, with summoning helper function
 	-Changed title screen from FORM YOUR TEAM to FORM A TEAM
 	-Changed string literal pointers to be generated from their IDs instead of stored, saving over 120 bytes!!
-		-Modified RSetBattleMessage and setup screen rendering to account for the increased time.
+		-Modified RSetBattleMessage and setup screen rendering to account for the increased time
+8/31/23
+	-Progress towards having enemies flash between their own colors and color of damage type when hit.
+		-Still needs to only enable for the enemy that was damaged
+9/1/23
+	-Enemies now flash between their own colors and the color of the damage type they received.
+	-Fixed long-standing bug where healing allies could cause an overflow
 
 TODO:
 	-Implement enemy special abilities
-	-Make enemies flash between their own colors and the color of the damage type when damaged
-		-Fire : orange
-		-Ice : light blue
-		-Electric : yellow
-		-Holy : white
-		-Poison : green
-		-Physical : gray
-		-Non-elemental : black
 	-Improve in-maze campfire graphics to look less squished when they appear
 	-Add calls for pain and excited avatars
 	-Setup screen logo?? Would be nice if space allows

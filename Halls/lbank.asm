@@ -1724,6 +1724,21 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	bcc .LDied
 	bcs .LSurvived
 .LDealDamageToEnemy:
+	ldx #5 ;Enemy damage flash effect
+	jsr LLoadEffect
+
+	lda temp4 ;The damage mask
+	ldy #$FF
+.LDamageShiftingLoop:
+	iny
+	lsr
+	bcc .LDamageShiftingLoop
+
+	;Y = 0 is non elemental, 1 is poison, 2 is electric, 3 is divine, 4 is ice, 5 is fire, 6 is physical
+	lda LDamageColors,y
+	sta mazeColor
+
+	ldx temp3
 	lda battlerHP,x
 	sec
 	sbc temp2
@@ -1736,6 +1751,15 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 .LDied:
 	lda #$FF
 	rts
+
+LDamageColors:
+	.byte $00
+	.byte $CA
+	.byte $1E
+	.byte $0E
+	.byte $9C
+	.byte $FC
+	.byte $08
 
 LDeathCleanup: SUBROUTINE ;Performs death housekeeping for target X
 	lda LHasActionMasks,x
@@ -1786,6 +1810,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	clc
 	adc temp2
 	cld
+	bcs .LAdditionOverflow
 	sta temp3 ;current health + heal amount
 	jsr LGetBattlerMaxHP
 	jsr LBinaryToDecimal
@@ -1796,6 +1821,10 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	sta battlerHP,x
 	lda temp2
 	rts
+.LAdditionOverflow:
+	jsr LGetBattlerMaxHP
+	jsr LBinaryToDecimal
+	ldx temp5
 .LMaxedOutHP:
 	sta battlerHP,x
 	lda #0
@@ -2035,7 +2064,10 @@ LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to conver
 	adc #10
 	sta temp4
 	txa
-	jsr L4Asl
+	asl
+	asl
+	asl
+	asl
 	ora temp4
 	rts
 
@@ -2062,7 +2094,10 @@ LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to conve
 	sta tempPointer2
 .LCombine:
 	txa
-	jsr L4Asl
+	asl
+	asl
+	asl
+	asl
 	ora tempPointer2
 	rts
 

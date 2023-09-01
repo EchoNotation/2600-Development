@@ -6,6 +6,23 @@
 EReset:
 	nop $1FF9 ;Go to bank 3, the correct startup bank
 
+;This function needs to be in a location where the branches are never in danger of crossing a page boundary.
+ECheckDamageTarget: SUBROUTINE ;Determines whether or not this enemy needs to do a damage flash effect. Takes 32 cycles.
+	lda temp3 ;3
+	clc ;2
+	adc #4 ;2
+	cmp startingCursorIndexAndTargetID ;3
+	beq .EIsTarget ;2/3
+.ENotTarget:
+	lda #$00 ;2
+	beq .ESaveAndReturn ;3
+.EIsTarget:
+	nop ;Lose 2 cycles
+	lda #$FF ;2
+.ESaveAndReturn:
+	sta temp2 ;3
+	rts
+
 ETestEffect:
 	.byte $10
 	.byte $20
@@ -197,7 +214,7 @@ EEffectLength:
 	.byte 8 ;Transition to battle
 	.byte 4 ;Transition to fire
 	.byte 4 ;Transition to maze
-	.byte 1 ;Enemy damage flash
+	.byte 16 ;Enemy damage flash
 	.byte 8 ;Test effect
 	.byte 12 ;Fire
 	.byte 8 ;Sleep
@@ -213,7 +230,7 @@ EEffectFrequency:
 	.byte 10
 	.byte 10
 	.byte 10
-	.byte 30
+	.byte 1 ;Enemy damage flash
 	.byte 30
 	.byte 4 ;Fire
 	.byte 6 ;Sleep
@@ -317,9 +334,7 @@ EPrepSmallEnemy:
 	
 	sta WSYNC
 	jsr EDrawSmallEnemy
-	ldx temp3
-	inx
-	stx temp3
+	inc temp3
 	lda temp1
 	sec
 	sbc #19
@@ -347,10 +362,8 @@ EPrepMediumEnemy:
 	sta WSYNC
 	sta WSYNC
 	jsr EDrawMediumEnemy
-	ldx temp3
-	inx
-	inx
-	stx temp3
+	inc temp3
+	inc temp3
 	lda temp1
 	sec
 	sbc #38
@@ -403,13 +416,11 @@ EAfterRenderingEnemiesLoop:
 	jmp EGoToDrawingBattleText
 
 EDrawSmallEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that are 8x8 pixels i size. Graphical information is interpreted from tempPointer1, and color information is interpreted from tempPointer5
-	jsr ESpinWheels
-	jsr ESpinWheels
-	jsr ESpinWheels
-	nop
-	sta RESP0
+	jsr ECheckDamageTarget ;Takes exactly 32 cycles to run
 	ldy #8
 	lda #0
+	nop
+	sta RESP0
 	sta NUSIZ0
 	sta NUSIZ1
 .EDrawSmallEnemyLoop:
@@ -418,8 +429,22 @@ EDrawSmallEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that ar
 	bmi .EDoneDrawingSmallEnemy
 	lda (tempPointer1),y
 	sta GRP0
+
+	lda currentEffect
+	and temp2
+	cmp #$5
+	bne .ENormalDrawing
+	lda effectCounter
+	and #$04
+	bne .ENormalDrawing
+.EColorDrawing:
+	lda mazeColor
+	sta COLUP0
+	jmp .EExitLoop
+.ENormalDrawing:
 	lda (temp5),y
 	sta COLUP0
+.EExitLoop:
 	sta WSYNC
 	jmp .EDrawSmallEnemyLoop
 .EDoneDrawingSmallEnemy
@@ -434,26 +459,37 @@ EDrawSmallEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that ar
 EDrawMediumEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that are 16x16 pixels in size. Graphical information is interpreted from tempPointer1 and tempPointer2, color information is interpreted from tempPointer5 and tempPointer6.
 	lda #$10 ;Moves one pixel to the left
 	sta HMP1
-	jsr ESpinWheels
-	jsr ESpinWheels
-	nop
-	nop
-	nop
-	nop
+	jsr ECheckDamageTarget ;Takes exactly 32 cycles
 	nop
 	sta RESP0
 	sta RESP1
 	jsr ESpinWheels
-	nop
-	nop
-	nop
-	nop
-	;sta WSYNC
-	sta HMOVE ;Need to make this happen on cycle 73 exactly...
 	ldy #16 ;Height of the enemy
 	lda #0 ;No duplication
+	sta HMOVE ;Need to make this happen on cycle 73 exactly...
 	sta NUSIZ0
 	sta NUSIZ1
+
+	lda currentEffect
+	and temp2
+	cmp #$5
+	bne .EDrawMediumEnemyLoop
+	lda effectCounter
+	and #$04
+	bne .EDrawMediumEnemyLoop
+.EDrawMediumEnemyLoopColorful:
+	dey
+	sta WSYNC
+	bmi .EDoneDrawingMediumEnemy 
+	lda (tempPointer1),y
+	sta GRP0
+	lda (tempPointer2),y
+	sta GRP1
+	lda mazeColor
+	sta COLUP0
+	sta COLUP1
+	sta WSYNC
+	jmp .EDrawMediumEnemyLoopColorful
 .EDrawMediumEnemyLoop:
 	dey
 	sta WSYNC
@@ -485,23 +521,31 @@ EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that ar
 	nop
 	nop
 	sta RESP0
-	sta RESP1
+	sta RESP1	
 	sta WSYNC
+
+	;Prepare enemy for damage effect
+	jsr ECheckDamageTarget ;Takes 32 cycles
 	jsr ESpinWheels ;Loses 12 cycles
-	jsr ESpinWheels
-	jsr ESpinWheels
-	jsr ESpinWheels
-	jsr ESpinWheels
-	cpx temp1
-	cpx temp1
-	cpx temp1
-	sta HMOVE
+	jsr ESpinWheels 
 	ldy #32
 	lda #1 ;Two copies close
 	sta NUSIZ0
 	sta NUSIZ1
+
+	sta HMOVE
+	lda currentEffect
+	and temp2 ;Controls whether or not this is the correct enemy to affect.
+	cmp #$05 ;Enemy damage flash
+	bne .EDrawLargeEnemyLoop
+	lda effectCounter
+	and #$04
+	beq .EDrawLargeEnemyLoopColorful
 .EDrawLargeEnemyLoop:
+	lda #1
+	sta charIndex
 	dey
+.EDrawLargeEnemyInnerLoop:
 	sta WSYNC
 	bmi .EDoneDrawingLargeEnemy
 	lda (tempPointer1),y
@@ -517,22 +561,35 @@ EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that ar
 	lda (temp4),y
 	stx GRP0
 	sta GRP1
+	dec charIndex
+	bmi .EDrawLargeEnemyLoop
+	bpl .EDrawLargeEnemyInnerLoop
+.EDrawLargeEnemyLoopColorful:
+	lda #1
+	sta charIndex
+	dey
+.EDrawLargeEnemyInnerLoopColorful:
 	sta WSYNC
-	nop
+	bmi .EDoneDrawingLargeEnemy
 	lda (tempPointer1),y
 	sta GRP0
 	lda (tempPointer2),y
 	sta GRP1
-	lda (temp5),y
+	lda mazeColor
 	sta COLUP0
-	lda (temp6),y
 	sta COLUP1
 	lda (tempPointer3),y
 	tax
 	lda (temp4),y
+	nop
+	nop
+	nop
 	stx GRP0
 	sta GRP1
-	jmp .EDrawLargeEnemyLoop
+	dec charIndex
+	bmi .EDrawLargeEnemyLoopColorful
+	bpl .EDrawLargeEnemyInnerLoopColorful
+
 .EDoneDrawingLargeEnemy
 	iny
 	lda #BATTLE_BOX_COLOR
@@ -594,9 +651,6 @@ EUpdateEffects: SUBROUTINE
 	sta temp2
 	rts
 .EEnemyDamageFlash:
-	lda #1
-	sta effectCounter
-	sta temp2
 	rts
 .ETransitionEffect:
 	lda #1
@@ -1622,6 +1676,142 @@ MediumTestEnemyColors:
 	.byte $82
 	.byte $80
 
+FireDrakeGraphics:
+	.byte %00000101
+	.byte %11000011
+	.byte %11110011
+	.byte %01111011
+	.byte %00111110
+	.byte %00111100
+	.byte %00011110
+	.byte %11111111
+	.byte %11100111
+	.byte %00000111
+	.byte %00001111
+	.byte %11111110
+	.byte %11011100
+	.byte %01111000
+	.byte %01001100
+	.byte %00100100
+	.byte %00111110
+	.byte %01111111
+	.byte %01100011
+	.byte %01000000
+	.byte %11100000
+	.byte %01100000
+	.byte %01000000
+	.byte %00000001
+	.byte %00000000
+	.byte %00000001
+	.byte %00011000
+	.byte %01100110
+	.byte %10010100
+	.byte %00101000
+	.byte %11010000
+	.byte %00000000
+
+FireDrakeColors:
+	.byte $e
+	.byte $42
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $36
+	.byte $36
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $42
+	.byte $36
+	.byte $36
+	.byte $36
+	.byte $e
+	.byte $36
+	.byte $e
+	.byte $3a
+	.byte $1a
+	.byte $3a
+	.byte $1a
+	.byte $3a
+	.byte $36
+
+IceDrakeGraphics:
+	.byte %11111100
+	.byte %11111110
+	.byte %10000110
+	.byte %00000010
+	.byte %00000111
+	.byte %00000110
+	.byte %00000010
+	.byte %10000000
+	.byte %00000000
+	.byte %10000000
+	.byte %00011000
+	.byte %01100110
+	.byte %00101001
+	.byte %00010100
+	.byte %00001011
+	.byte %00000000
+	.byte %10100000
+	.byte %11000011
+	.byte %11001111
+	.byte %11011110
+	.byte %01111100
+	.byte %00111100
+	.byte %01110000
+	.byte %11101111
+	.byte %11100111
+	.byte %11100000
+	.byte %11110000
+	.byte %01111111
+	.byte %00111011
+	.byte %00011110
+	.byte %00110010
+	.byte %00100100
+
+IceDrakeColors:
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $94
+	.byte $ae
+	.byte $ae
+	.byte $ae
+	.byte $e
+	.byte $e
+	.byte $e
+	.byte $ae
+	.byte $8e
+	.byte $ae
+	.byte $8e
+	.byte $ae
+	.byte $8e
+	.byte $e
+	.byte $94
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $ae
+	.byte $ae
+
 	ORG $ED00
 	RORG $FD00
 
@@ -1828,8 +2018,8 @@ EEnemyGraphicsLowLookup: ;Stores the low bytes of the pointers to enemy graphics
 	.byte (SmallTestEnemyGraphics & $FF)
 	.byte (MediumTestEnemyGraphics & $FF)
 	.byte (LargeTestEnemyGraphics & $FF)
-	.byte $00
-	.byte $00
+	.byte (FireDrakeGraphics & $FF)
+	.byte (IceDrakeGraphics & $FF)
 	.byte $00
 	.byte $00
 	.byte $00
@@ -1870,8 +2060,8 @@ EEnemyGraphicsHighLookup: ;Stores the high bytes of the pointers to enemy graphi
 	.byte (SmallTestEnemyGraphics >> 8 & $FF)
 	.byte (MediumTestEnemyGraphics >> 8 & $FF)
 	.byte (LargeTestEnemyGraphics >> 8 & $FF)
-	.byte $00
-	.byte $00
+	.byte (FireDrakeGraphics >> 8 & $FF)
+	.byte (IceDrakeGraphics >> 8 & $FF)
 	.byte $00
 	.byte $00
 	.byte $00
@@ -1912,8 +2102,8 @@ EEnemyColorsLowLookup: ;Stores the low bytes of the pointers to enemy color info
 	.byte (SmallTestEnemyColors & $FF)
 	.byte (MediumTestEnemyColors & $FF)
 	.byte (LargeTestEnemyColors & $FF)
-	.byte $00
-	.byte $00
+	.byte (FireDrakeColors & $FF)
+	.byte (IceDrakeColors & $FF)
 	.byte $00
 	.byte $00
 	.byte $00
@@ -1958,8 +2148,8 @@ EEnemyColorsHighLookup: ;Stores the high bytes of the pointers to enemy color in
 	.byte (SmallTestEnemyColors >> 8 & $FF)
 	.byte (MediumTestEnemyColors >> 8 & $FF)
 	.byte (LargeTestEnemyColors >> 8 & $FF)
-	.byte $00
-	.byte $00
+	.byte (FireDrakeColors >> 8 & $FF)
+	.byte (IceDrakeColors >> 8 & $FF)
 	.byte $00
 	.byte $00
 	.byte $00
@@ -2003,8 +2193,8 @@ EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1
 	.byte 1
 	.byte 2
 	.byte 3
-	.byte $00
-	.byte $00
+	.byte 2
+	.byte 2
 	.byte $00
 	.byte $00
 	.byte $00
