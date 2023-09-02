@@ -435,7 +435,6 @@ RDoNothingLoop:
 RGoToSpecialOptions:
 	jmp RShowSpecialOptions
 RNoBlankLines:
-	sta WSYNC
 	ldx aoeTargetID
 	cmp #$0
 	bpl RShowBattlerName
@@ -445,6 +444,7 @@ RNoBlankLines:
 	cmp #$C0
 	bne RGoToSpecialOptions
 RShowSpellOptions:
+	sta WSYNC
 	lda menuLines,x
 	and #$3F
 	tay
@@ -473,6 +473,8 @@ RStoreSpellColor:
 	jsr RDrawBattleMenuLine
 	jmp RDrawBattleMenuLoop
 RShowBattleOptions:
+	sta WSYNC
+	sta WSYNC
 	lda menuLines,x
 	and #$0F
 	tay
@@ -488,6 +490,7 @@ RDontHighlightBattleOption:
 	jsr RDrawBattleMenuLine
 	jmp RDrawBattleMenuLoop
 RShowBattlerName:
+	sta WSYNC
 	and #$04
 	bne RShowEnemyName
 RShowAllyName:
@@ -555,7 +558,7 @@ RUseSpecialColor:
 	lda menuLines,x
 	and #$1F
 	clc
-	adc #56
+	adc #56 ;This constant needs to be updated whenever there is message indexing tomfoolery.
 	tax
 	jsr RLoadString
 	jsr RSetTextPointers

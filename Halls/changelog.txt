@@ -606,35 +606,35 @@
 	-Enemies now flash between their own colors and the color of the damage type they received.
 	-Fixed long-standing bug where healing allies could cause an overflow
 	-Tried connecting in spell effects and damage, with mixed success.
-	-Applied brk-rti savings to SGetMazeRoomData saving ~16 bytes	
+	-Applied brk-rti savings to SGetMazeRoomData saving ~16 bytes
+	-Applied brk-rti savings to LBinaryToDecimal saving 27 bytes
+	-Fixed rendering issue where special options ran long.	
 
 KNOWN BUGS:
 	-Ally casting sleep puts first party member to sleep?
-	-Campfire rendering is 2 scanlines too long, probably because of text pointer change on 8/30
-		-NO SPELLS KNOWN also affected
 
 TODO:
-	-Implement all enemy special abilities
-	-Improve in-maze campfire graphics to look less squished when they appear
-	-Add calls for pain and excited avatars
-	-Setup screen logo
-	-Consider booting enemy AI tables, logic, or both into the E bank to make more room for sound effects or battle system logic
-	-Connect visual and sound effects
 	-Figure out better solution to enemy pointers
-	-Perform interrupt-based optimization
-
-	Additional sounds to consider:
-		-Crackling campfire sound
-		-Footsteps
-		-Monster roar near exit
-		-Battle victory jingle
-		-Game victory jingle
+	-Implement all enemy special abilities
+	-Connect visual and sound effects
+	-Consider booting enemy AI tables, logic, or both into the E bank to make more room for sound effects or battle system logic
+		-Maybe the tables can go, but there's not a lot of room left in E after enemy graphics
+	-Setup screen logo
+	-Add calls for pain and excited avatars
 
 	Make enemies with legendary resistance take 50% less damage from all sources
 		-Preferably don't factor this in when showing damage messages
 		-Nerfs blight significantly against bosses...
 
+	Additional sounds to consider:
+		-Footsteps
+		-Monster roar near exit
+		-Battle victory jingle
+		-Game victory jingle
+		-Crackling campfire sound (would need to be a loop, so it's certainly out of scope)
+
 	DOESN'T REQUIRE LOGIC:
+		-Improve in-maze campfire graphics to look less squished when they appear
 		-Add more text & messages
 		-Create all enemy graphics
 		-Create all enemy AI tables
@@ -642,40 +642,6 @@ TODO:
 		-Tune maze exit tables
 		-Create all visual effects
 		-Create all sound effects
-
-	Requirements for functional game loop:
-		-Functional combat - 100%
-			-Control Flow/Battler Selection - 100%
-			-Fighting - 100%
-			-Spellcasting - 100%
-			-Moving - 100%
-			-Running - 100%
-			-Functional status effects - 100%
-			-Enemy AI - 100% (needs a lot more testing)
-				-Special moves - ??%
-					-Summon
-					-Summon & destruct self (OOZE & SLIME)
-					-Explode (GIFT)
-					-Fake spell?
-					-AoE shield 1??
-					-Death effect??
-			-Character advancement - 100%
-			-Mana implementation - 100%
-		-Additional maze logic - 100%
-			-Moving between floors - 100%
-			-Encounter generation - 100%
-				-Bosses - 100%
-			-Campfires - 100%
-		-Transitioning between maze and battles - 100%
-
-		-Advanced effect system - 100%
-			-Load visual effect routine - 100%
-			
-		-Sound engine - 100%
-			-Load sound effect routine - 100%
-		
-		-Name entry and class selection screen v1 - 100%
-			-Logo - 0%
 
 	Version 1.1 considerations:
 		-Position of enemy sprites in battle:

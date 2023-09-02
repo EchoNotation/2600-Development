@@ -111,7 +111,7 @@ $07 - METEOR
 $08 - CHAOS
 $09 - HEAL spell
 $0A - SMITE
-$0B - reserved for POISON, currently empty
+$0B - reserved for VOLLEY, currently empty
 $0C - SHARP
 $0D - BLIGHT spell
 $0E - TRIAGE

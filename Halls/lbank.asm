@@ -295,11 +295,11 @@ LProcessCharacterAdvancement:
 .LFullRestoreLoop:
 	stx charIndex
 	jsr LGetBattlerMaxHP
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	ldx charIndex
 	sta battlerHP,x
 	jsr LGetBattlerMaxMP
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	ldx charIndex
 	sta mp1,x
 	dex
@@ -656,7 +656,7 @@ LProcessCasting:
 	lda #07 ;X LOSES Y HP
 	sta currentMessage
 	lda temp2
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	sta cursorIndexAndMessageY
 	rts
 
@@ -784,7 +784,7 @@ LProcessCasting:
 	lda #07 ;X LOSES Y HP
 	sta currentMessage
 	lda temp2
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	sta cursorIndexAndMessageY
 	rts
 
@@ -954,7 +954,7 @@ LProcessCasting:
 	lda #07 ;X LOSES Y HP
 	sta currentMessage
 	lda temp2
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	sta cursorIndexAndMessageY
 	lda inBattle
 	cmp #$B1
@@ -1143,7 +1143,7 @@ LProcessFighting:
 	lda #$07 ;X LOSES Y HP
 	sta currentMessage
 	lda temp2
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	sta cursorIndexAndMessageY
 	rts
 
@@ -1638,7 +1638,7 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 	sta temp3
 
 	lda temp2 ;Actual damage dealt by LApplyDamage
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	sta cursorIndexAndMessageY
 	lda #$07 ;X LOSES Y HP
 	sta currentMessage
@@ -1720,7 +1720,7 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	cpx #4
 	bcs .LDealDamageToEnemy
 .LDealDamageToAlly:
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	sta temp4
 
 	ldy #PAIN
@@ -1805,7 +1805,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	bcs .LHealEnemy
 	;healing an ally
 	lda temp2 ;binary health to heal
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	sta temp2 ;decimal health to heal
 	ldx temp5
 	lda battlerHP,x
@@ -1816,7 +1816,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	bcs .LAdditionOverflow
 	sta temp3 ;current health + heal amount
 	jsr LGetBattlerMaxHP
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	ldx temp5 ;targetID
 	cmp temp3
 	bcc .LMaxedOutHP
@@ -1826,7 +1826,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	rts
 .LAdditionOverflow:
 	jsr LGetBattlerMaxHP
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	ldx temp5
 .LMaxedOutHP:
 	sta battlerHP,x
@@ -1844,7 +1844,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	lda temp3
 	sta battlerHP,x
 	lda temp2
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	rts
 .LMaxedOutHPEnemy:
 	sta battlerHP,x ;predicted healing is greater, so just store the max hp
@@ -1859,7 +1859,7 @@ LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Re
 	rts
 .LIsAlly:
 	stx temp5 ;target index
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	sta temp3 ;decimal amount to regain
 	ldx temp5
 	lda mp1,x
@@ -1869,7 +1869,7 @@ LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Re
 	cld
 	sta temp2 ;Total mana after regaining, but before clamping (decimal)
 	jsr LGetBattlerMaxMP ;max mana for this battler (binary)
-	jsr LBinaryToDecimal ;A contains max mana for this battler (decimal)
+	brk ;LBinaryToDecimal ;A contains max mana for this battler (decimal)
 	beq .LNoMana
 	ldx temp5
 	cmp temp2
@@ -1968,11 +1968,11 @@ LLoadPlayerVars: SUBROUTINE ;Loads each party members max HP and MP
 .LLoadPlayerVarsLoop:
 	stx charIndex
 	jsr LGetBattlerMaxHP
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	ldx charIndex
 	sta hp1,x
 	jsr LGetBattlerMaxMP
-	jsr LBinaryToDecimal
+	brk ;LBinaryToDecimal
 	ldx charIndex
 	sta mp1,x
 	dex
@@ -2055,6 +2055,11 @@ LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return t
 	rts
 
 LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to convert to decimal. Returns the result in A.
+	tsx
+	inx
+	inx
+	dec $00,x ;Trim the extra address increment that happens as part of brk
+
 	ldx #0
 .LRemove10s:
 	sec
@@ -2072,7 +2077,7 @@ LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to conver
 	asl
 	asl
 	ora temp4
-	rts
+	rti
 
 LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to convert to binary. Returns the result in A.
 	ldx #0
@@ -2196,7 +2201,7 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 	inc charIndex
 	rts
 
-LOverrideAvatar: SUBROUTINE ;Sets party member X's mood to X. 17 bytes
+LOverrideAvatar: SUBROUTINE ;Sets party member X's mood to Y. 17 bytes
 	lda char1,x
 	and #$0F ;Get just the class
 	sta temp6
@@ -2772,6 +2777,6 @@ LReturnLocation:
 	;NMI, IRQ, and RESET information
 	.word LReset
 	.word LReset
-	.word LReset
+	.word LBinaryToDecimal
 
 
