@@ -606,9 +606,12 @@
 	-Enemies now flash between their own colors and the color of the damage type they received.
 	-Fixed long-standing bug where healing allies could cause an overflow
 	-Tried connecting in spell effects and damage, with mixed success.
+	-Applied brk-rti savings to SGetMazeRoomData saving ~16 bytes	
 
-Bug list:
-	-Ally casting sleep put first party member to sleep?
+KNOWN BUGS:
+	-Ally casting sleep puts first party member to sleep?
+	-Campfire rendering is 2 scanlines too long, probably because of text pointer change on 8/30
+		-NO SPELLS KNOWN also affected
 
 TODO:
 	-Implement all enemy special abilities
@@ -629,7 +632,7 @@ TODO:
 
 	Make enemies with legendary resistance take 50% less damage from all sources
 		-Preferably don't factor this in when showing damage messages
-
+		-Nerfs blight significantly against bosses...
 
 	DOESN'T REQUIRE LOGIC:
 		-Add more text & messages

@@ -1,4 +1,4 @@
-	;BANK 3 - THE STARTUP BANK. CONTAINS SOUND EFFECT ROUTINES AND DATA (AS WELL AS LOTS OF MAZE AND BATTLE UI LOGIC)
+	;BANK 3 - THE STARTUP BANK. CONTAINS THE OVERARCHING GAME LOGIC AND EVERYTHING THAT DIDN'T FIT IN BANKS R, L, or E.
 
 	ORG $F000
 	RORG $F000
@@ -21,6 +21,7 @@ SClear:
 	lda #0
 	sta SWACNT
 
+	;The top two lines here can be removed once mazes are no longer being generated without the setup screen.
 	lda INTIM ;Seed the random number generator
 	bne SSkipSeeding
 	lda #$6B ;Extremely random random number generator here
@@ -31,11 +32,9 @@ SSkipSeeding:
 	sta currentInput
 	sta previousInput
 
-	jsr SClearMazeData
+	jsr SClearMazeData ;Only used here, can save 4 bytes by injecting that code here...
 
-#if BUILD_DEBUG
-	;Debug only code, do not include in final version!
-#endif
+	dec currentMenu ;Should now be $FF
 
 	ldx #19
 	lda #A
@@ -44,6 +43,8 @@ SClearNames:
 	dex
 	bpl SClearNames
 
+#if BUILD_DEBUG
+	;Debug only code, do not include in final version!
 	;ldy #0
 	;sty cursorIndexAndMessageY
 	;lda #$09 ;Maze level 0, party level 9
@@ -72,7 +73,8 @@ SClearNames:
 	;jsr SRunFunctionInLBank
 	;ldx #$14
 	;jsr STryLoadSound
-	dec currentMenu ;Should now be $FF
+#endif
+	
 
 SStartOfFrame:
 	lda #$82
@@ -338,7 +340,7 @@ SWaitForOverscanTimer:
 	sta WSYNC
 	jmp SStartOfFrame
 
-SMoveSetupCursor: SUBROUTINE
+SMoveSetupCursor: SUBROUTINE ;Controls the movement of the cursor on the startup screen.
 	lda battleActions
 	bpl .SRightPressed
 	asl
@@ -359,7 +361,7 @@ SMoveSetupCursor: SUBROUTINE
 .SReturn
 	rts
 
-SCheckCursorChange: SUBROUTINE
+SCheckCursorChange: SUBROUTINE ;Facilitates changing party member's names and classes
 	ldy cursorIndexAndMessageY
 	cpy #24
 	bcs .SReturn ;Just return if on the ready button
@@ -442,7 +444,7 @@ SBallFineCoarsePositions:
 	.byte $D6
 	.byte $47
 
-SUpdateBallPosition: SUBROUTINE
+SUpdateBallPosition: SUBROUTINE ;Calculates the fine and coarse position of the cursor on the setup screen.
 	lda #0
 	sta enemyID ;Used for which line the cursor should appear on
 	lda cursorIndexAndMessageY
@@ -810,6 +812,7 @@ SClearMazeData: SUBROUTINE ;Sets all the vertical and horizontal edges of the ma
 	rts
 
 SGetMazeRoomData: SUBROUTINE ;Returns the four edges (0000NSEW) of the room specified by X and Y
+	dec $FC ;Remove the unused byte from the brk instruction
 	stx temp4
 	sty temp5
 	lda #0
@@ -844,7 +847,7 @@ SGetMazeRoomData: SUBROUTINE ;Returns the four edges (0000NSEW) of the room spec
 	jsr SGetVEdge
 	ora temp6
 	sta temp6
-	rts
+	rti
 
 SGetEdge: SUBROUTINE ;Uses X and Y to return a vertical or horizontal edge in A. Call SGetVEdge or SGetHEdge instead!
 .SOutOfBounds:
@@ -900,40 +903,40 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	beq .SFacingWest
 .SFacingNorth:
 	dey
-	jsr SGetMazeRoomData
+	brk ;SGetMazeRoomData
 	sta temp1
 	ldx playerX
 	dey
-	jsr SGetMazeRoomData
+	brk ;SGetMazeRoomData
 	sta temp2
 	jmp .SUpdatePointers
 .SFacingEast:
 	inx
-	jsr SGetMazeRoomData
+	brk ;SGetMazeRoomData
 	sta temp1
 	ldx playerX
 	inx
 	inx
-	jsr SGetMazeRoomData
+	brk ;SGetMazeRoomData
 	sta temp2
 	jmp .SUpdatePointers
 .SFacingSouth:
 	iny
-	jsr SGetMazeRoomData
+	brk ;SGetMazeRoomData
 	sta temp1
 	ldx playerX
 	iny
-	jsr SGetMazeRoomData
+	brk ;SGetMazeRoomData
 	sta temp2
 	jmp .SUpdatePointers
 .SFacingWest:
 	dex
-	jsr SGetMazeRoomData
+	brk ;SGetMazeRoomData
 	sta temp1
 	ldx playerX
 	dex
 	dex
-	jsr SGetMazeRoomData
+	brk ;SGetMazeRoomData
 	sta temp2
 .SUpdatePointers:
 	lda temp1
@@ -1226,7 +1229,7 @@ SUpdatePlayerMovement: SUBROUTINE ;Checks the joystick input to see if the playe
 .SMoveForward:
 	ldx playerX
 	ldy playerY
-	jsr SGetMazeRoomData
+	brk ;SGetMazeRoomData
 	ldy playerFacing
 	and SMazeForwardMask,y
 	bne .SReturnFromPlayerMovement ;If equals 1, then there is a wall ahead in this direction
@@ -2918,6 +2921,6 @@ SCatchFromMainPicture:
 	;NMI, IRQ, and RESET information
 	.word SReset
 	.word SReset
-	.word SReset
+	.word SGetMazeRoomData
 
 END
