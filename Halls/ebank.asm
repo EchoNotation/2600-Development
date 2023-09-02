@@ -804,9 +804,6 @@ ELoadEffect: SUBROUTINE ;Loads the effect of ID X.
 	sta effectCountdown
 	jmp EAfterLoadingEffect
 
-	ORG $E500
-	RORG $F500
-
 EEncounterSizes:
 	.byte 2
 	.byte 3

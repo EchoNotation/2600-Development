@@ -338,6 +338,10 @@ LAdvanceBattlerStatus:
 	jmp .LHandleSingleTgtEffect
 .LGoToSingleTgtPhase2:
 	jmp .LSingleTgtPhase2
+.LGoToDrainKilled:
+	jmp .LDrainKilled
+.LGoToWishMPRestoration:
+	jmp .LWishMPRestoration
 
 LProcessCasting:
 	lda inBattle
@@ -348,9 +352,9 @@ LProcessCasting:
 	cmp #$A2
 	beq .LGoToSingleTgtPhase2
 	cmp #$A3
-	beq .LDrainKilled
+	beq .LGoToDrainKilled
 	cmp #$A4
-	beq .LWishMPRestoration
+	beq .LGoToWishMPRestoration
 	cmp #$B0
 	beq .LGoToHandleAoEEffect
 	cmp #$B1
@@ -376,6 +380,14 @@ LProcessCasting:
 	lda #$21 ;X SHOT A Y
 .LStoreCastsMessage:
 	sta currentMessage
+
+	ldx cursorIndexAndMessageY ;spellID
+	jsr LLoadSoundInS
+	txa
+	adc #7
+	tax
+	jsr LLoadEffect
+	ldx cursorIndexAndMessageY
 
 	ldy currentBattler
 	cpy #4
@@ -1752,15 +1764,6 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	lda #$FF
 	rts
 
-LDamageColors:
-	.byte $00
-	.byte $CA
-	.byte $1E
-	.byte $0E
-	.byte $9C
-	.byte $FC
-	.byte $08
-
 LDeathCleanup: SUBROUTINE ;Performs death housekeeping for target X
 	lda LHasActionMasks,x
 	eor #$FF
@@ -2684,6 +2687,17 @@ LIsClassRanged:
 	.byte $1 ;Wizard
 	.byte $1 ;Ranger
 	.byte $0 ;Paladin
+
+LDamageColors:
+	.byte $00
+	.byte $CA
+	.byte $1E
+	.byte $0E
+	.byte $9C
+	.byte $FC
+	.byte $08
+
+	;69 bytes here
 
 	ORG $DF80
 	RORG $FF80

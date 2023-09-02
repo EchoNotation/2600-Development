@@ -605,13 +605,20 @@
 9/1/23
 	-Enemies now flash between their own colors and the color of the damage type they received.
 	-Fixed long-standing bug where healing allies could cause an overflow
+	-Tried connecting in spell effects and damage, with mixed success.
+
+Bug list:
+	-Ally casting sleep put first party member to sleep?
 
 TODO:
-	-Implement enemy special abilities
+	-Implement all enemy special abilities
 	-Improve in-maze campfire graphics to look less squished when they appear
 	-Add calls for pain and excited avatars
-	-Setup screen logo?? Would be nice if space allows
+	-Setup screen logo
 	-Consider booting enemy AI tables, logic, or both into the E bank to make more room for sound effects or battle system logic
+	-Connect visual and sound effects
+	-Figure out better solution to enemy pointers
+	-Perform interrupt-based optimization
 
 	Additional sounds to consider:
 		-Crackling campfire sound
@@ -668,10 +675,6 @@ TODO:
 			-Logo - 0%
 
 	Version 1.1 considerations:
-		-Setup screen logo?
-		-Maze input behavior:
-			-Make it so that the button enters into the menu when in maze view?
-			-Make back button move you backwards while maintaining facing direction??
 		-Position of enemy sprites in battle:
 			-Not all enemies are centered, create more of a "group skirmish" appearance
 			-Potentially try to center enemies more precisely?
@@ -682,9 +685,7 @@ TODO:
 		-Battle system improvements:
 			-Introduce random value offsets based on party level (attack and healing amounts)
 			-Make party members gain delta HP, delta MP when leveling up
-				-If doing this, store delta values in separate tables or avoid using LGetBattlerStat
-			-Add resistances to party members?
-				-Add damage types to enemy basic attacks
+				-If doing this, store delta values in separate tables or avoid using LGetBattlerStat (runtime considerations)
 			-Consider refactoring X LOSES Y HP to X TAKES Y DMG
 		-Hear a "roar" when getting near the boss?
 		-Flesh out victory screen a bit
