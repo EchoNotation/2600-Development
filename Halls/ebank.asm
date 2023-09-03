@@ -570,7 +570,8 @@ EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that ar
 	sta HMP1
 	
 	jsr ESpinWheels
-	cmp temp1
+	nop
+	nop
 	nop
 	nop
 
