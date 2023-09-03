@@ -47,11 +47,11 @@ SClearNames:
 	;Debug only code, do not include in final version!
 	;ldy #0
 	;sty cursorIndexAndMessageY
-	;lda #$09 ;Maze level 0, party level 9
-	;sta mazeAndPartyLevel
-	;lda #$80
-	;sta inBattle
-	;sta currentMenu
+	lda #$09 ;Maze level 0, party level 9
+	sta mazeAndPartyLevel
+	lda #$80
+	sta inBattle
+	sta currentMenu
 	;lda #$FF
 	;sta hasAction
 	;sta enemyID+1
@@ -59,11 +59,12 @@ SClearNames:
 	;sta enemyID+3
 	;lda #$03
 	;sta menuSize
-	;lda #0
-	;sta enemyID
+	lda #35
+	sta enemyID
+	;lda #22
 	;sta enemyID+2
-	;lda #1
-	;sta enemyHP
+	lda #1
+	sta enemyHP
 	;sta enemyHP+2
 	;sta enemyHP+1
 	;sta enemyHP+2

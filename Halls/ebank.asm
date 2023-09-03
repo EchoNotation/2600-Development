@@ -323,15 +323,26 @@ EStorePlayfieldColor:
 	beq EPrepMediumEnemy
 	jmp EPrepLargeEnemy
 EPrepSmallEnemy:
-	lda EEnemyGraphicsHighLookup,x
+	stx returnValue ;enemyID
+	lda #$FD
 	sta tempPointer1+1
-	lda EEnemyGraphicsLowLookup,x
+	lda returnValue
+	asl
+	asl
+	asl
+	asl
+	clc
+	adc #$80
 	sta tempPointer1
-	lda EEnemyColorsHighLookup,x
-	sta tempPointer5
-	lda EEnemyColorsLowLookup,x
+	bcc .EDontIncrementSmall 
+	inc tempPointer1+1
+.EDontIncrementSmall:
+	clc
+	adc #8
 	sta temp5
-	
+	lda tempPointer1+1
+	sta tempPointer5
+
 	sta WSYNC
 	jsr EDrawSmallEnemy
 	inc temp3
@@ -341,24 +352,33 @@ EPrepSmallEnemy:
 	sta temp1
 	jmp EEnemyRenderingLoop
 EPrepMediumEnemy:
-	lda EEnemyGraphicsHighLookup,x
+	txa
+	sec
+	sbc #20
+	sta returnValue ;modified enemyID
+
+	lda #$FA ;Starting page for medium enemy graphics
+	sta tempPointer1+1
+	lda returnValue
+	lsr
+	lsr ;4 medium enemies per page
+	clc
+	adc tempPointer1+1
 	sta tempPointer1+1
 	sta tempPointer2+1
-	lda EEnemyGraphicsLowLookup,x
-	sta tempPointer2
-	clc
-	adc #16
-	sta tempPointer1
-	lda EEnemyColorsHighLookup,x
 	sta tempPointer5
 	sta tempPointer6
-	lda EEnemyColorsLowLookup,x
+
+	lda returnValue
+	jsr E6Asl
+	sta tempPointer2
+	adc #16
+	sta tempPointer1
+	adc #16
 	sta temp6
 	adc #16
 	sta temp5
-	nop
-	nop
-	nop
+
 	sta WSYNC
 	sta WSYNC
 	jsr EDrawMediumEnemy
@@ -370,29 +390,46 @@ EPrepMediumEnemy:
 	sta temp1
 	jmp EEnemyRenderingLoop
 EPrepLargeEnemy:
-	lda EEnemyGraphicsHighLookup,x
+	;X currently contains the enemyID
+	;graphics are stored in temp4, tempPointer3, tempPointer2, tempPointer1 order low to high addresses
+	;color are stored ub temp6, temp5 order low to high addresses
+	txa
+	sec
+	sbc #34 ;Currently, large enemies are at the end of the enemyID list.
+	sta returnValue
+
+	lda #$F7 ;Starting page for large enemy graphics
 	sta tempPointer1+1
-	sta tempPointer2+1
-	sta tempPointer3+1
-	sta tempPointer4
-	lda EEnemyGraphicsLowLookup,x
+	lda returnValue
+	cmp #2
+	bcc .ESkipLargePointerIncrement
+	inc tempPointer1+1
+.ESkipLargePointerIncrement:
+	and #$1
+	jsr E7Asl
 	sta temp4
 	clc
-	sta WSYNC
 	adc #32
 	sta tempPointer3
 	adc #32
 	sta tempPointer2
-	sta WSYNC
 	adc #32
 	sta tempPointer1
-	lda EEnemyColorsHighLookup,x
+	lda tempPointer1+1
+	sta tempPointer2+1
+	sta tempPointer3+1
+	sta tempPointer4
+
+	lda #$F9 ;High byte for the color data pointers
 	sta tempPointer5
 	sta tempPointer6
-	lda EEnemyColorsLowLookup,x
+	lda returnValue ;modified enemyID
+	jsr E6Asl
 	sta temp6
 	adc #32
 	sta temp5
+
+	sta WSYNC
 	jsr EDrawLargeEnemy
 	ldx temp3
 	inx
@@ -414,6 +451,19 @@ EAfterRenderingEnemiesLoop:
 	bne EAfterRenderingEnemiesLoop
 	stx COLUBK ;Clear any spellcasting effects that may be present
 	jmp EGoToDrawingBattleText
+
+E7Asl:
+	asl
+E6Asl:
+	asl
+E5Asl:
+	asl
+E4Asl:
+	asl
+	asl
+	asl
+	asl
+	rts
 
 EDrawSmallEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that are 8x8 pixels i size. Graphical information is interpreted from tempPointer1, and color information is interpreted from tempPointer5
 	jsr ECheckDamageTarget ;Takes exactly 32 cycles to run
@@ -518,22 +568,27 @@ ESpinWheels:
 EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that are 32x32 in size. Graphical information is pulled from tempPointers1-4, color information for columns 0 and 2 is pulled from tempPointer5, and color information for columns 1 and 3 is pulled from tempPointer6.
 	lda #$10 ;Moves one pixel to the left
 	sta HMP1
+	
+	jsr ESpinWheels
+	cmp temp1
 	nop
 	nop
-	sta RESP0
-	sta RESP1	
-	sta WSYNC
 
-	;Prepare enemy for damage effect
-	jsr ECheckDamageTarget ;Takes 32 cycles
-	jsr ESpinWheels ;Loses 12 cycles
-	jsr ESpinWheels 
 	ldy #32
 	lda #1 ;Two copies close
 	sta NUSIZ0
 	sta NUSIZ1
 
-	sta HMOVE
+	sta RESP0
+	sta RESP1
+	jsr ESpinWheels
+	nop
+	nop
+	sta HMOVE ;Needs to hit on exactly cycle 67
+	
+	;Prepare enemy for damage effect
+	jsr ECheckDamageTarget ;Takes 32 cycles
+
 	lda currentEffect
 	and temp2 ;Controls whether or not this is the correct enemy to affect.
 	cmp #$05 ;Enemy damage flash
@@ -804,130 +859,8 @@ ELoadEffect: SUBROUTINE ;Loads the effect of ID X.
 	sta effectCountdown
 	jmp EAfterLoadingEffect
 
-EEncounterSizes:
-	.byte 2
-	.byte 3
-	.byte 4
-	.byte 4
-
-	;Encounter tables must ALWAYS end with a small enemy, and every instance of a medium or large enemy MUST be IMMEDIATELY followed by a small enemy
-	;Encounter tables must be a multiple of 2 in size. 16 happens to be the most convenient size.
-EGroundsEnemies:
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-
-ECastleEnemies:
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-
-ECatacombsEnemies:
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-
-EAbyssEnemies:
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-
-EBossEncounters:
-	;GROUNDS BOSS 1
-	.byte $00
-	.byte $FF
-	.byte $FF
-	.byte $FF
-	;GROUNDS BOSS 2
-	.byte $00
-	.byte $FF
-	.byte $FF
-	.byte $FF
-	;CASTLE BOSS 1
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	;CASTLE BOSS 2
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	;CRYPT BOSS 1
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	;CRYPT BOSS 2
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	;ABYSS BOSS 1
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	;ABYSS BOSS 2
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-
-	ORG $E600
-	RORG $F600
+	ORG $E500
+	RORG $F500
 
 EStabsText:
 	.byte #S
@@ -1224,8 +1157,8 @@ EOverText:
 	.byte #EMPTY
 	.byte #EMPTY
 
-	ORG $E700
-	RORG $F700
+	ORG $E600
+	RORG $F600
 
 ETheText:
 	.byte #T
@@ -1382,11 +1315,8 @@ EShotAText:
 	.byte #EMPTY
 	.byte #A
 
-	ORG $E800
-	RORG $F800
-
-	ORG $EB00
-	RORG $FB00
+	ORG $E700 ;Contains the first 2 large enemies graphics data
+	RORG $F700
 
 CampfireGraphics:
 	.byte %11111000
@@ -1518,300 +1448,6 @@ CampfireGraphics:
 	.byte %00000000
 	.byte %00000000
 
-CampfireColors:
-	.byte $f2
-	.byte $f0
-	.byte $f2
-	.byte $f2
-	.byte $f0
-	.byte $f0
-	.byte $f2
-	.byte $42
-	.byte $42
-	.byte $40
-	.byte $36
-	.byte $40
-	.byte $42
-	.byte $42
-	.byte $40
-	.byte $36
-	.byte $40
-	.byte $fe
-	.byte $42
-	.byte $40
-	.byte $40
-	.byte $36
-	.byte $42
-	.byte $fe
-	.byte $36
-	.byte $fe
-	.byte $40
-	.byte $40
-	.byte $36
-	.byte $40
-	.byte $fe
-	.byte $40
-	.byte $f0
-	.byte $f2
-	.byte $f0
-	.byte $f0
-	.byte $f2
-	.byte $f2
-	.byte $f0
-	.byte $40
-	.byte $36
-	.byte $42
-	.byte $40
-	.byte $42
-	.byte $40
-	.byte $36
-	.byte $40
-	.byte $40
-	.byte $42
-	.byte $38
-	.byte $40
-	.byte $36
-	.byte $fe
-	.byte $42
-	.byte $40
-	.byte $36
-	.byte $42
-	.byte $36
-	.byte $fe
-	.byte $40
-	.byte $42
-	.byte $42
-	.byte $40
-	.byte $40
-
-	ORG $EC00
-	RORG $FC00
-
-SmallTestEnemyGraphics:
-	.byte %01111110
-	.byte %11011011
-	.byte %10100101
-	.byte %10000001
-	.byte %10100101
-	.byte %10000001
-	.byte %11000011
-	.byte %01111110
-MediumTestEnemyGraphics:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-	.byte %00000000
-	.byte %00000000
-	.byte %01111110
-	.byte %01000000
-	.byte %01000000
-	.byte %01111000
-	.byte %01000000
-	.byte %01000000
-	.byte %01111110
-	.byte %01111000
-	.byte %00000100
-	.byte %00000100
-	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
-	.byte %00000000
-	.byte %00000000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-
-SmallTestEnemyColors:
-	.byte $9e
-	.byte $9c
-	.byte $9a
-	.byte $98
-	.byte $96
-	.byte $94
-	.byte $82
-	.byte $80
-MediumTestEnemyColors:
-	.byte $6c
-	.byte $6a
-	.byte $68
-	.byte $66
-	.byte $64
-	.byte $62
-	.byte $60
-	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
-	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
-
-FireDrakeGraphics:
-	.byte %00000101
-	.byte %11000011
-	.byte %11110011
-	.byte %01111011
-	.byte %00111110
-	.byte %00111100
-	.byte %00011110
-	.byte %11111111
-	.byte %11100111
-	.byte %00000111
-	.byte %00001111
-	.byte %11111110
-	.byte %11011100
-	.byte %01111000
-	.byte %01001100
-	.byte %00100100
-	.byte %00111110
-	.byte %01111111
-	.byte %01100011
-	.byte %01000000
-	.byte %11100000
-	.byte %01100000
-	.byte %01000000
-	.byte %00000001
-	.byte %00000000
-	.byte %00000001
-	.byte %00011000
-	.byte %01100110
-	.byte %10010100
-	.byte %00101000
-	.byte %11010000
-	.byte %00000000
-
-FireDrakeColors:
-	.byte $e
-	.byte $42
-	.byte $44
-	.byte $42
-	.byte $44
-	.byte $42
-	.byte $44
-	.byte $42
-	.byte $44
-	.byte $42
-	.byte $44
-	.byte $44
-	.byte $42
-	.byte $44
-	.byte $36
-	.byte $36
-	.byte $44
-	.byte $42
-	.byte $44
-	.byte $42
-	.byte $36
-	.byte $36
-	.byte $36
-	.byte $e
-	.byte $36
-	.byte $e
-	.byte $3a
-	.byte $1a
-	.byte $3a
-	.byte $1a
-	.byte $3a
-	.byte $36
-
-IceDrakeGraphics:
-	.byte %11111100
-	.byte %11111110
-	.byte %10000110
-	.byte %00000010
-	.byte %00000111
-	.byte %00000110
-	.byte %00000010
-	.byte %10000000
-	.byte %00000000
-	.byte %10000000
-	.byte %00011000
-	.byte %01100110
-	.byte %00101001
-	.byte %00010100
-	.byte %00001011
-	.byte %00000000
-	.byte %10100000
-	.byte %11000011
-	.byte %11001111
-	.byte %11011110
-	.byte %01111100
-	.byte %00111100
-	.byte %01110000
-	.byte %11101111
-	.byte %11100111
-	.byte %11100000
-	.byte %11110000
-	.byte %01111111
-	.byte %00111011
-	.byte %00011110
-	.byte %00110010
-	.byte %00100100
-
-IceDrakeColors:
-	.byte $86
-	.byte $94
-	.byte $86
-	.byte $94
-	.byte $ae
-	.byte $ae
-	.byte $ae
-	.byte $e
-	.byte $e
-	.byte $e
-	.byte $ae
-	.byte $8e
-	.byte $ae
-	.byte $8e
-	.byte $ae
-	.byte $8e
-	.byte $e
-	.byte $94
-	.byte $86
-	.byte $94
-	.byte $86
-	.byte $94
-	.byte $86
-	.byte $94
-	.byte $86
-	.byte $94
-	.byte $86
-	.byte $86
-	.byte $94
-	.byte $86
-	.byte $ae
-	.byte $ae
-
-	ORG $ED00
-	RORG $FD00
-
 LargeTestEnemyGraphics:
 	.byte %10000000
 	.byte %10000000
@@ -1942,6 +1578,78 @@ LargeTestEnemyGraphics:
 	.byte %00000001
 	.byte %01111111
 
+	ORG $E800 ;Contains the next two large enemies graphics data
+	RORG $F800
+
+	ORG $E900 ;Contains the large enemies' color data
+	RORG $F900
+
+CampfireColors:
+	.byte $f2
+	.byte $f0
+	.byte $f2
+	.byte $f2
+	.byte $f0
+	.byte $f0
+	.byte $f2
+	.byte $42
+	.byte $42
+	.byte $40
+	.byte $36
+	.byte $40
+	.byte $42
+	.byte $42
+	.byte $40
+	.byte $36
+	.byte $40
+	.byte $fe
+	.byte $42
+	.byte $40
+	.byte $40
+	.byte $36
+	.byte $42
+	.byte $fe
+	.byte $36
+	.byte $fe
+	.byte $40
+	.byte $40
+	.byte $36
+	.byte $40
+	.byte $fe
+	.byte $40
+	.byte $f0
+	.byte $f2
+	.byte $f0
+	.byte $f0
+	.byte $f2
+	.byte $f2
+	.byte $f0
+	.byte $40
+	.byte $36
+	.byte $42
+	.byte $40
+	.byte $42
+	.byte $40
+	.byte $36
+	.byte $40
+	.byte $40
+	.byte $42
+	.byte $38
+	.byte $40
+	.byte $36
+	.byte $fe
+	.byte $42
+	.byte $40
+	.byte $36
+	.byte $42
+	.byte $36
+	.byte $fe
+	.byte $40
+	.byte $42
+	.byte $42
+	.byte $40
+	.byte $40
+
 LargeTestEnemyColors:
 	.byte $c8
 	.byte $c8
@@ -2008,190 +1716,294 @@ LargeTestEnemyColors:
 	.byte $90
 	.byte $90
 
-	ORG $EE00
-	RORG $FE00
+	ORG $EA00 ;Contains medium enemy data
+	RORG $FA00
 
-EEnemyGraphicsLowLookup: ;Stores the low bytes of the pointers to enemy graphics ordered by enemyID
-	.byte (SmallTestEnemyGraphics & $FF)
-	.byte (MediumTestEnemyGraphics & $FF)
-	.byte (LargeTestEnemyGraphics & $FF)
-	.byte (FireDrakeGraphics & $FF)
-	.byte (IceDrakeGraphics & $FF)
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte (CampfireGraphics & $FF)
+MediumTestEnemyGraphics:
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %01111110
+	.byte %00000000
+	.byte %00000000
+	.byte %01111110
+	.byte %01000000
+	.byte %01000000
+	.byte %01111000
+	.byte %01000000
+	.byte %01000000
+	.byte %01111110
+	.byte %01111000
+	.byte %00000100
+	.byte %00000100
+	.byte %00111000
+	.byte %01000000
+	.byte %01000000
+	.byte %00111100
+	.byte %00000000
+	.byte %00000000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %01111110
+MediumTestEnemyColors:
+	.byte $6c
+	.byte $6a
+	.byte $68
+	.byte $66
+	.byte $64
+	.byte $62
+	.byte $60
+	.byte $0
+	.byte $ce
+	.byte $cc
+	.byte $ca
+	.byte $c8
+	.byte $c6
+	.byte $c4
+	.byte $c2
+	.byte $c0
+	.byte $4e
+	.byte $4c
+	.byte $48
+	.byte $46
+	.byte $44
+	.byte $42
+	.byte $40
+	.byte $0
+	.byte $9e
+	.byte $9c
+	.byte $8a
+	.byte $8a
+	.byte $88
+	.byte $86
+	.byte $82
+	.byte $80
 
-EEnemyGraphicsHighLookup: ;Stores the high bytes of the pointers to enemy graphics ordered by enemyID
-	.byte (SmallTestEnemyGraphics >> 8 & $FF)
-	.byte (MediumTestEnemyGraphics >> 8 & $FF)
-	.byte (LargeTestEnemyGraphics >> 8 & $FF)
-	.byte (FireDrakeGraphics >> 8 & $FF)
-	.byte (IceDrakeGraphics >> 8 & $FF)
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte (CampfireGraphics >> 8 & $FF)
+FireDrakeGraphics:
+	.byte %00000101
+	.byte %11000011
+	.byte %11110011
+	.byte %01111011
+	.byte %00111110
+	.byte %00111100
+	.byte %00011110
+	.byte %11111111
+	.byte %11100111
+	.byte %00000111
+	.byte %00001111
+	.byte %11111110
+	.byte %11011100
+	.byte %01111000
+	.byte %01001100
+	.byte %00100100
+	.byte %00111110
+	.byte %01111111
+	.byte %01100011
+	.byte %01000000
+	.byte %11100000
+	.byte %01100000
+	.byte %01000000
+	.byte %00000001
+	.byte %00000000
+	.byte %00000001
+	.byte %00011000
+	.byte %01100110
+	.byte %10010100
+	.byte %00101000
+	.byte %11010000
+	.byte %00000000
+FireDrakeColors:
+	.byte $e
+	.byte $42
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $36
+	.byte $36
+	.byte $44
+	.byte $42
+	.byte $44
+	.byte $42
+	.byte $36
+	.byte $36
+	.byte $36
+	.byte $e
+	.byte $36
+	.byte $e
+	.byte $3a
+	.byte $1a
+	.byte $3a
+	.byte $1a
+	.byte $3a
+	.byte $36
 
-EEnemyColorsLowLookup: ;Stores the low bytes of the pointers to enemy color information ordered by enemyID
-	.byte (SmallTestEnemyColors & $FF)
-	.byte (MediumTestEnemyColors & $FF)
-	.byte (LargeTestEnemyColors & $FF)
-	.byte (FireDrakeColors & $FF)
-	.byte (IceDrakeColors & $FF)
-	.byte $00
-	.byte $00
-	.byte $00
+IceDrakeGraphics:
+	.byte %11111100
+	.byte %11111110
+	.byte %10000110
+	.byte %00000010
+	.byte %00000111
+	.byte %00000110
+	.byte %00000010
+	.byte %10000000
+	.byte %00000000
+	.byte %10000000
+	.byte %00011000
+	.byte %01100110
+	.byte %00101001
+	.byte %00010100
+	.byte %00001011
+	.byte %00000000
+	.byte %10100000
+	.byte %11000011
+	.byte %11001111
+	.byte %11011110
+	.byte %01111100
+	.byte %00111100
+	.byte %01110000
+	.byte %11101111
+	.byte %11100111
+	.byte %11100000
+	.byte %11110000
+	.byte %01111111
+	.byte %00111011
+	.byte %00011110
+	.byte %00110010
+	.byte %00100100
+IceDrakeColors:
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $94
+	.byte $ae
+	.byte $ae
+	.byte $ae
+	.byte $e
+	.byte $e
+	.byte $e
+	.byte $ae
+	.byte $8e
+	.byte $ae
+	.byte $8e
+	.byte $ae
+	.byte $8e
+	.byte $e
+	.byte $94
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $86
+	.byte $94
+	.byte $86
+	.byte $ae
+	.byte $ae
 
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
+	ORG $EB00 ;Contains medium enemy data
+	RORG $FB00
 
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
+	ORG $EC00 ;Contains medium enemy data
+	RORG $FC00
 
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
+	ORG $ED00 ;Contains medium enemy data
+	RORG $FD00
 
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte (CampfireColors & $FF)
+	ORG $ED80 ;Contains small enemy data
+	RORG $FD80
 
-EEnemyColorsHighLookup: ;Stores the high bytes of the pointers to enemy color information ordered by enemyID
-	.byte (SmallTestEnemyColors >> 8 & $FF)
-	.byte (MediumTestEnemyColors >> 8 & $FF)
-	.byte (LargeTestEnemyColors >> 8 & $FF)
-	.byte (FireDrakeColors >> 8 & $FF)
-	.byte (IceDrakeColors >> 8 & $FF)
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte (CampfireColors >> 8 & $FF)
+SmallTestEnemyGraphics:
+	.byte %01111110
+	.byte %11011011
+	.byte %10100101
+	.byte %10000001
+	.byte %10100101
+	.byte %10000001
+	.byte %11000011
+	.byte %01111110
+SmallTestEnemyColors:
+	.byte $9e
+	.byte $9c
+	.byte $9a
+	.byte $98
+	.byte $96
+	.byte $94
+	.byte $82
+	.byte $80
 
-	ORG $EF00
-	RORG $FF00
+	ORG $EEC0
+	RORG $FEC0
 
-EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1 if the enemy is 16x16, 2 if the enemy is 32x32
+	;This could potentially be optimized out.
+EEnemySizes: ;Stores the size of each enemy by enemyID. 1 if the enemy is 8x8, 2 if the enemy is 16x16, 3 if the enemy is 32x32
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
+	.byte 1
 	.byte 1
 	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 2
+	.byte 3 ;Campfire?
 	.byte 3
+	.byte 3
+	.byte 3 ;Campfire?
+
+EEncounterSizes:
 	.byte 2
-	.byte 2
+	.byte 3
+	.byte 4
+	.byte 4
+
+	;Encounter tables must ALWAYS end with a small enemy, and every instance of a medium or large enemy MUST be IMMEDIATELY followed by a small enemy
+	;Encounter tables must be a multiple of 2 in size. 16 happens to be the most convenient size.
+EGroundsEnemies:
 	.byte $00
 	.byte $00
 	.byte $00
@@ -2200,6 +2012,16 @@ EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1
 	.byte $00
 	.byte $00
 	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+
+ECastleEnemies:
 	.byte $00
 	.byte $00
 	.byte $00
@@ -2208,6 +2030,16 @@ EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1
 	.byte $00
 	.byte $00
 	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+
+ECatacombsEnemies:
 	.byte $00
 	.byte $00
 	.byte $00
@@ -2216,6 +2048,16 @@ EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1
 	.byte $00
 	.byte $00
 	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+
+EAbyssEnemies:
 	.byte $00
 	.byte $00
 	.byte $00
@@ -2224,8 +2066,58 @@ EEnemySizes: ;Stores the size of each enemy by enemyID. 0 if the enemy is 8x8, 1
 	.byte $00
 	.byte $00
 	.byte $00
+	.byte $01
 	.byte $00
-	.byte 3 ;Campfire
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+	.byte $01
+	.byte $00
+
+EBossEncounters:
+	;GROUNDS BOSS 1
+	.byte $00
+	.byte $FF
+	.byte $FF
+	.byte $FF
+	;GROUNDS BOSS 2
+	.byte $00
+	.byte $FF
+	.byte $FF
+	.byte $FF
+	;CASTLE BOSS 1
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;CASTLE BOSS 2
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;CRYPT BOSS 1
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;CRYPT BOSS 2
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;ABYSS BOSS 1
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	;ABYSS BOSS 2
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+
+	;~70 bytes here
 
 	ORG $EF90
 	RORG $FF90

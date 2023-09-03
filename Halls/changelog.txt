@@ -609,15 +609,18 @@
 	-Applied brk-rti savings to SGetMazeRoomData saving ~16 bytes
 	-Applied brk-rti savings to LBinaryToDecimal saving 27 bytes
 	-Fixed rendering issue where special options ran long.	
+9/2/23
+	-Lots of pointer generation math to remove all lookup tables for enemy graphics and color data.
+		-Saves an unknown amount of bytes. Oughta be quite a lot though.
+	-Cut some more enemies in order to cap enemy graphics data to 2 KiB.
 
 KNOWN BUGS:
 	-Ally casting sleep puts first party member to sleep?
 
 TODO:
-	-Figure out better solution to enemy pointers
 	-Implement all enemy special abilities
 	-Connect visual and sound effects
-	-Consider booting enemy AI tables, logic, or both into the E bank to make more room for sound effects or battle system logic
+	-Consider booting enemy AI tables, logic, or both into R or E banks to make more room for sound effects
 		-Maybe the tables can go, but there's not a lot of room left in E after enemy graphics
 	-Setup screen logo
 	-Add calls for pain and excited avatars
