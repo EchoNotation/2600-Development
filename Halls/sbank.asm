@@ -213,7 +213,7 @@ STryEnterCampfire:
 	bne SDidNotTriggerCampfire
 	lda #TRANSITIONING_TO_CAMPFIRE
 	jsr SSetupTransitionEffect
-	lda #$27 ;"Enemy" ID for Campfire
+	lda #$25 ;"Enemy" ID for Campfire
 	sta enemyID
 	lda #$FF
 	sta enemyID+1

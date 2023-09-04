@@ -625,13 +625,15 @@
 KNOWN BUGS:
 
 TODO:
+	Mandatory:
 	-Implement all enemy special abilities
 	-Connect visual and sound effects
 	-Consider booting enemy AI tables, logic, or both into R or E banks to make more room for sound effects
 		-Maybe the tables can go, but there's not a lot of room left in E after enemy graphics
+
+	Nice:
 	-Setup screen logo
 	-Add calls for pain and excited avatars
-
 	-Make enemies with legendary resistance take 50% less damage from all sources
 		-Preferably don't factor this in when showing damage messages
 		-Nerfs blight significantly against bosses...
@@ -639,6 +641,8 @@ TODO:
 	-Random damage and healing offsets
 	-Avatars not being updated after last logic frame
 	-Being guarded reduces blight damage
+
+	Ehh:
 	-Position enemies in "group skirmish" formation?
 
 	Additional sounds to consider:
