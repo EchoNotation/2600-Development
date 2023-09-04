@@ -619,7 +619,7 @@
 	-Simplified stat growth in order to use fewer tables. Hopefully it is still balanceable.
 	-Fixed bugs where targeting enemies took more scanlines than intended
 	-Made changes to enemy rendering and encounter generation code in order to remove EEnemySizes table, saving ~30 bytes.
-	-Filled in all enemy data, in order to verify that all pointer calculations are working properly. Looks good so far.
+	-Filled in all enemy graphics data, in order to verify that all pointer calculations are working properly. Looks good so far.
 	-Trophy now appears at the end of the game, along with an overcomplicated shimmering effect
 
 KNOWN BUGS:
@@ -641,9 +641,16 @@ TODO:
 	-Random damage and healing offsets
 	-Avatars not being updated after last logic frame
 	-Being guarded reduces blight damage
+	-Make bosses able to target dead allies
+	-Make SHARP give all allies a single use damage doubling that clears on use
 
 	Ehh:
 	-Position enemies in "group skirmish" formation?
+
+	-Looks like I probably need to remove the individual spell effects. 
+		-Maybe instead define a few effect patterns, and define a palette per spell
+		-Or just go back to a single simple effect that they all use.
+		-Then transfer the enemy AI into the E bank
 
 	Additional sounds to consider:
 		-Footsteps
