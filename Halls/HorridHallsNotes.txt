@@ -305,6 +305,8 @@ MESSAGE COMPONENTS (& strings):
 42: SMITES
 43: SHOT A
 
+Only 20 more strings can be allocated!
+
 MESSAGES:
 00: X STABS Y
 01: X SHOOTS Y

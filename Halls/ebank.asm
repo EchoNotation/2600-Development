@@ -772,11 +772,26 @@ EGenerateEncounter: SUBROUTINE ;Sets the enemyIDs to be an appropriate battle fo
 	tay
 	lda (tempPointer1),y
 	tax ;X now contains the enemy ID to try
+	lda #0
+	sta temp3
+	cpx #$14
+	bcc .ESmall
+	cpx #$22
+	bcc .EMedium
+.ELarge:
+	inc temp3
+	inc temp3
+.EMedium:
+	inc temp3
+.ESmall:
+	inc temp3
 	lda temp1
-	cmp EEnemySizes,x
+	cmp temp3
 	bcs .EEnemyFits
 .EEnemyDoesNotFit
 	iny
+	lda #1
+	sta temp3
 	lda (tempPointer1),y
 	tax
 .EEnemyFits:
@@ -786,12 +801,12 @@ EGenerateEncounter: SUBROUTINE ;Sets the enemyIDs to be an appropriate battle fo
 
 	lda temp2
 	clc
-	adc EEnemySizes,x
+	adc temp3
 	sta temp2
 
 	lda temp1
 	sec
-	sbc EEnemySizes,x
+	sbc temp3
 	sta temp1
 	cmp #1
 	bcs .EEncounterGenLoop ;If there is at least one space left, continue
@@ -2343,47 +2358,6 @@ SmallTestEnemyColors:
 	ORG $EEC0
 	RORG $FEC0
 
-	;This could potentially be optimized out.
-EEnemySizes: ;Stores the size of each enemy by enemyID. 1 if the enemy is 8x8, 2 if the enemy is 16x16, 3 if the enemy is 32x32
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 2
-	.byte 3 ;Campfire?
-	.byte 3
-	.byte 3
-	.byte 3 ;Campfire?
-
 EEncounterSizes:
 	.byte 2
 	.byte 3
@@ -2393,21 +2367,21 @@ EEncounterSizes:
 	;Encounter tables must ALWAYS end with a small enemy, and every instance of a medium or large enemy MUST be IMMEDIATELY followed by a small enemy
 	;Encounter tables must be a multiple of 2 in size. 16 happens to be the most convenient size.
 EGroundsEnemies:
+	.byte $14
 	.byte $00
+	.byte $14
 	.byte $00
+	.byte $14
 	.byte $00
+	.byte $14
 	.byte $00
+	.byte $14
 	.byte $00
+	.byte $14
 	.byte $00
+	.byte $14
 	.byte $00
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
+	.byte $14
 	.byte $00
 
 ECastleEnemies:
@@ -2506,7 +2480,7 @@ EBossEncounters:
 	.byte $00
 	.byte $00
 
-	;~70 bytes here
+	;~108 bytes here
 
 	ORG $EF90
 	RORG $FF90

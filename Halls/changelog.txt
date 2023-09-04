@@ -617,7 +617,8 @@
 	-Fixed bug where the sleep spell would put allies to sleep when targeted on enemies.
 	-Changed RUSHES to SLICES
 	-Simplified stat growth in order to use fewer tables. Hopefully it is still balanceable.
-	-Fixed bug where targeting enemies took more scanlines than intended
+	-Fixed bugs where targeting enemies took more scanlines than intended
+	-Made changes to enemy rendering and encounter generation code in order to remove EEnemySizes table, saving ~30 bytes.
 
 KNOWN BUGS:
 
@@ -629,9 +630,15 @@ TODO:
 	-Setup screen logo
 	-Add calls for pain and excited avatars
 
-	Make enemies with legendary resistance take 50% less damage from all sources
+	-Make enemies with legendary resistance take 50% less damage from all sources
 		-Preferably don't factor this in when showing damage messages
 		-Nerfs blight significantly against bosses...
+	-Party members gain delta HP, delta MP on level up
+	-Random damage and healing offsets
+	-Avatars not being updated after last logic frame
+	-Improve victory screen
+	-Being guarded reduces blight damage
+	-Position enemies in "group skirmish" formation?
 
 	Additional sounds to consider:
 		-Footsteps
@@ -649,22 +656,3 @@ TODO:
 		-Tune maze exit tables
 		-Create all visual effects
 		-Create all sound effects
-
-	Version 1.1 considerations:
-		-Position of enemy sprites in battle:
-			-Not all enemies are centered, create more of a "group skirmish" appearance
-			-Potentially try to center enemies more precisely?
-		-Battle system quirks:
-			-Avatars are not updated after the last logic frame for a single round, or when exiting battle
-			-Being guarded reduces blight damage.
-				-GUARD could be given the same treatment as the positional modifier and SHARP
-		-Battle system improvements:
-			-Introduce random value offsets based on party level (attack and healing amounts)
-			-Make party members gain delta HP, delta MP when leveling up
-				-If doing this, store delta values in separate tables or avoid using LGetBattlerStat (runtime considerations)
-			-Consider refactoring X LOSES Y HP to X TAKES Y DMG
-		-Hear a "roar" when getting near the boss?
-		-Flesh out victory screen a bit
-			-Add a new "enemy" that looks like a trophy
-				-Shimmering animation?
-			-Play a victory jingle
