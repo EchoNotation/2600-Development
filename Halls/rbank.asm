@@ -1444,8 +1444,8 @@ RIndexToEnemyPosition: SUBROUTINE ;Converts the position of a menu cursor into t
 .RDone
 	rts ;Y is the correct offset into the enemyID array
 
-	ORG $C910 ;Used to hold enemy names, nothing else can go in this section
-	RORG $F910
+	ORG $C928 ;Used to hold enemy names, nothing else can go in this section
+	RORG $F928
 
 RZombieText:
 	.byte #Z
@@ -1667,6 +1667,7 @@ RBattleOptionsLookupTable:
 	.byte (RGuardText & $FF)
 	.byte (RParryText & $FF)
 
+;Make sure to add back room for the Trophy and Campfire ids if trying to remove this table!!
 REnemyNameLookup: ;This table could be turned into a calculation RZombieText + (6 * enemyID)
 	.byte (RZombieText & $FF)
 	.byte (RGiantText & $FF)

@@ -183,7 +183,7 @@ MP : Self explanatory
 Classes:
 0-Fighter : High durability, good physical damage output, slow, frontline
 1-Rogue : Low durability, very good physical damage output, very fast, frontline
-2-Cleric : High durability, mediocre physical damage ouput, healing spells, slow, frontline
+2-Cleric : High durability, mediocre physical damage ouput, healing spells, slow, frontline or backline
 3-Wizard : Low durability, low physical extremely good magic damage output, medium speed, backline
 4-Ranger : Medium durability, good physical damage output, fast, inverse damage penalty from position
 5-Paladin : Medium durability, medium physical damage, medium speed, damage and healing spells just limited list
@@ -244,7 +244,7 @@ MESSAGE COMPONENTS (& strings):
 05: SHOOTS
 06: BASHES
 07: BITES
-08: RUSHES - SLICES?
+08: SLICES
 09: CASTS
 0A: HEALS
 0B: LOSES

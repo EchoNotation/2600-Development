@@ -613,9 +613,13 @@
 	-Lots of pointer generation math to remove all lookup tables for enemy graphics and color data.
 		-Saves an unknown amount of bytes. Oughta be quite a lot though.
 	-Cut some more enemies in order to cap enemy graphics data to 2 KiB.
+9/3/23
+	-Fixed bug where the sleep spell would put allies to sleep when targeted on enemies.
+	-Changed RUSHES to SLICES
+	-Simplified stat growth in order to use fewer tables. Hopefully it is still balanceable.
+	-Fixed bug where targeting enemies took more scanlines than intended
 
 KNOWN BUGS:
-	-Ally casting sleep puts first party member to sleep?
 
 TODO:
 	-Implement all enemy special abilities

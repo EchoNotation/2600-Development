@@ -2012,7 +2012,7 @@ LSetStatPointers:
 	tay
 	lda (tempPointer3),y
 	sta tempPointer3
-	lda #(LStat1PerLevel >> 8 & $FF)
+	lda #(LLowStatGrowth >> 8 & $FF)
 	sta tempPointer3+1
 	lda mazeAndPartyLevel
 	and #$0F
@@ -2050,8 +2050,12 @@ LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return t
 	dex
 	dex
 	lda enemyID,x
-	tax
-	lda LEnemyResistances,x
+	tay
+	lda LEnemyResistances,y
+	inx
+	inx
+	inx
+	inx
 	rts
 
 LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to convert to decimal. Returns the result in A.
@@ -2153,7 +2157,7 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 	tax
 	lda LClassHPLookup,x
 	sta tempPointer2
-	lda #(LStat1PerLevel >> 8 & $FF)
+	lda #(LLowStatGrowth >> 8 & $FF)
 	sta tempPointer2+1
 
 	lda mazeAndPartyLevel
@@ -2263,6 +2267,28 @@ LXPToNextLevel: ;TODO balance this
 	.byte #86
 	.byte #106 ; 8 -> 9
 
+LClassFightMessages:
+	.byte $4 ;Knight
+	.byte $0 ;Rogue
+	.byte $2 ;Cleric
+	.byte $1 ;Wizard
+	.byte $1 ;Ranger
+	.byte $0 ;Paladin
+
+LPartyPositionMasks:
+	.byte $01
+	.byte $02
+	.byte $04
+	.byte $08
+
+LSpellListLookup:
+	.byte (LEmptySpellList & $FF)
+	.byte (LEmptySpellList & $FF)
+	.byte (LClericSpellList & $FF)
+	.byte (LWizardSpellList & $FF)
+	.byte (LRangerSpellList & $FF)
+	.byte (LPaladinSpellList & $FF)
+
 LEnemyExperience:
 	.byte #1 ;Zombie
 	.byte #5 ;Giant
@@ -2333,14 +2359,6 @@ LEnemyResistances:
 	ORG $DE00 ;Used to hold miscellaneous data/lookup tables
 	RORG $FE00
 
-LClassFightMessages:
-	.byte $4 ;Knight
-	.byte $0 ;Rogue
-	.byte $2 ;Cleric
-	.byte $1 ;Wizard
-	.byte $1 ;Ranger
-	.byte $0 ;Paladin
-
 LEnemyFightMessages:
 	.byte $3 ;Zombie
 	.byte $2 ;Giant
@@ -2356,27 +2374,28 @@ LAllZeroes:
 	.byte 0
 	.byte 0
 	.byte 0
-LStat1PerLevel:
+LLowStatGrowth:
+	.byte 1
+	.byte 2
+	.byte 3
 	.byte 4
 	.byte 5
 	.byte 6
 	.byte 7
 	.byte 8
 	.byte 9
+LMidStatGrowth:
+	.byte 2
+	.byte 4
+	.byte 6
+	.byte 8
 	.byte 10
-	.byte 11
 	.byte 12
-LStat2PerLevel:
-	.byte 5
-	.byte 7
-	.byte 9
-	.byte 11
-	.byte 13
-	.byte 15
-	.byte 17
-	.byte 19
-	.byte 21
-LStat3PerLevel:
+	.byte 14
+	.byte 16
+	.byte 18
+LHighStatGrowth:
+	.byte 3
 	.byte 6
 	.byte 9
 	.byte 12
@@ -2385,40 +2404,27 @@ LStat3PerLevel:
 	.byte 21
 	.byte 24
 	.byte 27
-	.byte 30
-LStat4PerLevel:
-	.byte 7
-	.byte 11
-	.byte 15
-	.byte 19
-	.byte 23
-	.byte 27
-	.byte 31
-	.byte 35
-	.byte 39
-LStat5PerLevel:
-	.byte 8
-	.byte 13
-	.byte 18
-	.byte 23
-	.byte 28
-	.byte 33
-	.byte 38
-	.byte 43
-	.byte 48
-LHP2PerLevel:
-	.byte 11
-	.byte 13
-	.byte 15
-	.byte 17
-	.byte 19
-	.byte 21
-	.byte 23
-	.byte 25
-	.byte 27
-LHP4PerLevel:
+LLowHPGrowth:
+	.byte 10
 	.byte 12
+	.byte 14
 	.byte 16
+	.byte 18
+	.byte 20
+	.byte 22
+	.byte 24
+	.byte 26
+LMidHPGrowth:
+	.byte 15
+	.byte 18
+	.byte 21
+	.byte 24
+	.byte 27
+	.byte 30
+	.byte 33
+	.byte 36
+	.byte 39
+LHighHPGrowth:
 	.byte 20
 	.byte 24
 	.byte 28
@@ -2426,116 +2432,44 @@ LHP4PerLevel:
 	.byte 36
 	.byte 40
 	.byte 44
-LHP6PerLevel:
-	.byte 13
-	.byte 19
-	.byte 25
-	.byte 31
-	.byte 37
-	.byte 43
-	.byte 49
-	.byte 55
-	.byte 61
-LHP8PerLevel:
-	.byte 14
-	.byte 22
-	.byte 30
-	.byte 38
-	.byte 46
-	.byte 54
-	.byte 62
-	.byte 70
-	.byte 78
-LHP10PerLevel:
-	.byte 15
-	.byte 25
-	.byte 35
-	.byte 45
-	.byte 55
-	.byte 65
-	.byte 75
-	.byte 85
-	.byte 95
-LMP2PerLevel:
-	.byte 7
-	.byte 9
-	.byte 11
-	.byte 13
-	.byte 15
-	.byte 17
-	.byte 19
-	.byte 21
-	.byte 23
-LMP3PerLevel:
-	.byte 8
-	.byte 11
-	.byte 14
-	.byte 17
-	.byte 20
-	.byte 23
-	.byte 26
-	.byte 29
-	.byte 32
-LMP5PerLevel:
-	.byte 10
-	.byte 15
-	.byte 20
-	.byte 25
-	.byte 30
-	.byte 35
-	.byte 40
-	.byte 45
-	.byte 50
+	.byte 48
+	.byte 52
 
 LClassAttackLookup:
-	.byte (LStat3PerLevel & $FF) ;Knight
-	.byte (LStat5PerLevel & $FF) ;Rogue
-	.byte (LStat2PerLevel & $FF) ;Cleric
-	.byte (LStat1PerLevel & $FF) ;Wizard
-	.byte (LStat4PerLevel & $FF) ;Ranger
-	.byte (LStat3PerLevel & $FF) ;Paladin
+	.byte (LMidStatGrowth & $FF) ;Knight
+	.byte (LHighStatGrowth & $FF) ;Rogue
+	.byte (LMidStatGrowth & $FF) ;Cleric
+	.byte (LLowStatGrowth & $FF) ;Wizard
+	.byte (LHighStatGrowth & $FF) ;Ranger
+	.byte (LMidStatGrowth & $FF) ;Paladin
 LClassMagicLookup:
 	.byte (LAllZeroes & $FF)
 	.byte (LAllZeroes & $FF)
-	.byte (LStat3PerLevel & $FF)
-	.byte (LStat5PerLevel & $FF)
-	.byte (LStat2PerLevel & $FF)
-	.byte (LStat3PerLevel & $FF)
+	.byte (LHighStatGrowth & $FF)
+	.byte (LHighStatGrowth & $FF)
+	.byte (LLowStatGrowth & $FF)
+	.byte (LLowStatGrowth & $FF)
 LClassSpeedLookup:
-	.byte (LStat2PerLevel & $FF)
-	.byte (LStat5PerLevel & $FF)
-	.byte (LStat1PerLevel & $FF)
-	.byte (LStat3PerLevel & $FF)
-	.byte (LStat4PerLevel & $FF)
-	.byte (LStat3PerLevel & $FF)
+	.byte (LLowStatGrowth & $FF)
+	.byte (LHighStatGrowth & $FF)
+	.byte (LLowStatGrowth & $FF)
+	.byte (LMidStatGrowth & $FF)
+	.byte (LHighStatGrowth & $FF)
+	.byte (LMidStatGrowth & $FF)
 LClassHPLookup:
-	.byte (LHP10PerLevel & $FF)
-	.byte (LHP4PerLevel & $FF)
-	.byte (LHP8PerLevel & $FF)
-	.byte (LHP2PerLevel & $FF)
-	.byte (LHP4PerLevel & $FF)
-	.byte (LHP6PerLevel & $FF)
+	.byte (LHighHPGrowth & $FF)
+	.byte (LLowHPGrowth & $FF)
+	.byte (LMidHPGrowth & $FF)
+	.byte (LLowHPGrowth & $FF)
+	.byte (LMidHPGrowth & $FF)
+	.byte (LMidHPGrowth & $FF)
 LClassMPLookup:
 	.byte (LAllZeroes & $FF)
 	.byte (LAllZeroes & $FF)
-	.byte (LMP3PerLevel & $FF)
-	.byte (LMP5PerLevel & $FF)
-	.byte (LMP2PerLevel & $FF)
-	.byte (LMP3PerLevel & $FF)
-
-LPartyPositionMasks:
-	.byte $01
-	.byte $02
-	.byte $04
-	.byte $08
-
-LSpellListLookup:
-	.byte (LEmptySpellList & $FF)
-	.byte (LEmptySpellList & $FF)
-	.byte (LClericSpellList & $FF)
-	.byte (LWizardSpellList & $FF)
-	.byte (LRangerSpellList & $FF)
-	.byte (LPaladinSpellList & $FF)
+	.byte (LHighHPGrowth & $FF)
+	.byte (LHighHPGrowth & $FF)
+	.byte (LLowHPGrowth & $FF)
+	.byte (LLowHPGrowth & $FF)
 
 LWizardSpellList:
 	.byte #$0 ;BACK
@@ -2702,7 +2636,7 @@ LDamageColors:
 	.byte $FC
 	.byte $08
 
-	;69 bytes here
+	;~100 bytes here
 
 	ORG $DF80
 	RORG $FF80
