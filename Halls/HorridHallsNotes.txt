@@ -89,7 +89,7 @@ $02 - Transitioning into battle
 $03 - Transitioning to campfire
 $04 - Transitioning to maze
 $05 - Enemy damage flash
-$06 - Test effect
+$06 - Trophy procession/shimmer
 $07 - FIRE effect
 $08 - SLEEP effect
 $09 - BLIZRD effect

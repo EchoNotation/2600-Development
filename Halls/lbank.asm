@@ -66,7 +66,7 @@ LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages 
 
 LProcessCharacterAdvancement:
 	cmp #$F0
-	beq .LCheckPartyXP
+	beq .LGoToCheckPartyXP
 	cmp #$F1
 	beq .LPartyDown
 	cmp #$F2
@@ -85,6 +85,8 @@ LProcessCharacterAdvancement:
 	beq .LExitBattleViaVictory
 	rts
 
+.LGoToCheckPartyXP:
+	jmp .LCheckPartyXP
 .LGoToPartyLeveledUp:
 	jmp .LPartyLeveledUp
 .LGoToCheckTypeOfConclusion:
@@ -135,6 +137,11 @@ LProcessCharacterAdvancement:
 	lda #$1F ;GAME OVER
 	bne .LStoreEndMessage
 .LGameCompleted:
+	ldx #6
+	jsr LLoadEffect
+	lda #$21 ;Trophy enemy id
+	sta enemyID+1
+	sta enemyHP+1
 	lda #$20 ;GAME CLEAR
 	bne .LStoreEndMessage
 .LExitBattleViaVictory:

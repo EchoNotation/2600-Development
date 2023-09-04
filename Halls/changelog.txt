@@ -619,6 +619,8 @@
 	-Simplified stat growth in order to use fewer tables. Hopefully it is still balanceable.
 	-Fixed bugs where targeting enemies took more scanlines than intended
 	-Made changes to enemy rendering and encounter generation code in order to remove EEnemySizes table, saving ~30 bytes.
+	-Filled in all enemy data, in order to verify that all pointer calculations are working properly. Looks good so far.
+	-Trophy now appears at the end of the game, along with an overcomplicated shimmering effect
 
 KNOWN BUGS:
 
@@ -636,7 +638,6 @@ TODO:
 	-Party members gain delta HP, delta MP on level up
 	-Random damage and healing offsets
 	-Avatars not being updated after last logic frame
-	-Improve victory screen
 	-Being guarded reduces blight damage
 	-Position enemies in "group skirmish" formation?
 
