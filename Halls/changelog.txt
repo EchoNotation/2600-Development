@@ -621,8 +621,11 @@
 	-Made changes to enemy rendering and encounter generation code in order to remove EEnemySizes table, saving ~30 bytes.
 	-Filled in all enemy graphics data, in order to verify that all pointer calculations are working properly. Looks good so far.
 	-Trophy now appears at the end of the game, along with an overcomplicated shimmering effect
+9/4/23
+	-Moved to middling complexity spell visual effects.
 
 KNOWN BUGS:
+	-Damage caused by blight appears dark orange instead of green?
 
 TODO:
 	Mandatory:

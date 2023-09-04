@@ -51,14 +51,15 @@ SClearNames:
 	sta mazeAndPartyLevel
 	lda #$80
 	sta inBattle
+	lda #0
 	sta currentMenu
 	;lda #$FF
 	;sta hasAction
 	;sta enemyID+1
 	;sta enemyID+2
 	;sta enemyID+3
-	lda #$03
-	sta menuSize
+	;lda #$03
+	;sta menuSize
 	lda #$15
 	sta enemyID+1
 	;lda #$16
@@ -68,9 +69,11 @@ SClearNames:
 	sta enemyHP+1
 	;sta enemyHP+2
 	;sta enemyHP+3
-	;ldy #6 ;Function ID
-	;ldx #$07 ;Effect ID
-	;jsr SRunFunctionInLBank
+	lda #$13
+	sta mazeColor
+	ldy #6 ;Function ID
+	ldx #$07 ;Effect ID
+	jsr SRunFunctionInLBank
 	;ldx #$14
 	;jsr STryLoadSound
 #endif

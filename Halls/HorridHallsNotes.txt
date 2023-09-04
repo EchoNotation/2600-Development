@@ -90,14 +90,8 @@ $03 - Transitioning to campfire
 $04 - Transitioning to maze
 $05 - Enemy damage flash
 $06 - Trophy procession/shimmer
-$07 - FIRE effect
-$08 - SLEEP effect
-$09 - BLIZRD effect
-$0A - DRAIN effect
-$0B - THUNDR effect
-$0C - SHIELD effect
-$0D - METEOR effect
-$0E - CHAOS effect
+$07 - Delay before spell effect
+$08 - Spell effect
 
 --- SOUND EFFECTS ---
 $00 - No sound

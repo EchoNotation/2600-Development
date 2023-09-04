@@ -23,182 +23,6 @@ ECheckDamageTarget: SUBROUTINE ;Determines whether or not this enemy needs to do
 	sta temp2 ;3
 	rts
 
-; EFireEffect:
-; 	.byte $24
-; 	.byte $26
-; 	.byte $28
-; 	.byte $2A
-; 	.byte $2C
-; 	.byte $2E
-; 	.byte $2A
-; 	.byte $2C
-; 	.byte $2E
-; 	.byte $2A
-; 	.byte $2C
-; 	.byte $2E
-; ESleepEffect:
-; 	.byte $B0
-; 	.byte $B2
-; 	.byte $B4
-; 	.byte $B6
-; 	.byte $B8
-; 	.byte $BA
-; 	.byte $BA
-; 	.byte $B6
-; EBlizrdEffect:
-; 	.byte $90
-; 	.byte $92
-; 	.byte $94
-; 	.byte $96
-; 	.byte $98
-; 	.byte $9A
-; 	.byte $9C
-; 	.byte $9E
-; 	.byte $9C
-; 	.byte $0E
-; 	.byte $9C
-; 	.byte $9E
-; 	.byte $0E
-; 	.byte $9A
-; 	.byte $9C
-; 	.byte $9E
-; 	.byte $9C
-; 	.byte $0E
-; 	.byte $9C
-; 	.byte $9E
-; EDrainEffect:
-; 	.byte $C0
-; 	.byte $C6
-; 	.byte $CA
-; 	.byte $C8
-; 	.byte $CA
-; 	.byte $C8
-; 	.byte $CA
-; 	.byte $C8
-; 	.byte $00
-; 	.byte $00
-; 	.byte $00
-; 	.byte $00
-; 	.byte $30
-; 	.byte $36
-; 	.byte $3C
-; 	.byte $3A
-; 	.byte $38
-; 	.byte $36
-; 	.byte $3C
-; 	.byte $3A
-; 	.byte $38
-; 	.byte $36
-; EThundrEffect:
-; 	.byte $02
-; 	.byte $02
-; 	.byte $04
-; 	.byte $04
-; 	.byte $1A
-; 	.byte $1C
-; 	.byte $1E
-; 	.byte $0E
-; 	.byte $0E
-; 	.byte $0E
-; 	.byte $1E
-; 	.byte $1C
-; 	.byte $04
-; 	.byte $04
-; 	.byte $02
-; 	.byte $04
-; 	.byte $04
-; 	.byte $04
-; EShieldEffect:
-; 	.byte $76
-; 	.byte $0E
-; 	.byte $7E
-; 	.byte $0E
-; 	.byte $7E
-; 	.byte $7A
-; 	.byte $78
-; 	.byte $76
-; EMeteorEffect:
-; 	.byte $24
-; 	.byte $2A
-; 	.byte $FA
-; 	.byte $2C
-; 	.byte $2A
-; 	.byte $FA
-; 	.byte $2C
-; 	.byte $2A
-; 	.byte $FA
-; 	.byte $2C
-; 	.byte $2A
-; 	.byte $FA
-; 	.byte $2C
-; 	.byte $2A
-; 	.byte $00
-; 	.byte $00
-; 	.byte $00
-; 	.byte $00
-; 	.byte $00
-; 	.byte $00
-; 	.byte $00
-; 	.byte $06
-; 	.byte $0E
-; 	.byte $0E
-; 	.byte $0E
-; 	.byte $06
-; 	.byte $00
-; 	.byte $00
-
-; EChaosEffect:
-; 	.byte $52
-; 	.byte $56
-; 	.byte $3A
-; 	.byte $E6
-; 	.byte $EA
-; 	.byte $E6
-; 	.byte $CA
-; 	.byte $C6
-; 	.byte $AA
-; 	.byte $A6
-; 	.byte $8A
-; 	.byte $86
-; 	.byte $4A
-; 	.byte $46
-; 	.byte $5A
-; 	.byte $56
-
-EEffectLowLookup:
-; 	.byte 0 ;No effect
-; 	.byte 0 ;Party member highlighting
-; 	.byte 0 ;Transition to battle
-; 	.byte 0 ;Transition to fire
-; 	.byte 0 ;Transition to maze
-; 	.byte 0 ;Enemy damage flash
-; 	.byte 0 ;Trophy shimmer
-; 	.byte (EFireEffect & $FF)
-; 	.byte (ESleepEffect & $FF)
-; 	.byte (EBlizrdEffect & $FF)
-; 	.byte (EDrainEffect & $FF)
-; 	.byte (EThundrEffect & $FF)
-; 	.byte (EShieldEffect & $FF)
-; 	.byte (EMeteorEffect & $FF)
-; 	.byte (EChaosEffect & $FF)
-
-EEffectHighLookup:
-; 	.byte 0 ;No effect
-; 	.byte 0 ;Party member highlighting
-; 	.byte 0 ;Transition to battle
-; 	.byte 0 ;Transition to fire
-; 	.byte 0 ;Transition to maze
-; 	.byte 0 ;Enemy damage flash
-; 	.byte 0 ;Trophy shimmer
-; 	.byte (EFireEffect >> 8 & $FF)
-; 	.byte (ESleepEffect >> 8 & $FF)
-; 	.byte (EBlizrdEffect >> 8 & $FF)
-; 	.byte (EDrainEffect >> 8 & $FF)
-; 	.byte (EThundrEffect >> 8 & $FF)
-; 	.byte (EShieldEffect >> 8 & $FF)
-; 	.byte (EMeteorEffect >> 8 & $FF)
-; 	.byte (EChaosEffect >> 8 & $FF)
-
 EEffectLength:
 	.byte 0 ;No effect
 	.byte 1 ;Party member highlighting
@@ -207,14 +31,8 @@ EEffectLength:
 	.byte 4 ;Transition to maze
 	.byte 16 ;Enemy damage flash
 	.byte 3 ;Trophy shimmer
-	.byte 12 ;Fire
-	.byte 8 ;Sleep
-	.byte 20 ;Blizrd
-	.byte 22 ;Drain
-	.byte 18 ;Thundr
-	.byte 8 ;Shield
-	.byte 28 ;Meteor
-	.byte 16 ;Chaos
+	.byte 0 ;Pre-spell delay --- These last two should never be accessed
+	.byte 0 ;Spell effect
 EEffectFrequency:
 	.byte 0
 	.byte 30
@@ -223,14 +41,71 @@ EEffectFrequency:
 	.byte 10
 	.byte 1 ;Enemy damage flash
 	.byte 4 ;Shimmer
-	.byte 4 ;Fire
-	.byte 6 ;Sleep
-	.byte 4 ;Blizrd
-	.byte 4 ;Drain
-	.byte 3 ;Thundr
-	.byte 4 ;Shield
-	.byte 3 ;Meteor
-	.byte 6 ;Chaos
+	.byte 0 ;Pre-spell delay
+	.byte 4 ;Spell effect
+
+ESpellDelays:
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+
+ESpellEffectLengths:
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+
+ESpellEffectBaseColors:
+	.byte $F8
+	.byte $B8
+	.byte $98
+	.byte $38
+	.byte $18
+	.byte $78
+	.byte $F8
+	.byte $58
+	.byte $C8
+	.byte $18
+	.byte $08
+	.byte $A8
+	.byte $C8
+	.byte $98
+	.byte $B8
+	.byte $48
+	.byte $58
+	.byte $28
+	.byte $48
 
 ERenderEffects:
 	sta WSYNC
@@ -245,7 +120,7 @@ ERenderEffects:
 
 	ldx temp2
 	beq ELine0
-	cmp #1
+	cpx #1
 	beq ELine1
 ELine2:
 	sta WSYNC
@@ -676,26 +551,25 @@ EUpdateEffects: SUBROUTINE
 	ldx currentEffect
 	cpx #$1 ;party member highlighting
 	beq .EHighlightEffect
-	cpx #$6
-	beq .ETrophyShimmer
-	cpx #$5
-	beq .EEnemyDamageFlash
-	cpx #$5 ;Branch if in one of the three transitions
-	bcc .ETransitionEffect
+	cpx #$8
+	bcc .ESpecialEffect
 .ENormalEffect:
-	lda EEffectLowLookup,x
-	sta tempPointer1
-	lda EEffectHighLookup,x
-	sta tempPointer1+1
-	ldy effectCounter
-	lda (tempPointer1),y ;Get the current background color for this effect and effectCounter
+	ldy mazeColor
+	dey
+	lda effectCounter
+	and #$3
+	asl
+	adc ESpellEffectBaseColors,y
 	sta COLUBK
-	dec temp2
+	lda #1
+	sta temp2
 	rts
 .EEndEffect:
 	lda currentEffect
 	cmp #$6
 	beq .EDontEndShimmer
+	cmp #$7
+	beq .EStartSpellEffect
 	sty currentEffect
 	sty effectCounter
 	sty effectCountdown
@@ -715,12 +589,24 @@ EUpdateEffects: SUBROUTINE
 	lda #1
 	sta effectCounter
 	sta temp2
-.EEnemyDamageFlash:
 	rts
-.ETransitionEffect:
-.ETrophyShimmer:
+.ESpecialEffect:
 	lda #1
 	sta temp2
+	rts
+.EStartSpellEffect:
+	ldy mazeColor
+	dey
+	lda ESpellEffectLengths,y
+	sta effectCounter
+	lda #8
+	sta currentEffect
+	ldx #1
+	stx effectCountdown
+	nop
+	nop
+	nop
+	stx temp2
 	rts
 
 EGenerateEncounter: SUBROUTINE ;Sets the enemyIDs to be an appropriate battle for this maze level. Also handles bosses.
@@ -879,10 +765,20 @@ ELoadString: SUBROUTINE ;Copies the string of ID X into temp1-temp6
 
 ELoadEffect: SUBROUTINE ;Loads the effect of ID X.
 	stx currentEffect
+	cpx #7
+	beq .ESpellDelayEffect
 	lda EEffectLength,x
 	sta effectCounter
 	lda #1
 	sta effectCountdown
+	jmp EAfterLoadingEffect
+.ESpellDelayEffect:
+	ldy mazeColor
+	dey
+	lda ESpellDelays,y
+	sta effectCountdown
+	lda #0
+	sta effectCounter
 	jmp EAfterLoadingEffect
 
 	ORG $E500

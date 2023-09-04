@@ -390,12 +390,11 @@ LProcessCasting:
 
 	ldx cursorIndexAndMessageY ;spellID
 	jsr LLoadSoundInS
-	txa
-	adc #7
-	tax
+	stx mazeColor
+	ldx #7 ;Pre-spell delay
 	jsr LLoadEffect
-	ldx cursorIndexAndMessageY
 
+	ldx cursorIndexAndMessageY ;spell ID
 	ldy currentBattler
 	cpy #4
 	bcs .LDontRemoveMana
