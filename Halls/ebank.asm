@@ -314,16 +314,13 @@ EUseNormalPFColor:
 EStorePlayfieldColor:
 	sta COLUPF
 	lda enemyID,x
-	and #$3F
-	tax
-	lda EEnemySizes,x
-	cmp #1
-	beq EPrepSmallEnemy
-	cmp #2
-	beq EPrepMediumEnemy
+	cmp #$14 ;First medium enemy ID
+	bcc EPrepSmallEnemy
+	cmp #$22 ;First large enemy ID
+	bcc EPrepMediumEnemy
 	jmp EPrepLargeEnemy
 EPrepSmallEnemy:
-	stx returnValue ;enemyID
+	sta returnValue ;enemyID
 	lda #$FD
 	sta tempPointer1+1
 	lda returnValue
@@ -352,8 +349,6 @@ EPrepSmallEnemy:
 	sta temp1
 	jmp EEnemyRenderingLoop
 EPrepMediumEnemy:
-	;sta WSYNC
-	txa
 	sec
 	sbc #20
 	sta returnValue ;modified enemyID
@@ -381,6 +376,7 @@ EPrepMediumEnemy:
 	sta temp5
 
 	sta WSYNC
+	sta WSYNC
 	jsr EDrawMediumEnemy
 	inc temp3
 	inc temp3
@@ -393,8 +389,7 @@ EPrepLargeEnemy:
 	;X currently contains the enemyID
 	;graphics are stored in temp4, tempPointer3, tempPointer2, tempPointer1 order low to high addresses
 	;color are stored ub temp6, temp5 order low to high addresses
-	;sta WSYNC
-	txa
+	sta WSYNC
 	sec
 	sbc #34 ;Currently, large enemies are at the end of the enemyID list.
 	sta returnValue
