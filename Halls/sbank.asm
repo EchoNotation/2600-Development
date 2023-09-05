@@ -1954,21 +1954,8 @@ SCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in X, a
 	rts
 
 SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
-	lda currentBattler
-	and #$03
-	tax
-	lda enemyID,x
-	asl
-	asl
-	clc
-	adc #(SZombieAI & $FF)
-	sta tempPointer1
-	lda #(SEnemyAI >> 8 & $FF)
-	sta tempPointer1+1
-	jsr SRandom
-	and #$03 ;Only 4 slots per enemy
-	tay
-	lda (tempPointer1),y
+	jmp SLoadEnemyAI
+SAfterLoadingEnemyAI:
 	;A now contains the selected AI card for this particular enemy
 	sta temp5 ;temp5 will hold the pulled card
 	and #$9F ;Copy the spellcasting bit, and the ID over to the final action
@@ -2658,25 +2645,18 @@ SSpellTargetingLookup:
 	.byte $84 ;WISH
 	.byte $82 ;SHIFT
 
-	ORG $FE60 ;Used for enemy AI, nothing else can go in here
-	RORG $FE60
+	ORG $FEC0
+	RORG $FEC0
 
-SEnemyAI: ;This table must be in order by enemy ID
-SZombieAI:
-	.byte $00 ;Attack frontline
-	.byte $00
-	.byte $00
-	.byte $00
-SGiantAI:
-	.byte $20 ;Attack backline
-	.byte $20
-	.byte $20
-	.byte $20
-SDragonAI:
-	.byte $C1 ;Cast fire any
-	.byte $C1
-	.byte $C1
-	.byte $C1
+SLoadEnemyAI:
+	sta $1FF8 ;Go to bank 2
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	jmp SAfterLoadingEnemyAI
 
 	ORG $FF00
 	RORG $FF00

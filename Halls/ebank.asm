@@ -23,89 +23,22 @@ ECheckDamageTarget: SUBROUTINE ;Determines whether or not this enemy needs to do
 	sta temp2 ;3
 	rts
 
-EEffectLength:
-	.byte 0 ;No effect
-	.byte 1 ;Party member highlighting
-	.byte 8 ;Transition to battle
-	.byte 4 ;Transition to fire
-	.byte 4 ;Transition to maze
-	.byte 16 ;Enemy damage flash
-	.byte 3 ;Trophy shimmer
-	.byte 0 ;Pre-spell delay --- These last two should never be accessed
-	.byte 0 ;Spell effect
-EEffectFrequency:
-	.byte 0
-	.byte 30
-	.byte 10
-	.byte 10
-	.byte 10
-	.byte 1 ;Enemy damage flash
-	.byte 4 ;Shimmer
-	.byte 0 ;Pre-spell delay
-	.byte 4 ;Spell effect
-
-ESpellDelays:
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-
-ESpellEffectLengths:
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-
-ESpellEffectBaseColors:
-	.byte $F8
-	.byte $B8
-	.byte $98
-	.byte $38
-	.byte $18
-	.byte $78
-	.byte $F8
-	.byte $58
-	.byte $C8
-	.byte $18
-	.byte $08
-	.byte $A8
-	.byte $C8
-	.byte $98
-	.byte $B8
-	.byte $48
-	.byte $58
-	.byte $28
-	.byte $48
+EEnemyAI: ;This table must be in order by enemy ID
+ZombieAI:
+	.byte $00 ;Attack frontline
+	.byte $00
+	.byte $C1 ;Cast fire any
+	.byte $C1
+GiantAI:
+	.byte $20 ;Attack backline
+	.byte $20
+	.byte $20
+	.byte $20
+DragonAI:
+	.byte $C1 ;Cast fire any
+	.byte $C1
+	.byte $C1
+	.byte $C1
 
 ERenderEffects:
 	sta WSYNC
@@ -780,6 +713,24 @@ ELoadEffect: SUBROUTINE ;Loads the effect of ID X.
 	lda #0
 	sta effectCounter
 	jmp EAfterLoadingEffect
+
+ELoadEnemyAI: SUBROUTINE
+	lda currentBattler
+	and #$03
+	tax
+	lda enemyID,x
+	asl
+	asl
+	clc ;this may not be necessary
+	adc #(EEnemyAI & $FF)
+	sta tempPointer1
+	lda #(EEnemyAI >> 8 & $FF)
+	sta tempPointer1+1
+	jsr ERandom
+	and #$03 ;Only 4 slots per enemy
+	tay
+	lda (tempPointer1),y
+	jmp EAfterLoadingEnemyAI
 
 	ORG $E500
 	RORG $F500
@@ -3352,6 +3303,14 @@ SmallTestColors20:
 	ORG $EEC0
 	RORG $FEC0
 
+ELoadEnemyAIForS:
+	nop
+	nop
+	nop
+	jmp ELoadEnemyAI
+EAfterLoadingEnemyAI:
+	sta $1FF9 ;Go to S bank	
+
 EEncounterSizes:
 	.byte 2
 	.byte 3
@@ -3361,21 +3320,21 @@ EEncounterSizes:
 	;Encounter tables must ALWAYS end with a small enemy, and every instance of a medium or large enemy MUST be IMMEDIATELY followed by a small enemy
 	;Encounter tables must be a multiple of 2 in size. 16 happens to be the most convenient size.
 EGroundsEnemies:
-	.byte $14
 	.byte $00
-	.byte $14
 	.byte $00
-	.byte $14
 	.byte $00
-	.byte $14
 	.byte $00
-	.byte $14
 	.byte $00
-	.byte $14
 	.byte $00
-	.byte $14
 	.byte $00
-	.byte $14
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
+	.byte $00
 	.byte $00
 
 ECastleEnemies:
@@ -3474,7 +3433,89 @@ EBossEncounters:
 	.byte $00
 	.byte $00
 
-	;~108 bytes here
+EEffectLength:
+	.byte 0 ;No effect
+	.byte 1 ;Party member highlighting
+	.byte 8 ;Transition to battle
+	.byte 4 ;Transition to fire
+	.byte 4 ;Transition to maze
+	.byte 16 ;Enemy damage flash
+	.byte 3 ;Trophy shimmer
+	.byte 0 ;Pre-spell delay --- These last two should never be accessed
+	.byte 0 ;Spell effect
+EEffectFrequency:
+	.byte 0
+	.byte 30
+	.byte 10
+	.byte 10
+	.byte 10
+	.byte 1 ;Enemy damage flash
+	.byte 4 ;Shimmer
+	.byte 0 ;Pre-spell delay
+	.byte 4 ;Spell effect
+
+ESpellDelays:
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+	.byte 8
+
+ESpellEffectLengths:
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+	.byte 32
+
+ESpellEffectBaseColors:
+	.byte $F8
+	.byte $B8
+	.byte $98
+	.byte $38
+	.byte $18
+	.byte $78
+	.byte $F8
+	.byte $58
+	.byte $C8
+	.byte $18
+	.byte $08
+	.byte $A8
+	.byte $C8
+	.byte $98
+	.byte $B8
+	.byte $48
+	.byte $58
+	.byte $28
+	.byte $48
 
 	ORG $EF90
 	RORG $FF90

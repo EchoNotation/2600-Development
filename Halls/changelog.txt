@@ -623,6 +623,9 @@
 	-Trophy now appears at the end of the game, along with an overcomplicated shimmering effect
 9/4/23
 	-Moved to middling complexity spell visual effects.
+		-Connected new spell visual effects
+	-Relocated enemy AI into E bank.
+
 
 KNOWN BUGS:
 	-Damage caused by blight appears dark orange instead of green?
@@ -631,8 +634,6 @@ TODO:
 	Mandatory:
 	-Implement all enemy special abilities
 	-Connect visual and sound effects
-	-Consider booting enemy AI tables, logic, or both into R or E banks to make more room for sound effects
-		-Maybe the tables can go, but there's not a lot of room left in E after enemy graphics
 
 	Nice:
 	-Setup screen logo
