@@ -631,7 +631,9 @@ RWaitToDrawSetupScreenLoop:
 	bne RWaitToDrawSetupScreenLoop
 
 RDrawLogo:
-	lda #$10
+	lda #$F0
+	sta HMP0
+	lda #$0
 	sta HMP1
 	
 	ldy #15
@@ -640,9 +642,6 @@ RDrawLogo:
 	nop
 	nop
 	nop
-	nop
-	cmp temp1
-	;nop
 	cmp temp1
 	sta RESP0
 	sta RESP1
@@ -696,7 +695,7 @@ RDrawLogoLoop:
 	iny
 	sty GRP0
 	sty GRP1
-
+	sta HMCLR
 
 	sta WSYNC
 	nop
