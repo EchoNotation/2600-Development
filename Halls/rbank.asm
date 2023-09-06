@@ -624,12 +624,83 @@ RAfterRendering:
 	jmp RGoToOverscan
 
 RRenderSetupScreen:
-	ldx #37
+	ldx #3
 RWaitToDrawSetupScreenLoop:
 	sta WSYNC
 	dex
 	bne RWaitToDrawSetupScreenLoop
 
+RDrawLogo:
+	lda #$10
+	sta HMP1
+	
+	ldy #15
+	jsr RSpinWheels
+	nop
+	nop
+	nop
+	nop
+	nop
+	cmp temp1
+	;nop
+	cmp temp1
+	sta RESP0
+	sta RESP1
+	
+	lda #1
+	sta NUSIZ0
+	sta NUSIZ1
+	sta WSYNC
+	sta HMOVE
+	lda #06
+	sta COLUPF
+RDrawLogoLoop:
+	sta WSYNC
+	lda RLogo0,y
+	sta GRP0
+	lda RLogo1,y
+	sta GRP1
+	lda RLogoColors,y
+	sta COLUP0
+	sta COLUP1
+
+	lda RLogoPF,y
+	sta PF2
+
+	lda RLogo2,y
+	tax
+	lda RLogo3,y
+	cmp temp1
+	stx GRP0
+	sta GRP1
+	sta WSYNC
+	lda RLogo0,y
+	sta GRP0
+	lda RLogo1,y
+	sta GRP1
+	lda RLogoColors,y
+	sta COLUP0
+	sta COLUP1
+
+	lda RLogoPF,y
+	sta PF2
+
+	lda RLogo2,y
+	tax
+	lda RLogo3,y
+	cmp temp1
+	stx GRP0
+	sta GRP1
+	dey
+	bpl RDrawLogoLoop
+	iny
+	sty GRP0
+	sty GRP1
+
+
+	sta WSYNC
+	nop
+	nop
 	lda enemyID+1
 	and #$F0
 	sta HMBL
@@ -664,6 +735,10 @@ RWaitToDrawSetupScreenLoop:
 	
 	sta GRP1
 	stx HMP1
+
+	lda #TEXT_HIGHLIGHTED_COLOR
+	sta COLUP0
+	sta COLUP1
 
 	sta WSYNC
 	sta HMOVE
@@ -1877,7 +1952,79 @@ RPartyPositionMasks:
 	.byte $04
 	.byte $08
 
-	;86 bytes in here...
+RLogoColors:
+	.byte $06
+	.byte $06
+	.byte $0E
+	.byte $0E
+	.byte $0E
+	.byte $0E
+	.byte $0E
+	.byte $06
+	.byte $06
+	.byte $0E
+	.byte $0E
+	.byte $0E
+	.byte $0E
+	.byte $0E
+	.byte $06
+	.byte $06
+
+RLogoPF:
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %01110000
+	.byte %01000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %10110000
+	.byte %11000000
+	.byte %00110000
+	.byte %10100000
+	.byte %00000000
+	.byte %00000000
+
+RLogo0:
+	.byte %11011101 ;maze
+	.byte %10000001 ;maze
+	.byte %00110101
+	.byte %01000110
+	.byte %01000101
+	.byte %01000101
+	.byte %00110110
+	.byte %10000111 ;maze
+	.byte %11011110 ;maze
+	.byte %00000000
+	.byte %00000001
+	.byte %00000001
+	.byte %00000001
+	.byte %00000000
+	.byte %10100000 ;maze
+	.byte %10111111 ;maze
+
+RLogo1:
+	.byte %11001110 ;maze
+	.byte %00011000 ;maze
+	.byte %01010010
+	.byte %01010101
+	.byte %01110101
+	.byte %01010100
+	.byte %00100100
+	.byte %01101101 ;maze
+	.byte %00001000 ;maze
+	.byte %11001010
+	.byte %00001010
+	.byte %00001110
+	.byte %00001010
+	.byte %11000100
+	.byte %01011000 ;maze
+	.byte %01011011 ;maze
+
+	;22 bytes in here...
 
 	ORG $CC00 ;Used to hold more graphics data
 	RORG $FC00
@@ -2145,7 +2292,41 @@ RNearFire:
 	.byte %00100000 ;R4
 	.byte $FF ;----
 
-	;32 bytes here
+RLogo2:
+	.byte %01110111 ;maze
+	.byte %11000100 ;maze
+	.byte %10011101
+	.byte %01010001
+	.byte %01010001
+	.byte %01010001
+	.byte %01010001
+	.byte %10011101 ;maze
+	.byte %11111000 ;maze
+	.byte %00100010
+	.byte %00100010
+	.byte %00100011
+	.byte %00100010
+	.byte %01110001
+	.byte %00010100 ;maze
+	.byte %01110110 ;maze
+
+RLogo3:
+	.byte %10110111 ;maze
+	.byte %00010001 ;maze
+	.byte %11010100
+	.byte %00011000
+	.byte %10010100
+	.byte %00010100
+	.byte %11011000
+	.byte %10001011 ;maze
+	.byte %10111011 ;maze
+	.byte %10000000
+	.byte %10000000
+	.byte %10000000
+	.byte %10000000
+	.byte %00000000
+	.byte %00000101 ;maze
+	.byte %11101101 ;maze
 
 	ORG $CD00 ;Used for holding the letters of the alphabet
 	RORG $FD00

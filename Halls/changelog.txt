@@ -633,6 +633,10 @@
 	-Moved things in the L bank around in order to have more room for battle system improvements
 	-SHARP spell now gives all allies a single use damage doubling that clears on next attack.
 	-Manually "exported" logo from image
+9/6/23
+	-Added logo into setup screen
+		-Realized that all the text in the game is actually 1 pixel left of center
+
 
 KNOWN BUGS:
 
@@ -673,6 +677,7 @@ TODO:
 		-Add more text & messages
 		-Create all enemy graphics
 		-Add all enemy names
+		-Create all enemy stats
 		-Create all enemy AI tables
 		-Create all encounter tables
 		-Tune maze exit tables
