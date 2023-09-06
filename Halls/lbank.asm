@@ -734,14 +734,6 @@ LProcessCasting:
 	ldy #HOLY_RESIST_MASK
 	bne .LTgtDamage
 
-.LSharp:
-	ldx startingCursorIndexAndTargetID
-	lda #SHARPENED_MASK
-	jsr LApplyStatus
-	lda #$1A ;X ATTACK UP
-	sta currentMessage
-	bne .LNormalTgtedExit
-
 .LBlight:
 	ldx startingCursorIndexAndTargetID
 	lda #BLIGHTED_MASK
@@ -873,7 +865,7 @@ LProcessCasting:
 	ldy #FULL_MAGIC
 	jsr LDetermineSpellPower
 	ldy #PHYSICAL_RESIST_MASK
-	bne .LAoEDamage
+	jmp .LAoEDamage
 
 .LChaos:
 	jsr LRandom
@@ -940,6 +932,14 @@ LProcessCasting:
 	jmp .LTryNextTgt
 .LNoBanishing:
 	lda #$15 ;NO EFFECT
+	sta currentMessage
+	bne .LTryNextTgt
+
+.LSharp:
+	ldx startingCursorIndexAndTargetID
+	lda #SHARPENED_MASK
+	jsr LApplyStatus
+	lda #$1A ;X ATTACK UP
 	sta currentMessage
 	bne .LTryNextTgt
 
@@ -1259,16 +1259,18 @@ LProcessParrying:
 LProcessSpecial:
 	ldx currentBattler
 	lda battleActions,x ;battleActions is 4 bytes before enemyID
-	cmp #$10 ;TODO replace with LICH id
+	cmp #$1E ;TODO replace with LICH id
 	beq .LLichSpecial
-	cmp #$20 ;TODO replace with JESTER id
+	cmp #$1A
 	beq .LJesterSpecial
-	cmp #$30 ;TODO replace with GIFT id
+	cmp #$6 ;TODO replace with GIFT id
 	beq .LGiftSpecial
-	cmp #$40 ;TODO replace with OOZE id
+	cmp #$23 ;TODO replace with OOZE id
 	beq .LOozeSpecial
-	cmp #$50 ;TODO replace with SLIME id
+	cmp #$1D ;TODO replace with SLIME id
 	beq .LSlimeSpecial
+	cmp #$1B
+	beq .LArmorSpecial
 	rts
 
 .LLichSpecial:
@@ -1280,11 +1282,11 @@ LProcessSpecial:
 	lda rand8
 	bpl .LSummonZombie
 .LSummonSkeleton:
-	lda #1 ;TODO SKLTON id
-	ldy LSkltonHP
+	lda #$A
+	ldy LSkltonHP ;Can actually save some bytes by replacing these with immediates
 	bne .LSummon
 .LSummonZombie:
-	lda #0 ;TODO ZOMBIE id
+	lda #$9
 	ldy LZombieHP
 	bne .LSummon
 
@@ -1294,7 +1296,7 @@ LProcessSpecial:
 	beq .LCantSummon
 	lda #$9C ;TODO X LEAVES Y
 	sta temp2
-	lda #3 ;TODO GIFT id
+	lda #$6
 	ldy #30 ;TODO GIFT hp
 .LSummon:
 	sta enemyID,x
@@ -1313,6 +1315,7 @@ LProcessSpecial:
 	lda #$FE ;TODO X BLOWS UP
 	sta currentMessage
 	lda #$83 ;Cast BLIZRD (can't tell the difference between this and FIRE)
+	sta enemyAction
 	sta temp1 ;Inject the new enemyAction
 	jmp .LIsOffensive ;Jumps into the relevant part of AoE spell setup code
 
@@ -1320,6 +1323,9 @@ LProcessSpecial:
 	rts
 
 .LSlimeSpecial:
+	rts
+
+.LArmorSpecial:
 	rts
 
 LFindNextEmptySpot: SUBROUTINE ;Starting from position X, returns the first empty spot in X. #$FF if no spot exists
@@ -1454,6 +1460,8 @@ LEnterBattleSetup:
 	sta menuSize
 	jsr LFindFirstLivingAlly
 	stx currentBattler
+
+	jsr LUpdateAvatars
 	rts
 
 .LContinue:
@@ -1502,7 +1510,7 @@ LCheckSpellHit: SUBROUTINE ;Determines if the spell corresponding to ID X should
 	lda battlerHP,y
 	bne .LSpellHits ;Any spell on a conscious target hits
 	cpy #4
-	bcs .LSpellMisses ;Enemies cease to exist after reaching 0 hp
+	bcs .LSpellMisses ;Enemies cease to exist after reaching 0 HP
 	cpx #$09 ;HEAL
 	beq .LSpellHits
 	cpx #$0E ;TRIAGE
@@ -1684,11 +1692,14 @@ LApplyPositionalDamageModifier: SUBROUTINE ;Treats X as the absolute ID of the a
 .LFullDamage:
 	rts
 
-LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, and doubles their damage if so
+LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, and doubles their damage for this attack if so.
 	lda battlerStatus,x
 	and #SHARPENED_MASK
 	beq .LNoSharp
 	asl temp2
+	lda battlerStatus,x
+	and #(~SHARPENED_MASK)
+	sta battlerStatus,x
 .LNoSharp:
 	rts
 
@@ -1960,176 +1971,16 @@ LSetTotalAoETgtsDefensive: SUBROUTINE ;Sets the aoeTargetsRemaining byte to the 
 	inx
 .LCheckEnemiesLoop:
 	lda battlerHP,x
-	beq .LEnemyDead
+	beq .LNoEnemy
 	iny
-.LEnemyDead:
+.LNoEnemy:
 	inx
 	cpx #8
 	bcc .LCheckEnemiesLoop
 	sty aoeTargetsRemaining
 	rts
 
-LLoadPlayerVars: SUBROUTINE ;Loads each party members max HP and MP
-	ldx #3
-.LLoadPlayerVarsLoop:
-	stx charIndex
-	jsr LGetBattlerMaxHP
-	brk ;LBinaryToDecimal
-	ldx charIndex
-	sta hp1,x
-	jsr LGetBattlerMaxMP
-	brk ;LBinaryToDecimal
-	ldx charIndex
-	sta mp1,x
-	dex
-	bpl .LLoadPlayerVarsLoop
-	rts
-
-LGetBattlerStat: SUBROUTINE ;Returns the appropriate stat of battlerID X in A
-LGetBattlerAttack:
-	ldy #0
-	beq LSetStatPointers
-LGetBattlerMagic:
-	ldy #1
-	bne LSetStatPointers
-LGetBattlerSpeed:
-	ldy #2
-	bne LSetStatPointers
-LGetBattlerMaxHP:
-	ldy #3
-	bne LSetStatPointers
-LGetBattlerMaxMP:
-	ldy #4
-LSetStatPointers:
-	lda LLowAllyStatPointers,y
-	sta tempPointer3
-	lda LHighAllyStatPointers,y
-	sta tempPointer3+1
-	lda LLowEnemyStatPointers,y
-	sta temp4
-	lda LHighEnemyStatPointers,y
-	sta tempPointer4
-.LGetStat:
-	cpx #4
-	bcs .LCheckEnemyStat
-.LCheckAllyStat:
-	lda char1,x
-	and #$0F
-	tay
-	lda (tempPointer3),y
-	sta tempPointer3
-	lda #(LLowStatGrowth >> 8 & $FF)
-	sta tempPointer3+1
-	lda mazeAndPartyLevel
-	and #$0F
-	tay
-	dey
-	lda (tempPointer3),y
-	rts
-.LCheckEnemyStat:
-	dex
-	dex
-	dex
-	dex
-	lda enemyID,x
-	tay
-	lda (temp4),y
-L4INX:
-	inx
-	inx
-	inx
-	inx
-	rts
-
-LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return the resistances of (in A). Format is LPFIDEPR
-									;L: Legendary resist (Banish/Sleep), P: Physical, F: Fire, I:Ice, D: Divine, E: Electric, P: Poison, R: isRanged
-	cpx #4 ;This section used to be 24 nops for bankswitching, but this function is conveniently exactly 24 bytes
-	bcs .LHasResistanceByte 
-	lda char1,x
-	and #$0f
-	tax
-	lda LIsClassRanged,x
-	rts
-.LHasResistanceByte:
-	dex
-	dex
-	dex
-	dex
-	lda enemyID,x
-	tay
-	lda LEnemyResistances,y
-	inx
-	inx
-	inx
-	inx
-	rts
-
-LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to convert to decimal. Returns the result in A.
-	tsx
-	inx
-	inx
-	dec $00,x ;Trim the extra address increment that happens as part of brk
-
-	ldx #0
-.LRemove10s:
-	sec
-	sbc #10
-	bmi .LDoneRemoving10s
-	inx
-	jmp .LRemove10s
-.LDoneRemoving10s:
-	clc
-	adc #10
-	sta temp4
-	txa
-	asl
-	asl
-	asl
-	asl
-	ora temp4
-	rti
-
-LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to convert to binary. Returns the result in A.
-	ldx #0
-	sed
-.LRemove16s:
-	sec
-	sbc #$16
-	bmi .LDoneRemoving16s
-	inx
-	bne .LRemove16s
-.LDoneRemoving16s:
-	adc #$16
-	cld
-	cmp #$10
-	bcs .LOver10
-	sta tempPointer2
-	bcc .LCombine ;Should always be taken
-.LOver10:
-	and #$0F
-	clc
-	adc #10
-	sta tempPointer2
-.LCombine:
-	txa
-	asl
-	asl
-	asl
-	asl
-	ora tempPointer2
-	rts
-
-LRandom: SUBROUTINE ;Ticks the random number generator when called 10 bytes
-	lda rand8
-	lsr
-	bcc .LNoEOR
-	eor #$B4
-.LNoEOR:
-	sta rand8
-	rts
-
 LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their status and health
-							;This is a candidate for relocation to S bank
 	lda inBattle
 	bpl .LContinue
 	lda #$08
@@ -2221,24 +2072,20 @@ LOverrideAvatar: SUBROUTINE ;Sets party member X's mood to Y. 17 bytes
 	sta char1,x
 	rts
 
-L6Lsr: ;7 bytes
-	lsr
-L5Lsr
-	lsr
-L4Lsr:
-	lsr
-	lsr
-	lsr
-	lsr
-	rts
-
-L5Asl:
-	asl
-L4Asl:
-	asl
-	asl
-	asl
-	asl
+LLoadPlayerVars: SUBROUTINE ;Loads each party members max HP and MP
+	ldx #3
+.LLoadPlayerVarsLoop:
+	stx charIndex
+	jsr LGetBattlerMaxHP
+	brk ;LBinaryToDecimal
+	ldx charIndex
+	sta hp1,x
+	jsr LGetBattlerMaxMP
+	brk ;LBinaryToDecimal
+	ldx charIndex
+	sta mp1,x
+	dex
+	bpl .LLoadPlayerVarsLoop
 	rts
 
 LLoadEnemyHP: SUBROUTINE ;Loads the correct starting HP values for all enemies based on enemyID. DO NOT CALL IF ENEMYIDs ARE NOT SET! 
@@ -2257,6 +2104,36 @@ LLoadEnemyHP: SUBROUTINE ;Loads the correct starting HP values for all enemies b
 .LNextIteration:
 	dex
 	bpl .LLoadEnemyHPLoop
+	rts
+
+LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to convert to binary. Returns the result in A.
+	ldx #0
+	sed
+.LRemove16s:
+	sec
+	sbc #$16
+	bmi .LDoneRemoving16s
+	inx
+	bne .LRemove16s
+.LDoneRemoving16s:
+	adc #$16
+	cld
+	cmp #$10
+	bcs .LOver10
+	sta tempPointer2
+	bcc .LCombine ;Should always be taken
+.LOver10:
+	and #$0F
+	clc
+	adc #10
+	sta tempPointer2
+.LCombine:
+	txa
+	asl
+	asl
+	asl
+	asl
+	ora tempPointer2
 	rts
 
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
@@ -2539,7 +2416,7 @@ LSpellTargetingLookup:
 	.byte $3 ;HEAL
 	.byte $1 ;SMITE
 	.byte $82 ;VOLLEY
-	.byte $3 ;SHARP
+	.byte $84 ;SHARP
 	.byte $1 ;BLIGHT
 	.byte $84 ;TRIAGE
 	.byte $1 ;WITHER
@@ -2605,14 +2482,6 @@ LHasActionMasks:
 	.byte #$02
 	.byte #$01
 
-LFrontlineModifiers:
-	.byte $0 ;Knight
-	.byte $0 ;Rogue
-	.byte $0 ;Cleric
-	.byte $1 ;Wizard
-	.byte $1 ;Ranger
-	.byte $0 ;Paladin
-
 LChaosElements:
 	.byte $FF ;Non-elemental
 	.byte PHYSICAL_RESIST_MASK
@@ -2623,14 +2492,6 @@ LChaosElements:
 	.byte POISON_RESIST_MASK
 	.byte $FF ;Non-elemental
 
-LIsClassRanged:
-	.byte $0 ;Knight
-	.byte $0 ;Rogue
-	.byte $0 ;Cleric
-	.byte $1 ;Wizard
-	.byte $1 ;Ranger
-	.byte $0 ;Paladin
-
 LDamageColors:
 	.byte $00
 	.byte $CA
@@ -2640,19 +2501,108 @@ LDamageColors:
 	.byte $FC
 	.byte $08
 
-	;~100 bytes here
+LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to convert to decimal. Returns the result in A.
+	tsx
+	inx
+	inx
+	dec $00,x ;Trim the extra address increment that happens as part of brk
+
+	ldx #0
+.LRemove10s:
+	sec
+	sbc #10
+	bmi .LDoneRemoving10s
+	inx
+	jmp .LRemove10s
+.LDoneRemoving10s:
+	clc
+	adc #10
+	sta temp4
+	txa
+	asl
+	asl
+	asl
+	asl
+	ora temp4
+	rti
+
+LRandom: SUBROUTINE ;Ticks the random number generator when called 10 bytes
+	lda rand8
+	lsr
+	bcc .LNoEOR
+	eor #$B4
+.LNoEOR:
+	sta rand8
+	rts
+
+LGetBattlerStat: SUBROUTINE ;Returns the appropriate stat of battlerID X in A
+LGetBattlerAttack:
+	ldy #0
+	beq LSetStatPointers
+LGetBattlerMagic:
+	ldy #1
+	bne LSetStatPointers
+LGetBattlerSpeed:
+	ldy #2
+	bne LSetStatPointers
+LGetBattlerMaxHP:
+	ldy #3
+	bne LSetStatPointers
+LGetBattlerMaxMP:
+	ldy #4
+LSetStatPointers:
+	lda LLowAllyStatPointers,y
+	sta tempPointer3
+	lda LHighAllyStatPointers,y
+	sta tempPointer3+1
+	lda LLowEnemyStatPointers,y
+	sta temp4
+	lda LHighEnemyStatPointers,y
+	sta tempPointer4
+.LGetStat:
+	cpx #4
+	bcs .LCheckEnemyStat
+.LCheckAllyStat:
+	lda char1,x
+	and #$0F
+	tay
+	lda (tempPointer3),y
+	sta tempPointer3
+	lda #(LLowStatGrowth >> 8 & $FF)
+	sta tempPointer3+1
+	lda mazeAndPartyLevel
+	and #$0F
+	tay
+	dey
+	lda (tempPointer3),y
+	rts
+.LCheckEnemyStat:
+	dex
+	dex
+	dex
+	dex
+	lda enemyID,x
+	tay
+	lda (temp4),y
+L4INX:
+	inx
+	inx
+	inx
+	inx
+	rts
 
 	ORG $DF80
 	RORG $FF80
 
 LLoadSoundInS:
 	sta $1FF9 ;Go to bank 3
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
+LFrontlineModifiers:
+	.byte $0 ;Knight
+	.byte $0 ;Rogue
+	.byte $0 ;Cleric
+	.byte $1 ;Wizard
+	.byte $1 ;Ranger
+	.byte $0 ;Paladin
 	rts
 
 	ORG $DF90
@@ -2660,16 +2610,14 @@ LLoadSoundInS:
 
 LLoadEffect:
 	sta $1FF8 ;Go to bank 2
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
+LIsClassRanged:
+	.byte $0 ;Knight
+	.byte $0 ;Rogue
+	.byte $0 ;Cleric
+	.byte $1 ;Wizard
+	.byte $1 ;Ranger
+	.byte $0 ;Paladin
 	rts
-	nop
-	nop
-	nop
 
 LLowLabelBytes:
 	.byte (LDoBattle & $FF)
@@ -2708,6 +2656,49 @@ LReturnLocation:
 	jmp (temp6) ;22
 	sta returnValue ;24
 	sta $1FF9 ;Return to S bank ;27
+
+LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return the resistances of (in A). Format is LPFIDEPR
+									;L: Legendary resist (Banish/Sleep), P: Physical, F: Fire, I:Ice, D: Divine, E: Electric, P: Poison, R: isRanged
+	cpx #4
+	bcs .LHasResistanceByte 
+	lda char1,x
+	and #$0f
+	tax
+	lda LIsClassRanged,x
+	rts
+.LHasResistanceByte:
+	dex
+	dex
+	dex
+	dex
+	lda enemyID,x
+	tay
+	lda LEnemyResistances,y
+	inx
+	inx
+	inx
+	inx
+	rts
+
+L6Lsr:
+	lsr
+L5Lsr
+	lsr
+L4Lsr:
+	lsr
+	lsr
+	lsr
+	lsr
+	rts
+
+L5Asl:
+	asl
+L4Asl:
+	asl
+	asl
+	asl
+	asl
+	rts
 
 	ORG $DFFA
 	RORG $FFFA

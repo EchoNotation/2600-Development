@@ -2636,7 +2636,7 @@ SSpellTargetingLookup:
 	.byte $3 ;HEAL
 	.byte $1 ;SMITE
 	.byte $82 ;VOLLEY
-	.byte $3 ;SHARP
+	.byte $84 ;SHARP
 	.byte $1 ;BLIGHT
 	.byte $84 ;TRIAGE
 	.byte $1 ;WITHER

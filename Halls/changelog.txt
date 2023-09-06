@@ -625,36 +625,41 @@
 	-Moved to middling complexity spell visual effects.
 		-Connected new spell visual effects
 	-Relocated enemy AI into E bank.
-
+	-Fixed bug where damage colors were incorrect due to stack corrupting variables
+		-Swapped mazeColor and returnValue, since returnValue's persistence is very unimportant
+	-Avatars are now updated after the last logic frame while still in battle
+		-May yet be issues with campfires or other battle exit circumstances
+9/5/23
+	-Moved things in the L bank around in order to have more room for battle system improvements
+	-SHARP spell now gives all allies a single use damage doubling that clears on next attack.
+	-Manually "exported" logo from image
 
 KNOWN BUGS:
-	-Damage caused by blight appears dark orange instead of green?
 
 TODO:
 	Mandatory:
 	-Implement all enemy special abilities
+		-LICH (untested)
+		-JESTER (untested)
+		-GIFT (untested)
+		-SLIME
+		-OOZE
+		-ARMOR
 	-Connect visual and sound effects
+		-Partially working?
 
 	Nice:
 	-Setup screen logo
-	-Add calls for pain and excited avatars
+	-Add call for excited avatar
 	-Make enemies with legendary resistance take 50% less damage from all sources
 		-Preferably don't factor this in when showing damage messages
 		-Nerfs blight significantly against bosses...
 	-Party members gain delta HP, delta MP on level up
 	-Random damage and healing offsets
-	-Avatars not being updated after last logic frame
-	-Being guarded reduces blight damage
-	-Make bosses able to target dead allies
-	-Make SHARP give all allies a single use damage doubling that clears on use
 
 	Ehh:
 	-Position enemies in "group skirmish" formation?
-
-	-Looks like I probably need to remove the individual spell effects. 
-		-Maybe instead define a few effect patterns, and define a palette per spell
-		-Or just go back to a single simple effect that they all use.
-		-Then transfer the enemy AI into the E bank
+	-Being guarded reduces blight damage, fix?
 
 	Additional sounds to consider:
 		-Footsteps
@@ -667,8 +672,9 @@ TODO:
 		-Improve in-maze campfire graphics to look less squished when they appear
 		-Add more text & messages
 		-Create all enemy graphics
+		-Add all enemy names
 		-Create all enemy AI tables
 		-Create all encounter tables
 		-Tune maze exit tables
-		-Create all visual effects
+		-Tune all visual effects
 		-Create all sound effects

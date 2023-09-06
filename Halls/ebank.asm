@@ -27,8 +27,8 @@ EEnemyAI: ;This table must be in order by enemy ID
 ZombieAI:
 	.byte $00 ;Attack frontline
 	.byte $00
-	.byte $C1 ;Cast fire any
-	.byte $C1
+	.byte $CE ;Cast triage any
+	.byte $CE
 GiantAI:
 	.byte $20 ;Attack backline
 	.byte $20

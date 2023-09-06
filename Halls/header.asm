@@ -199,9 +199,9 @@ effectCounter ds 1
 effectCountdown ds 1
 mazeAndPartyLevel ds 1
 flags ds 1
-returnValue ds 1
 fireMazeHeightAndMessageLine ds 1
 mazeColor ds 1
+returnValue ds 1
 
 	SEG CODE 
 
