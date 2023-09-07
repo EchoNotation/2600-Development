@@ -308,17 +308,18 @@ RDrawPartyInfoMaze:
 	stx VDELP0
 	stx VDELP1
 
-	ldx #$10 ;Moves one color clock to the left.
-
 	;Need some sort of delay here in order to more or less center this data.
 	lda #0
 	sta GRP0
-	nop
+	cmp temp1
 	sta RESP0
 	sta RESP1
 	
+	ldx #$E0 ;Moves one color clock to the left.
 	sta GRP1
-	stx HMP1
+	stx HMP0
+	lda #$F0
+	sta HMP1
 
 	ldy #3
 .LWaitToDrawCharacterInfoLoop:
@@ -384,14 +385,16 @@ RPlaceBattleText:
 	sta GRP0
 	sta GRP1
 
-	ldx #$10 ;Moves one color clock to the left.
+	ldx #$F0 ;Moves one color clock to the right.
 	stx HMP1
 
-	nop
-	nop
+	cmp temp1
 
 	sta RESP0
 	sta RESP1
+
+	lda #$E0
+	sta HMP0
 
 	sta WSYNC
 	sta WSYNC
@@ -721,19 +724,20 @@ RDrawLogoLoop:
 	stx VDELP0
 	stx VDELP1
 
-	ldx #$10 ;Moves one color clock to the left.
+	ldx #$E0 ;Moves one color clock to the right.
 
 	;Need some sort of delay here in order to more or less center this data.
 	lda #0
 	sta GRP0
 	jsr RSpinWheels
-	nop
-	nop
+	cmp temp1
 	sta RESP0
 	sta RESP1
 	
 	sta GRP1
-	stx HMP1
+	stx HMP0
+	lda #$F0
+	sta HMP1
 
 	lda #TEXT_HIGHLIGHTED_COLOR
 	sta COLUP0

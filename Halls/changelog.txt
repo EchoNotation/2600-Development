@@ -649,6 +649,7 @@ TODO:
 		-SLIME
 		-OOZE
 		-ARMOR
+		-GLDORB?
 	-Connect visual and sound effects
 		-Partially working?
 
@@ -662,6 +663,7 @@ TODO:
 	-Random damage and healing offsets
 
 	Ehh:
+	-Try to center enemies more precisely?
 	-Position enemies in "group skirmish" formation?
 	-Being guarded reduces blight damage, fix?
 
