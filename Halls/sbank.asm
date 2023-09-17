@@ -535,9 +535,6 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 	jsr SRunFunctionInLBank ;This operation restores all party members to max HP and MP
 	;Need to position player, exit, and campfire
 	jsr SRandom
-	and #$77 ;Only 3 bits needed for each of x and y
-	sta campfireLocation
-	jsr SRandom
 	and #$07
 	tay
 	lda SMazeExits,y
@@ -548,6 +545,14 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 	lda SMazeEntrances,y
 	jsr S4Lsr
 	sta playerX
+	jsr SRandom
+	and #$77 ;Only 3 bits needed for each of x and y
+	bne .SNoRandomORForCampfireLoc
+	ora #$41 ;suitably random number
+.SNoRandomORForCampfireLoc:
+	eor exitLocation
+	sta campfireLocation
+
 	lda flags
 	and #(~(NEED_NEW_MAZE | CAMPFIRE_USED)) ;Finished generating new maze!
 	sta flags

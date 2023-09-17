@@ -410,7 +410,7 @@ Paladin Spell List:
 -SHIELD - 8
 
 Ranger Spell List:
--POISON - 2
+-VOLLEY - 2
 -HEAL - 4
 -SLEEP - 6
 -BLIGHT - 8

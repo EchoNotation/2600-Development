@@ -208,6 +208,24 @@ LProcessCharacterAdvancement:
 	rts
 
 .LPartyLeveledUp:
+	sed
+	ldx #3
+.LApplyLevelUpDeltas:
+	lda char1,x
+	and #$0f
+	tay
+	lda hp1,x
+	clc
+	adc LHPDeltas,y
+	sta hp1,x
+	lda mp1,x
+	clc
+	adc LMPDeltas,y
+	sta mp1,x
+	dex
+	bpl .LApplyLevelUpDeltas
+	cld
+
 	lda #$0A ;PARTY LEVELS UP
 	sta currentMessage
 	ldx #0
@@ -2135,6 +2153,22 @@ LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to conve
 	asl
 	ora tempPointer2
 	rts
+
+LHPDeltas:
+	.byte 4
+	.byte 2
+	.byte 3
+	.byte 2
+	.byte 3
+	.byte 3
+
+LMPDeltas:
+	.byte 0
+	.byte 0
+	.byte 4
+	.byte 4
+	.byte 2
+	.byte 2
 
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
 	RORG $FD00

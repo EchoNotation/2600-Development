@@ -636,9 +636,15 @@
 9/6/23
 	-Added logo into setup screen
 		-Realized that all the text in the game is actually 1 pixel left of center
-
+	-Centered all text
+9/7/23
+	-Party members gain delta HP, delta MP on level up
+9/8/23
+	-Should no longer be possibly for the campfire to spawn on top of the exit.
+	-Added all the enemy names into the ROM
 
 KNOWN BUGS:
+	-Enemy graphics got slightly messed up by the text pixel change... HMCLR needed?
 
 TODO:
 	Mandatory:
@@ -659,7 +665,6 @@ TODO:
 	-Make enemies with legendary resistance take 50% less damage from all sources
 		-Preferably don't factor this in when showing damage messages
 		-Nerfs blight significantly against bosses...
-	-Party members gain delta HP, delta MP on level up
 	-Random damage and healing offsets
 
 	Ehh:
@@ -678,7 +683,6 @@ TODO:
 		-Improve in-maze campfire graphics to look less squished when they appear
 		-Add more text & messages
 		-Create all enemy graphics
-		-Add all enemy names
 		-Create all enemy stats
 		-Create all enemy AI tables
 		-Create all encounter tables

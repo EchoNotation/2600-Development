@@ -654,7 +654,7 @@ RDrawLogo:
 	sta NUSIZ1
 	sta WSYNC
 	sta HMOVE
-	lda #06
+	lda #$66
 	sta COLUPF
 RDrawLogoLoop:
 	sta WSYNC
@@ -1525,6 +1525,62 @@ RIndexToEnemyPosition: SUBROUTINE ;Converts the position of a menu cursor into t
 	ORG $C928 ;Used to hold enemy names, nothing else can go in this section
 	RORG $F928
 
+RWolfText:
+	.byte #W
+	.byte #O
+	.byte #L
+	.byte #F
+	.byte #EMPTY
+	.byte #EMPTY
+RDruidText:
+	.byte #D
+	.byte #R
+	.byte #U
+	.byte #I
+	.byte #D
+	.byte #EMPTY
+RShroomText:
+	.byte #S
+	.byte #H
+	.byte #R
+	.byte #O
+	.byte #O
+	.byte #M
+RSquireText:
+	.byte #S
+	.byte #Q
+	.byte #U
+	.byte #I
+	.byte #R
+	.byte #E
+RArcherText:
+	.byte #A
+	.byte #R
+	.byte #C
+	.byte #H
+	.byte #E
+	.byte #R
+RPriestText:
+	.byte #P
+	.byte #R
+	.byte #I
+	.byte #E
+	.byte #S
+	.byte #T
+RGiftText:
+	.byte #G
+	.byte #I
+	.byte #F
+	.byte #T
+	.byte #EMPTY
+	.byte #EMPTY
+RSwordText:
+	.byte #S
+	.byte #W
+	.byte #O
+	.byte #R
+	.byte #D
+	.byte #EMPTY
 RZombieText:
 	.byte #Z
 	.byte #O
@@ -1532,20 +1588,195 @@ RZombieText:
 	.byte #B
 	.byte #I
 	.byte #E
-RGiantText:
-	.byte #G
-	.byte #I
-	.byte #A
-	.byte #N
+RSkltonText:
+	.byte #S
+	.byte #K
+	.byte #L
 	.byte #T
-	.byte #EMPTY
-RDragonText:
-	.byte #D
-	.byte #R
-	.byte #A
-	.byte #G
 	.byte #O
 	.byte #N
+RMageText:
+	.byte #M
+	.byte #A
+	.byte #G
+	.byte #E
+	.byte #EMPTY
+	.byte #EMPTY
+RGoopText:
+	.byte #G
+	.byte #O
+	.byte #O
+	.byte #P
+	.byte #EMPTY
+	.byte #EMPTY
+RWarlokText:
+	.byte #W
+	.byte #A
+	.byte #R
+	.byte #L
+	.byte #O
+	.byte #K
+RImpText:
+	.byte #I
+	.byte #M
+	.byte #P
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+RAbyssHealerText:
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+	.byte #EMPTY
+RRedOrbText:
+	.byte #R
+	.byte #E
+	.byte #D
+	.byte #O
+	.byte #R
+	.byte #B
+RBluOrbText:
+	.byte #B
+	.byte #L
+	.byte #U
+	.byte #O
+	.byte #R
+	.byte #B
+RGrnOrbText:
+	.byte #G
+	.byte #R
+	.byte #N
+	.byte #O
+	.byte #R
+	.byte #B
+RGldOrbText:
+	.byte #G
+	.byte #L
+	.byte #D
+	.byte #O
+	.byte #R
+	.byte #B
+RBearText:
+	.byte #B
+	.byte #E
+	.byte #A
+	.byte #R
+	.byte #EMPTY
+	.byte #EMPTY
+RUnicrnText:
+	.byte #U
+	.byte #N
+	.byte #I
+	.byte #C
+	.byte #R
+	.byte #N
+RVolcioText:
+	.byte #V
+	.byte #O
+	.byte #L
+	.byte #C
+	.byte #I
+	.byte #O
+RGlaciaText:
+	.byte #G
+	.byte #L
+	.byte #A
+	.byte #C
+	.byte #I
+	.byte #A
+RGrgoylText:
+	.byte #G
+	.byte #R
+	.byte #G
+	.byte #O
+	.byte #Y
+	.byte #L
+RMimicText:
+	.byte #M
+	.byte #I
+	.byte #M
+	.byte #I
+	.byte #C
+	.byte #EMPTY
+RJesterText:
+	.byte #J
+	.byte #E
+	.byte #S
+	.byte #T
+	.byte #E
+	.byte #R
+RArmorText:
+	.byte #A
+	.byte #R
+	.byte #M
+	.byte #O
+	.byte #R
+	.byte #EMPTY
+RSpiderText:
+	.byte #S
+	.byte #P
+	.byte #I
+	.byte #D
+	.byte #E
+	.byte #R
+RSlimeText:
+	.byte #S
+	.byte #L
+	.byte #I
+	.byte #M
+	.byte #E
+	.byte #EMPTY
+RLichText:
+	.byte #L
+	.byte #I
+	.byte #C
+	.byte #H
+	.byte #EMPTY
+	.byte #EMPTY
+RShfflrText:
+	.byte #S
+	.byte #H
+	.byte #F
+	.byte #F
+	.byte #L
+	.byte #R
+RShmblrText:
+	.byte #S
+	.byte #H
+	.byte #M
+	.byte #B
+	.byte #L
+	.byte #R
+RTrophyText:
+	.byte #T
+	.byte #R
+	.byte #O
+	.byte #P
+	.byte #H
+	.byte #Y
+RThicktText:
+	.byte #T
+	.byte #H
+	.byte #I
+	.byte #C
+	.byte #K
+	.byte #T
+ROozeText:
+	.byte #O
+	.byte #O
+	.byte #Z
+	.byte #E
+	.byte #EMPTY
+	.byte #EMPTY
+RHorrorText:
+	.byte #H
+	.byte #O
+	.byte #R
+	.byte #R
+	.byte #O
+	.byte #R
 
 	ORG $CA00 ;Used to hold text.
 	RORG $FA00
@@ -1747,9 +1978,44 @@ RBattleOptionsLookupTable:
 
 ;Make sure to add back room for the Trophy and Campfire ids if trying to remove this table!!
 REnemyNameLookup: ;This table could be turned into a calculation RZombieText + (6 * enemyID)
+	.byte (RWolfText & $FF)
+	.byte (RDruidText & $FF)
+	.byte (RShroomText & $FF)
+	.byte (RSquireText & $FF)
+	.byte (RArcherText & $FF)
+	.byte (RPriestText & $FF)
+	.byte (RGiftText & $FF)
+	.byte (RSwordText & $FF)
+	.byte (RShieldText & $FF)
 	.byte (RZombieText & $FF)
-	.byte (RGiantText & $FF)
-	.byte (RDragonText & $FF)
+	.byte (RSkltonText & $FF)
+	.byte (RMageText & $FF)
+	.byte (RGoopText & $FF)
+	.byte (RWarlokText & $FF)
+	.byte (RImpText & $FF)
+	.byte (RAbyssHealerText & $FF)
+	.byte (RRedOrbText & $FF)
+	.byte (RBluOrbText & $FF)
+	.byte (RGrnOrbText & $FF)
+	.byte (RGldOrbText & $FF)
+	.byte (RBearText & $FF)
+	.byte (RUnicrnText & $FF)
+	.byte (RVolcioText & $FF)
+	.byte (RGlaciaText & $FF)
+	.byte (RGrgoylText & $FF)
+	.byte (RMimicText & $FF)
+	.byte (RJesterText & $FF)
+	.byte (RArmorText & $FF)
+	.byte (RSpiderText & $FF)
+	.byte (RSlimeText & $FF)
+	.byte (RLichText & $FF)
+	.byte (RShfflrText & $FF)
+	.byte (RShmblrText & $FF)
+	.byte 0 ;Trophy
+	.byte (RThicktText & $FF)
+	.byte (ROozeText & $FF)
+	.byte (RHorrorText & $FF)
+	.byte 0 ;Campfire
 
 REnemyColorLookup:
 	.byte $D6 ;Zombie
@@ -1956,22 +2222,22 @@ RPartyPositionMasks:
 	.byte $08
 
 RLogoColors:
-	.byte $06
-	.byte $06
+	.byte $66
+	.byte $66
 	.byte $0E
 	.byte $0E
 	.byte $0E
 	.byte $0E
 	.byte $0E
-	.byte $06
-	.byte $06
+	.byte $66
+	.byte $66
 	.byte $0E
 	.byte $0E
 	.byte $0E
 	.byte $0E
 	.byte $0E
-	.byte $06
-	.byte $06
+	.byte $66
+	.byte $66
 
 RLogoPF:
 	.byte %00000000
