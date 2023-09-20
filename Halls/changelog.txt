@@ -645,6 +645,7 @@
 
 KNOWN BUGS:
 	-Enemy graphics got slightly messed up by the text pixel change... HMCLR needed?
+	-Enemies not being healed properly by TRIAGE, possibly connected to the heals fully condition?
 
 TODO:
 	Mandatory:
