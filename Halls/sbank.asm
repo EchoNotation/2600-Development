@@ -60,7 +60,7 @@ SClearNames:
 	;sta enemyID+3
 	;lda #$03
 	;sta menuSize
-	lda #$21
+	lda #$10
 	sta enemyID
 	;lda #$16
 	;sta enemyID+2

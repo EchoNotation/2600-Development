@@ -126,13 +126,15 @@ EPrepSmallEnemy:
 	asl
 	asl
 	asl
-	asl ;All this math in here doesn't seem to work if enemy ID >= $10
+	asl
 	clc
 	adc #$80
 	sta tempPointer1
-	bcc .EDontIncrementSmall 
+	ldx returnValue
+	cpx #$8
+	bcc .ESmallOnFirstPage
 	inc tempPointer1+1
-.EDontIncrementSmall:
+.ESmallOnFirstPage:
 	clc
 	adc #8
 	sta temp5
@@ -186,6 +188,10 @@ EPrepMediumEnemy:
 	sta temp5
 .ENoShimmer:
 	sta WSYNC
+	lda #$40
+	sta HMP0
+	lda #$50
+	sta HMP1
 	sta WSYNC
 	jsr EDrawMediumEnemy
 	inc temp3
@@ -313,10 +319,10 @@ EDrawSmallEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that ar
 	rts
 
 EDrawMediumEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that are 16x16 pixels in size. Graphical information is interpreted from tempPointer1 and tempPointer2, color information is interpreted from tempPointer5 and tempPointer6.
-	lda #$10 ;Moves one pixel to the left
-	sta HMP1
 	jsr ECheckDamageTarget ;Takes exactly 32 cycles
 	nop
+	nop
+	cmp temp1
 	sta RESP0
 	sta RESP1
 	jsr ESpinWheels
@@ -372,14 +378,13 @@ ESpinWheels:
 	rts
 
 EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that are 32x32 in size. Graphical information is pulled from tempPointers1-4, color information for columns 0 and 2 is pulled from tempPointer5, and color information for columns 1 and 3 is pulled from tempPointer6.
-	lda #$10 ;Moves one pixel to the left
+	lda #$20
+	sta HMP0 ;Large enemies are actually 1 pixel left of center for timing reasons
+	lda #$30
 	sta HMP1
-	
+
 	jsr ESpinWheels
-	nop
-	nop
-	nop
-	nop
+	cmp temp1
 
 	ldy #32
 	lda #1 ;Two copies close

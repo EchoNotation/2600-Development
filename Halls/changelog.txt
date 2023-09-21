@@ -646,9 +646,10 @@
 	-More artwork
 9/20/23
 	-Added lots of graphics into ROM
+	-Centered enemies more precisely, and fixed graphics overlap issues.
+	-Fixed bug with small enemy pointer generation
 
 KNOWN BUGS:
-	-Enemy graphics got slightly messed up by the text pixel change... HMCLR needed?
 	-Enemies not being healed properly by TRIAGE, possibly connected to the heals fully condition?
 
 TODO:
@@ -660,13 +661,13 @@ TODO:
 		-SLIME
 		-OOZE
 		-ARMOR
+		-GRNORB?
 		-GLDORB?
 	-Connect visual and sound effects
 		-Partially working?
 
 	Nice:
 	-Setup screen logo effect?
-	-Try to center enemies more precisely
 	-Add call for excited avatar
 	-Random damage and healing offsets
 	-Make enemies with legendary resistance take 50% less damage from all sources
