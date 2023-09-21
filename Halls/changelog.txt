@@ -648,6 +648,7 @@
 	-Added lots of graphics into ROM
 	-Centered enemies more precisely, and fixed graphics overlap issues.
 	-Fixed bug with small enemy pointer generation
+	-Fixed small enemy targeting runtime issue
 
 KNOWN BUGS:
 	-Enemies not being healed properly by TRIAGE, possibly connected to the heals fully condition?
@@ -666,28 +667,31 @@ TODO:
 	-Connect visual and sound effects
 		-Partially working?
 
+	-Rename mazeColor variable to be more accurate
+
 	Nice:
-	-Setup screen logo effect?
 	-Add call for excited avatar
 	-Random damage and healing offsets
 	-Make enemies with legendary resistance take 50% less damage from all sources
 		-Preferably don't factor this in when showing damage messages
 		-Nerfs blight significantly against bosses...
+	-Soft reset to keep party classes and names populated
 
 	Ehh:
-	-Position enemies in "group skirmish" formation?
 	-Being guarded reduces blight damage, fix?
 
 	Additional sounds to consider:
 		-Footsteps
 		-Monster roar near exit
+		-Level up jingle
 		-Battle victory jingle
 		-Game victory jingle
+		-Game over jingle
+		-Going down stairs sound
 		-Crackling campfire sound (would need to be a loop, so it's almost certainly out of scope)
 
 	DOESN'T REQUIRE LOGIC:
 		-Improve in-maze campfire graphics to look less squished when they appear
-		-Add more text & messages
 		-Create all enemy graphics
 		-Create all enemy stats
 		-Create all enemy AI tables

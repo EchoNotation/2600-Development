@@ -138,10 +138,10 @@ EPrepSmallEnemy:
 	clc
 	adc #8
 	sta temp5
+	sta WSYNC
 	lda tempPointer1+1
 	sta tempPointer5
 
-	sta WSYNC
 	jsr EDrawSmallEnemy
 	inc temp3
 	lda temp1
@@ -279,12 +279,14 @@ E4Asl:
 
 EDrawSmallEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that are 8x8 pixels i size. Graphical information is interpreted from tempPointer1, and color information is interpreted from tempPointer5
 	jsr ECheckDamageTarget ;Takes exactly 32 cycles to run
+	sta RESP0
 	ldy #8
 	lda #0
-	nop
-	sta RESP0
 	sta NUSIZ0
 	sta NUSIZ1
+	lda #$00
+	sta HMP0
+	sta HMOVE
 .EDrawSmallEnemyLoop:
 	dey
 	sta WSYNC
@@ -3446,7 +3448,7 @@ EEffectLength:
 	.byte 4 ;Transition to maze
 	.byte 16 ;Enemy damage flash
 	.byte 3 ;Trophy shimmer
-	.byte 0 ;Pre-spell delay --- These last two should never be accessed
+	.byte 0 ;Pre-spell delay
 	.byte 0 ;Spell effect
 EEffectFrequency:
 	.byte 0
