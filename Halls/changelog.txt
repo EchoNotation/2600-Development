@@ -642,6 +642,10 @@
 9/8/23
 	-Should no longer be possibly for the campfire to spawn on top of the exit.
 	-Added all the enemy names into the ROM
+9/19/23
+	-More artwork
+9/20/23
+	-Added lots of graphics into ROM
 
 KNOWN BUGS:
 	-Enemy graphics got slightly messed up by the text pixel change... HMCLR needed?
@@ -661,15 +665,15 @@ TODO:
 		-Partially working?
 
 	Nice:
-	-Setup screen logo
+	-Setup screen logo effect?
+	-Try to center enemies more precisely
 	-Add call for excited avatar
+	-Random damage and healing offsets
 	-Make enemies with legendary resistance take 50% less damage from all sources
 		-Preferably don't factor this in when showing damage messages
 		-Nerfs blight significantly against bosses...
-	-Random damage and healing offsets
 
 	Ehh:
-	-Try to center enemies more precisely?
 	-Position enemies in "group skirmish" formation?
 	-Being guarded reduces blight damage, fix?
 
@@ -678,7 +682,7 @@ TODO:
 		-Monster roar near exit
 		-Battle victory jingle
 		-Game victory jingle
-		-Crackling campfire sound (would need to be a loop, so it's certainly out of scope)
+		-Crackling campfire sound (would need to be a loop, so it's almost certainly out of scope)
 
 	DOESN'T REQUIRE LOGIC:
 		-Improve in-maze campfire graphics to look less squished when they appear

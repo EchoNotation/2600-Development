@@ -60,20 +60,20 @@ SClearNames:
 	;sta enemyID+3
 	;lda #$03
 	;sta menuSize
-	lda #$15
-	sta enemyID+1
+	lda #$21
+	sta enemyID
 	;lda #$16
 	;sta enemyID+2
 	lda #1
-	;sta enemyHP
-	sta enemyHP+1
+	sta enemyHP
+	;sta enemyHP+1
 	;sta enemyHP+2
 	;sta enemyHP+3
-	lda #$13
-	sta mazeColor
-	ldy #6 ;Function ID
-	ldx #$07 ;Effect ID
-	jsr SRunFunctionInLBank
+	;lda #$13
+	;sta mazeColor
+	;ldy #6 ;Function ID
+	;ldx #$07 ;Effect ID
+	;jsr SRunFunctionInLBank
 	;ldx #$14
 	;jsr STryLoadSound
 #endif

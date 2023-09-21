@@ -126,7 +126,7 @@ EPrepSmallEnemy:
 	asl
 	asl
 	asl
-	asl
+	asl ;All this math in here doesn't seem to work if enemy ID >= $10
 	clc
 	adc #$80
 	sta tempPointer1
@@ -1191,87 +1191,28 @@ EShotAText:
 	ORG $E700 ;Contains the first 2 large enemies graphics data
 	RORG $F700
 
-LargeTestEnemyGraphics1:
+ThicktGraphics:
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %01100000
 	.byte %10000000
 	.byte %10000000
 	.byte %10000000
 	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %11111110
+	.byte %01100000
 	.byte %00000000
 	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %11111100
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %11111100
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %01111111
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00111111
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00111111
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00111111
-	.byte %11100000
 	.byte %00110000
-	.byte %00011000
-	.byte %00001000
-	.byte %00001000
-	.byte %00001000
-	.byte %00111000
-	.byte %11110000
+	.byte %11000000
+	.byte %10000000
+	.byte %01100000
+	.byte %00010000
+	.byte %10000000
+	.byte %01000000
 	.byte %00000000
 	.byte %00000000
 	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00011000
-	.byte %11110000
 	.byte %00000000
 	.byte %00000000
 	.byte %00000000
@@ -1282,174 +1223,233 @@ LargeTestEnemyGraphics1:
 	.byte %10000000
 	.byte %10000000
 	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %11111110
-	.byte %00011111
-	.byte %00110000
 	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00001111
-	.byte %00011000
-	.byte %00110000
 	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00110000
-	.byte %00011000
+	.byte %01100000
+	.byte %11010000
+	.byte %10011100
+	.byte %11000110
+	.byte %11000011
+	.byte %01000000
+	.byte %01000000
+	.byte %11000000
+	.byte %10000000
+	.byte %01110000
+	.byte %00111100
 	.byte %00000111
+	.byte %00000001
+	.byte %00000001
+	.byte %00000011
+	.byte %00001110
+	.byte %00001000
+	.byte %01111000
+	.byte %11100000
+	.byte %01100000
+	.byte %00110000
+	.byte %00011000
+	.byte %00001100
+	.byte %11111111
+	.byte %11001011
+	.byte %11100111
+	.byte %11111111
+	.byte %11011011
+	.byte %10111101
+	.byte %11111111
+	.byte %11111111
+	.byte %00000000
+	.byte %00000000
+	.byte %10000010
+	.byte %01000100
+	.byte %00100100
+	.byte %11100011
+	.byte %10111110
+	.byte %00001000
+	.byte %00001000
+	.byte %10010000
+	.byte %01000001
+	.byte %00100010
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %10000001
+	.byte %01000001
+	.byte %00100010
+	.byte %00111100
+	.byte %11000111
+	.byte %01000010
+	.byte %01000010
+	.byte %01000001
+	.byte %00000000
+	.byte %00000000
+	.byte %00000001
+	.byte %10000001
+	.byte %10000001
+	.byte %10000001
+	.byte %10000001
+	.byte %00000001
 	.byte %00000000
 	.byte %00000000
 	.byte %00000000
 	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
 	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %01111111
+	.byte %01000001
+	.byte %01100011
+	.byte %01110010
+	.byte %00110110
+	.byte %00111110
+	.byte %00001100
+	.byte %00111000
+	.byte %01110000
+	.byte %01110000
+	.byte %01000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000011
+	.byte %00000110
+	.byte %00001100
+	.byte %00011000
+	.byte %01111110
+	.byte %11100111
+	.byte %11001011
+	.byte %11111111
+	.byte %11011011
+	.byte %10111101
+	.byte %11111111
+	.byte %01111110
 
-LargeTestEnemyGraphics2:
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %11111110
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %11111100
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %11111100
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %01111111
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00111111
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00111111
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00111111
-	.byte %11100000
-	.byte %00110000
-	.byte %00011000
-	.byte %00001000
-	.byte %00001000
-	.byte %00001000
-	.byte %00111000
-	.byte %11110000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00011000
-	.byte %11110000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %10000000
-	.byte %11111110
-	.byte %00011111
-	.byte %00110000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00001111
-	.byte %00011000
-	.byte %00110000
-	.byte %00100000
-	.byte %00100000
-	.byte %00100000
-	.byte %00110000
-	.byte %00011000
+OozeGraphics:
+	.byte %11111000
+	.byte %00011100
+	.byte %00011100
+	.byte %00001110
 	.byte %00000111
+	.byte %00000011
+	.byte %00000011
+	.byte %00000011
+	.byte %00000011
+	.byte %00000011
+	.byte %01100011
+	.byte %00000011
+	.byte %00000110
+	.byte %00000110
+	.byte %00000110
+	.byte %00000110
+	.byte %00001110
+	.byte %00001100
+	.byte %11111100
+	.byte %11110000
+	.byte %01000000
+	.byte %11111111
+	.byte %11110000
+	.byte %11000000
+	.byte %10000000
 	.byte %00000000
 	.byte %00000000
 	.byte %00000000
 	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %11111111
+	.byte %00000000
+	.byte %00000000
+	.byte %11111000
+	.byte %01110000
+	.byte %10101000
+	.byte %11111000
+	.byte %11000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000011
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %11011000
+	.byte %00000000
 	.byte %00000001
 	.byte %00000001
+	.byte %00000011
+	.byte %00000011
+	.byte %00000011
 	.byte %00000001
+	.byte %00000111
+	.byte %00011111
+	.byte %00111100
+	.byte %11110000
+	.byte %11100000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %11111111
+	.byte %00000000
+	.byte %00000000
+	.byte %10000001
+	.byte %11000011
+	.byte %11001001
+	.byte %10000011
 	.byte %00000001
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %10000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00010000
+	.byte %00001000
+	.byte %10000100
+	.byte %11100000
+	.byte %11111000
+	.byte %00111111
+	.byte %00001111
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00111111
+	.byte %00111000
+	.byte %01101100
+	.byte %11010111
+	.byte %10000011
+	.byte %11111110
+	.byte %10000011
+	.byte %10011111
+	.byte %11110000
+	.byte %01100000
+	.byte %01100100
+	.byte %01100100
+	.byte %01110010
+	.byte %01110000
+	.byte %00110000
+	.byte %00110000
+	.byte %00110010
+	.byte %00110001
+	.byte %00111000
+	.byte %00011100
+	.byte %00011100
+	.byte %00001110
+	.byte %00001111
+	.byte %00000111
+	.byte %00000011
 	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %00000001
-	.byte %01111111
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
 
 	ORG $E800 ;Contains the next two large enemies graphics data
 	RORG $F800
@@ -1717,137 +1717,137 @@ CampfireGraphics:
 	ORG $E900 ;Contains the large enemies' color data
 	RORG $F900
 
-LargeTestEnemyColors1:
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $0
-	.byte $0
-	.byte $0
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $0
-	.byte $0
-	.byte $0
-	.byte $0
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
+ThicktColors:
+	.byte $42
+	.byte $42
+	.byte $46
+	.byte $42
+	.byte $42
+	.byte $c4
+	.byte $c6
+	.byte $42
+	.byte $42
+	.byte $42
+	.byte $42
+	.byte $46
+	.byte $42
+	.byte $42
+	.byte $42
+	.byte $46
+	.byte $42
+	.byte $42
+	.byte $c4
+	.byte $c4
+	.byte $42
+	.byte $42
+	.byte $46
+	.byte $42
+	.byte $42
+	.byte $52
+	.byte $52
+	.byte $52
+	.byte $52
+	.byte $52
+	.byte $52
+	.byte $42
+	.byte $c2
+	.byte $c2
+	.byte $c4
+	.byte $c6
+	.byte $c4
+	.byte $c4
+	.byte $c4
+	.byte $c4
+	.byte $c4
+	.byte $c4
+	.byte $c6
+	.byte $c4
+	.byte $c2
+	.byte $c6
+	.byte $c6
+	.byte $c4
+	.byte $c4
+	.byte $c4
+	.byte $c4
+	.byte $c6
+	.byte $c4
+	.byte $c6
+	.byte $c2
+	.byte $c4
+	.byte $52
+	.byte $6e
+	.byte $6c
+	.byte $6e
+	.byte $6c
+	.byte $6c
+	.byte $6e
+	.byte $52
 
-LargeTestEnemyColors2:
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $c8
-	.byte $0
-	.byte $0
-	.byte $0
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $9c
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $c0
-	.byte $0
-	.byte $0
-	.byte $0
-	.byte $0
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
-	.byte $90
+OozeColors:
+	.byte $b2
+	.byte $c4
+	.byte $b2
+	.byte $d2
+	.byte $b2
+	.byte $c4
+	.byte $c2
+	.byte $d2
+	.byte $b0
+	.byte $c2
+	.byte $d0
+	.byte $c2
+	.byte $d4
+	.byte $c2
+	.byte $c4
+	.byte $c2
+	.byte $d0
+	.byte $c4
+	.byte $c2
+	.byte $8
+	.byte $6
+	.byte $f2
+	.byte $c4
+	.byte $c2
+	.byte $c4
+	.byte $d2
+	.byte $c2
+	.byte $d0
+	.byte $c2
+	.byte $c2
+	.byte $c2
+	.byte $c2
+	.byte $d0
+	.byte $b4
+	.byte $d4
+	.byte $c2
+	.byte $a
+	.byte $a
+	.byte $a
+	.byte $b2
+	.byte $d0
+	.byte $c2
+	.byte $d0
+	.byte $b2
+	.byte $d2
+	.byte $d4
+	.byte $c2
+	.byte $b4
+	.byte $d2
+	.byte $b2
+	.byte $d0
+	.byte $c2
+	.byte $c4
+	.byte $b4
+	.byte $b2
+	.byte $d2
+	.byte $d0
+	.byte $d4
+	.byte $d0
+	.byte $b2
+	.byte $b4
+	.byte $ba
+	.byte $ba
+	.byte $ba
 
 LargeTestEnemyColors3:
 	.byte $c8
@@ -1984,139 +1984,139 @@ CampfireColors:
 	ORG $EA00 ;Contains medium enemy data
 	RORG $FA00
 
-MediumTestEnemyGraphics1:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
+BearGraphics:
 	.byte %00000000
 	.byte %00000000
-	.byte %01111110
-	.byte %01000000
-	.byte %01000000
-	.byte %01111000
-	.byte %01000000
-	.byte %01000000
-	.byte %01111110
-	.byte %01111000
-	.byte %00000100
-	.byte %00000100
-	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
+	.byte %00010000
+	.byte %01001000
+	.byte %00101000
+	.byte %11110000
+	.byte %11100000
 	.byte %00000000
 	.byte %00000000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
+	.byte %11100000
+	.byte %10100000
+	.byte %01010000
+	.byte %11110000
+	.byte %11110000
+	.byte %00000000
+	.byte %00000000
+	.byte %11110000
+	.byte %11111000
+	.byte %11111100
+	.byte %11111110
+	.byte %11111111
+	.byte %11111111
+	.byte %11111011
+	.byte %11111000
+	.byte %01111100
+	.byte %00111111
+	.byte %00111111
+	.byte %01111111
+	.byte %01111111
+	.byte %01111011
 	.byte %01111110
-MediumTestEnemyColors1:
-	.byte $6c
-	.byte $6a
-	.byte $68
-	.byte $66
-	.byte $64
-	.byte $62
-	.byte $60
-	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
-	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
+	.byte %00110000
+BearColors:
+	.byte $e
+	.byte $f0
+	.byte $c
+	.byte $c
+	.byte $c
+	.byte $f0
+	.byte $f0
+	.byte $f0
+	.byte $f2
+	.byte $f2
+	.byte $e
+	.byte $e
+	.byte $f0
+	.byte $f0
+	.byte $6
+	.byte $6
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
 
-MediumTestEnemyGraphics2:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-	.byte %00000000
-	.byte %00000000
-	.byte %01111110
-	.byte %01000000
-	.byte %01000000
-	.byte %01111000
-	.byte %01000000
-	.byte %01000000
-	.byte %01111110
-	.byte %01111000
+UnicrnGraphics:
+	.byte %00010000
+	.byte %00010000
+	.byte %10010000
+	.byte %10100000
+	.byte %11000000
+	.byte %11000000
+	.byte %11000000
+	.byte %11000000
+	.byte %11100000
+	.byte %11110000
+	.byte %11111110
+	.byte %11111110
+	.byte %11101000
+	.byte %01110000
+	.byte %00001000
 	.byte %00000100
-	.byte %00000100
-	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
+	.byte %10010010
+	.byte %10001001
+	.byte %01001000
+	.byte %01010000
+	.byte %01111111
+	.byte %01111111
+	.byte %01111111
+	.byte %10111111
+	.byte %00000001
+	.byte %00000111
+	.byte %00000011
+	.byte %00000011
+	.byte %00000001
 	.byte %00000000
 	.byte %00000000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-MediumTestEnemyColors2:
-	.byte $6c
-	.byte $6a
-	.byte $68
-	.byte $66
-	.byte $64
-	.byte $62
-	.byte $60
-	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
-	.byte $0
-	.byte $9e
+	.byte %00000000
+UnicrnColors:
+	.byte $f4
+	.byte $5e
+	.byte $c
+	.byte $5e
+	.byte $5c
+	.byte $c
+	.byte $c
+	.byte $5c
+	.byte $5e
+	.byte $c
+	.byte $e
+	.byte $5c
+	.byte $5e
+	.byte $e
 	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
+	.byte $ae
+	.byte $f4
+	.byte $a
+	.byte $5a
+	.byte $a
+	.byte $5c
+	.byte $c
+	.byte $e
+	.byte $5e
+	.byte $5e
+	.byte $7a
+	.byte $7c
+	.byte $7c
+	.byte $7e
+	.byte $6a
+	.byte $0
+	.byte $42
 
 FireDrakeGraphics:
 	.byte %00000101
@@ -2255,273 +2255,273 @@ IceDrakeColors:
 	ORG $EB00 ;Contains medium enemy data
 	RORG $FB00
 
-MediumTestEnemyGraphics3:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-	.byte %00000000
-	.byte %00000000
-	.byte %01111110
-	.byte %01000000
-	.byte %01000000
+GrgoylGraphics:
+	.byte %11001110
+	.byte %10001100
+	.byte %10011100
+	.byte %11111000
+	.byte %11111000
+	.byte %11110000
+	.byte %11110001
+	.byte %11111001
+	.byte %11111110
+	.byte %01110000
 	.byte %01111000
-	.byte %01000000
-	.byte %01000000
-	.byte %01111110
-	.byte %01111000
-	.byte %00000100
-	.byte %00000100
-	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
+	.byte %11111111
+	.byte %11011111
+	.byte %11011010
+	.byte %10011100
+	.byte %10100000
+	.byte %00000001
+	.byte %00000001
+	.byte %00000001
+	.byte %00011100
+	.byte %00100110
+	.byte %01000001
+	.byte %00011000
+	.byte %11111000
+	.byte %11111000
+	.byte %11111100
+	.byte %11111100
+	.byte %11111110
+	.byte %01111111
+	.byte %00011111
+	.byte %00000111
 	.byte %00000000
-	.byte %00000000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-MediumTestEnemyColors3:
-	.byte $6c
-	.byte $6a
-	.byte $68
-	.byte $66
-	.byte $64
-	.byte $62
-	.byte $60
-	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
-	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
+GrgoylColors:
+	.byte $4
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $4
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $4
+	.byte $6
+	.byte $6
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $a
+	.byte $a
+	.byte $c
+	.byte $a
+	.byte $a
+	.byte $c
+	.byte $c
+	.byte $a
+	.byte $6
+	.byte $8
 
-MediumTestEnemyGraphics4:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-	.byte %00000000
-	.byte %00000000
-	.byte %01111110
-	.byte %01000000
-	.byte %01000000
+MimicGraphics:
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11110000
 	.byte %01111000
-	.byte %01000000
-	.byte %01000000
-	.byte %01111110
-	.byte %01111000
+	.byte %00011000
+	.byte %00001100
+	.byte %00000110
+	.byte %00000010
 	.byte %00000100
+	.byte %00100000
+	.byte %11000000
+	.byte %00000011
+	.byte %00000011
+	.byte %00000011
+	.byte %00000011
+	.byte %00000011
+	.byte %00000011
+	.byte %00000011
 	.byte %00000100
-	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
-	.byte %00000000
-	.byte %00000000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-MediumTestEnemyColors4:
-	.byte $6c
-	.byte $6a
+	.byte %00001100
+	.byte %00001100
+	.byte %00011110
+	.byte %00011110
+	.byte %00011110
+	.byte %00011111
+	.byte %00001111
+	.byte %00000011
+MimicColors:
+	.byte $f4
+	.byte $f2
+	.byte $f0
+	.byte $f0
+	.byte $f4
+	.byte $f0
+	.byte $f2
+	.byte $64
+	.byte $64
+	.byte $66
+	.byte $66
 	.byte $68
 	.byte $66
 	.byte $64
-	.byte $62
-	.byte $60
-	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
-	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
+	.byte $a
+	.byte $a
+	.byte $f0
+	.byte $f0
+	.byte $f2
+	.byte $f0
+	.byte $f2
+	.byte $f0
+	.byte $f0
+	.byte $f2
+	.byte $f0
+	.byte $f2
+	.byte $f0
+	.byte $f4
+	.byte $f0
+	.byte $f0
+	.byte $f2
+	.byte $f4
 
-MediumTestEnemyGraphics5:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
+JesterGraphics:
+	.byte %11100100
+	.byte %11100100
+	.byte %11101000
+	.byte %11110000
+	.byte %11000000
 	.byte %00000000
-	.byte %00000000
-	.byte %01111110
+	.byte %10000000
 	.byte %01000000
-	.byte %01000000
-	.byte %01111000
-	.byte %01000000
-	.byte %01000000
-	.byte %01111110
-	.byte %01111000
+	.byte %11100000
+	.byte %10100000
+	.byte %11000000
+	.byte %11100100
+	.byte %11111000
+	.byte %11100000
+	.byte %10011000
 	.byte %00000100
-	.byte %00000100
-	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
-	.byte %00000000
-	.byte %00000000
+	.byte %00000111
+	.byte %00000111
+	.byte %00110111
+	.byte %01101111
+	.byte %01000011
+	.byte %11100000
+	.byte %01000001
+	.byte %01000010
+	.byte %00100111
+	.byte %00000101
+	.byte %00000011
+	.byte %00100111
+	.byte %00011111
+	.byte %00000111
 	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-MediumTestEnemyColors5:
-	.byte $6c
-	.byte $6a
-	.byte $68
-	.byte $66
-	.byte $64
-	.byte $62
-	.byte $60
-	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
-	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
+	.byte %00100001
+JesterColors:
+	.byte $54
+	.byte $d8
+	.byte $54
+	.byte $d8
+	.byte $54
+	.byte $e
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $2c
 	.byte $82
-	.byte $80
+	.byte $42
+	.byte $42
+	.byte $2c
+	.byte $d8
+	.byte $54
+	.byte $d8
+	.byte $54
+	.byte $d8
+	.byte $f4
+	.byte $e
+	.byte $e
+	.byte $e
+	.byte $e
+	.byte $e
+	.byte $2c
+	.byte $42
+	.byte $82
+	.byte $82
+	.byte $2c
 
-MediumTestEnemyGraphics6:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
+ArmorGraphics:
+	.byte %10000000
 	.byte %00000000
 	.byte %00000000
-	.byte %01111110
+	.byte %00000000
+	.byte %00000000
 	.byte %01000000
 	.byte %01000000
-	.byte %01111000
 	.byte %01000000
 	.byte %01000000
-	.byte %01111110
-	.byte %01111000
-	.byte %00000100
-	.byte %00000100
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00011000
 	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
+	.byte %01111000
+	.byte %11100000
+	.byte %01110011
+	.byte %00110011
+	.byte %00110011
 	.byte %00000000
+	.byte %00101101
+	.byte %10111111
+	.byte %10111111
+	.byte %10111111
+	.byte %10111111
+	.byte %00011110
 	.byte %00000000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-MediumTestEnemyColors6:
-	.byte $6c
-	.byte $6a
-	.byte $68
-	.byte $66
-	.byte $64
-	.byte $62
-	.byte $60
+	.byte %00011110
+	.byte %00111111
+	.byte %00100001
+	.byte %00111111
+	.byte %00011110
+ArmorColors:
+	.byte $f2
 	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
 	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
+	.byte $0
+	.byte $f4
+	.byte $6
+	.byte $8
+	.byte $8
+	.byte $d4
+	.byte $0
+	.byte $d4
+	.byte $d4
+	.byte $d4
+	.byte $d4
+	.byte $d4
+	.byte $d4
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $8
+	.byte $6
+	.byte $6
+	.byte $8
+	.byte $8
+	.byte $d4
+	.byte $6
+	.byte $8
+	.byte $6
+	.byte $6
+	.byte $8
+	.byte $8
+	.byte $8
 
 	ORG $EC00 ;Contains medium enemy data
 	RORG $FC00
@@ -2593,72 +2593,72 @@ MediumTestEnemyColors7:
 	.byte $82
 	.byte $80
 
-MediumTestEnemyGraphics8:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-	.byte %00000000
-	.byte %00000000
-	.byte %01111110
-	.byte %01000000
-	.byte %01000000
-	.byte %01111000
-	.byte %01000000
-	.byte %01000000
-	.byte %01111110
-	.byte %01111000
-	.byte %00000100
-	.byte %00000100
+SlimeGraphics:
+	.byte %11111110
+	.byte %00000111
+	.byte %00000001
+	.byte %00000011
+	.byte %00000010
+	.byte %10100110
+	.byte %00001100
+	.byte %00011100
 	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
+	.byte %11110000
+	.byte %11000000
 	.byte %00000000
 	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %01111111
+	.byte %11100000
+	.byte %10000000
+	.byte %11001000
+	.byte %01100100
+	.byte %00100000
+	.byte %00110100
+	.byte %00010010
 	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-MediumTestEnemyColors8:
-	.byte $6c
-	.byte $6a
-	.byte $68
-	.byte $66
-	.byte $64
-	.byte $62
-	.byte $60
+	.byte %00001111
+	.byte %00000111
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+	.byte %00000000
+SlimeColors:
+	.byte $c4
+	.byte $b4
+	.byte $c6
+	.byte $b6
+	.byte $c6
+	.byte $b4
+	.byte $c4
+	.byte $c6
+	.byte $c2
+	.byte $b4
+	.byte $c6
 	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $b4
 	.byte $c6
 	.byte $c4
 	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
+	.byte $c6
+	.byte $c6
+	.byte $b6
+	.byte $b8
+	.byte $c6
+	.byte $c2
+	.byte $c4
 	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
 
 MediumTestEnemyGraphics9:
 	.byte %00011000
@@ -2939,81 +2939,81 @@ SmallTestColors1:
 	.byte $6c
 	.byte $6e
 
-SmallTestGraphics2:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors2:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+DruidGraphics:
+	.byte %00101001
+	.byte %00101001
+	.byte %00110011
+	.byte %01111101
+	.byte %10110001
+	.byte %00110000
+	.byte %11001100
+	.byte %01001010
+DruidColors:
+	.byte $c8
+	.byte $d6
+	.byte $c6
+	.byte $d8
+	.byte $b6
+	.byte $b6
+	.byte $f2
+	.byte $f2
 
-SmallTestGraphics3:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors3:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+ShroomGraphics:
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %11110111
+	.byte %10111101
+	.byte %11101111
+	.byte %00111100
+ShroomColors:
+	.byte $fe
+	.byte $fc
+	.byte $fa
+	.byte $fa
+	.byte $46
+	.byte $44
+	.byte $42
+	.byte $42
 
-SmallTestGraphics4:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors4:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+SquireGraphics:
+	.byte %10010110
+	.byte %10010100
+	.byte %10011000
+	.byte %01011010
+	.byte %00111100
+	.byte %00011000
+	.byte %00010100
+	.byte %00111100
+SquireColors:
+	.byte $8
+	.byte $8
+	.byte $f4
+	.byte $42
+	.byte $44
+	.byte $fe
+	.byte $a6
+	.byte $f2
 
-SmallTestGraphics5:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors5:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+ArcherGraphics:
+	.byte %01010100
+	.byte %01010010
+	.byte %01110001
+	.byte %10101101
+	.byte %01110010
+	.byte %00100100
+	.byte %01110000
+	.byte %01110000
+ArcherColors:
+	.byte $f2
+	.byte $f6
+	.byte $f2
+	.byte $d6
+	.byte $d6
+	.byte $d2
+	.byte $fc
+	.byte $fc
 
 SmallTestGraphics6:
 	.byte %11111111
@@ -3034,271 +3034,271 @@ SmallTestColors6:
 	.byte $6c
 	.byte $6e
 
-SmallTestGraphics7:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors7:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+GiftGraphics:
+	.byte %01111110
+	.byte %01111110
+	.byte %01111110
+	.byte %01111110
+	.byte %01111110
+	.byte %00010000
+	.byte %00010000
+	.byte %00001000
+GiftColors:
+	.byte $96
+	.byte $82
+	.byte $96
+	.byte $82
+	.byte $96
+	.byte $f2
+	.byte $36
+	.byte $2c
 
-SmallTestGraphics8:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors8:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+SwordGraphics:
+	.byte %00011000
+	.byte %00011000
+	.byte %00111100
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00011000
+	.byte %00001000
+SwordColors:
+	.byte $f4
+	.byte $f2
+	.byte $d4
+	.byte $8
+	.byte $a
+	.byte $a
+	.byte $a
+	.byte $a
 
-SmallTestGraphics9:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors9:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+ShieldGraphics:
+	.byte %00011000
+	.byte %00111100
+	.byte %01111110
+	.byte %01100110
+	.byte %01100110
+	.byte %01100110
+	.byte %01111110
+	.byte %01111110
+ShieldColors:
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $6
+	.byte $d4
+	.byte $d4
+	.byte $6
+	.byte $8
 
-SmallTestGraphics10:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors10:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+ZombieGraphics:
+	.byte %00101100
+	.byte %00101000
+	.byte %00110000
+	.byte %00110010
+	.byte %00111100
+	.byte %00110000
+	.byte %00101000
+	.byte %00110000
+ZombieColors:
+	.byte $f0
+	.byte $f2
+	.byte $98
+	.byte $98
+	.byte $96
+	.byte $d4
+	.byte $42
+	.byte $d4
 
-SmallTestGraphics11:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors11:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+SkltonGraphics:
+	.byte %01010000
+	.byte %01010100
+	.byte %01110010
+	.byte %10101101
+	.byte %01110001
+	.byte %00100010
+	.byte %01110100
+	.byte %01010000
+SkltonColors:
+	.byte $e
+	.byte $a
+	.byte $e
+	.byte $a
+	.byte $e
+	.byte $a
+	.byte $e
+	.byte $42
 
-SmallTestGraphics12:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors12:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+MageGraphics:
+	.byte %01111110
+	.byte %00111100
+	.byte %10111101
+	.byte %01111110
+	.byte %00111000
+	.byte %00100100
+	.byte %00110100
+	.byte %00011000
+MageColors:
+	.byte $96
+	.byte $98
+	.byte $9a
+	.byte $9a
+	.byte $96
+	.byte $98
+	.byte $9a
+	.byte $9a
 
-SmallTestGraphics13:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors13:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+GoopGraphics:
+	.byte %01111110
+	.byte %10000001
+	.byte %01000001
+	.byte %01001010
+	.byte %00100010
+	.byte %00100100
+	.byte %00011000
+	.byte %00000000
+GoopColors:
+	.byte $c2
+	.byte $b4
+	.byte $c2
+	.byte $c4
+	.byte $b4
+	.byte $c2
+	.byte $d4
+	.byte $c2
 
-SmallTestGraphics14:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors14:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+WarlokGraphics:
+	.byte %01111110
+	.byte %00111100
+	.byte %10111101
+	.byte %01111110
+	.byte %00111000
+	.byte %00100100
+	.byte %00110100
+	.byte %00011000
+WarlokColors:
+	.byte $40
+	.byte $42
+	.byte $42
+	.byte $44
+	.byte $40
+	.byte $42
+	.byte $42
+	.byte $44
 
-SmallTestGraphics15:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors15:
-	.byte $60
+ImpGraphics:
+	.byte %00010110
+	.byte %01010100
+	.byte %10101100
+	.byte %10011111
+	.byte %01001100
+	.byte %10001111
+	.byte %00001010
+	.byte %00011100
+ImpColors:
+	.byte $64
 	.byte $62
 	.byte $64
+	.byte $64
+	.byte $62
+	.byte $64
+	.byte $46
 	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
 
-SmallTestGraphics16:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors16:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+WispGraphics:
+	.byte %00000000
+	.byte %00011100
+	.byte %00111100
+	.byte %00110000
+	.byte %00100000
+	.byte %00100000
+	.byte %00010000
+	.byte %00000000
+WispColors:
+	.byte $aa
+	.byte $a4
+	.byte $a6
+	.byte $a8
+	.byte $aa
+	.byte $ac
+	.byte $ae
+	.byte $ac
 
-SmallTestGraphics17:
+RedOrbGraphics:
+	.byte %00111100
+	.byte %01001110
+	.byte %10111111
+	.byte %01111111
 	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors17:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+	.byte %11111101
+	.byte %01111010
+	.byte %00111100
+RedOrbColors:
+	.byte $30
+	.byte $30
+	.byte $42
+	.byte $42
+	.byte $44
+	.byte $44
+	.byte $46
+	.byte $46
 
-SmallTestGraphics18:
+BluOrbGraphics:
+	.byte %00111100
+	.byte %01001110
+	.byte %10111111
+	.byte %01111111
 	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors18:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+	.byte %11111101
+	.byte %01111010
+	.byte %00111100
+BluOrbColors:
+	.byte $92
+	.byte $92
+	.byte $94
+	.byte $94
+	.byte $96
+	.byte $96
+	.byte $98
+	.byte $98
 
-SmallTestGraphics19:
+GrnOrbGraphics:
+	.byte %00111100
+	.byte %01001110
+	.byte %10111111
+	.byte %01111111
 	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors19:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+	.byte %11111101
+	.byte %01111010
+	.byte %00111100
+GrnOrbColors:
+	.byte $c2
+	.byte $c2
+	.byte $c4
+	.byte $c4
+	.byte $c6
+	.byte $c6
+	.byte $d8
+	.byte $d8
 
-SmallTestGraphics20:
+GldOrbGraphics:
+	.byte %00111100
+	.byte %01001110
+	.byte %10111111
+	.byte %01111111
 	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors20:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+	.byte %11111101
+	.byte %01111010
+	.byte %00111100
+GldOrbColors:
+	.byte $18
+	.byte $18
+	.byte $1a
+	.byte $1a
+	.byte $1c
+	.byte $1c
+	.byte $1e
+	.byte $1e
 
 	ORG $EEC0
 	RORG $FEC0

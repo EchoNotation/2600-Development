@@ -1,0 +1,19 @@
+	.byte 0
+
+	.byte %00000000
+	.byte %00011100
+	.byte %00111100
+	.byte %00110000
+	.byte %00100000
+	.byte %00100000
+	.byte %00010000
+	.byte %00000000
+
+	.byte $aa
+	.byte $a4
+	.byte $a6
+	.byte $a8
+	.byte $aa
+	.byte $ac
+	.byte $ae
+	.byte $ac

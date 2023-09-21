@@ -1,0 +1,19 @@
+	.byte 0
+
+	.byte %00010110
+	.byte %01010100
+	.byte %10101100
+	.byte %10011111
+	.byte %01001100
+	.byte %10001111
+	.byte %00001010
+	.byte %00011100
+
+	.byte $64
+	.byte $62
+	.byte $64
+	.byte $64
+	.byte $62
+	.byte $64
+	.byte $46
+	.byte $66
