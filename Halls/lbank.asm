@@ -1203,16 +1203,19 @@ LProcessRunning:
 .LInitiateRun:
 	lda #$14 ;X TRIES TO RUN
 	sta currentMessage
-	ldx #4
-.LFindMaxEnemySpeed:
+	lda #0
+	sta temp1
+	jsr LSetTotalAoETgtsOffensive
+.LFindMaxEnemySpeed
+	jsr LFindAoETgtOffensive ;X contains aoeTargetID after this call
 	jsr LGetBattlerSpeed
 	cmp temp1
 	bcc .LNextIteration
 	sta temp1
-.LNextIteration:
-	inx
-	cpx #8
-	bcc .LFindMaxEnemySpeed
+.LNextIteration
+	dec aoeTargetsRemaining
+	bne .LFindMaxEnemySpeed
+
 	;temp1 should now contain the maximum speed of any alive enemy
 	ldx currentBattler
 	jsr LGetBattlerSpeed
@@ -2207,77 +2210,293 @@ LSpellListLookup:
 	.byte (LPaladinSpellList & $FF)
 
 LEnemyExperience:
-	.byte #1 ;Zombie
-	.byte #5 ;Giant
-	.byte #20 ;Dragon
+	.byte 1 ;Wolf
+	.byte 1 ;Druid
+	.byte 1 ;Shroom
+	.byte 1 ;Squire
+	.byte 1 ;Archer
+	.byte 1 ;Priest
+	.byte 1 ;Gift
+	.byte 1 ;Sword
+	.byte 1 ;Shield
+	.byte 1 ;Zombie
+	.byte 1 ;Sklton
+	.byte 1 ;Mage
+	.byte 1 ;Goop
+	.byte 1 ;Warlok
+	.byte 1 ;Imp
+	.byte 1 ;Wisp
+	.byte 1 ;RedOrb
+	.byte 1 ;BluOrb
+	.byte 1 ;GrnOrb
+	.byte 1 ;GldOrb
+	.byte 1 ;Bear
+	.byte 1 ;Unicrn
+	.byte 1 ;Volcio
+	.byte 1 ;Glacia
+	.byte 1 ;Grgoyl
+	.byte 1 ;Mimic
+	.byte 1 ;Jester
+	.byte 1 ;Armor
+	.byte 1 ;Spider
+	.byte 1 ;Slime
+	.byte 1 ;Lich
+	.byte 1 ;Shfflr
+	.byte 1 ;Shmblr
+	.byte 1 ;Trophy
+	.byte 1 ;Thickt
+	.byte 1 ;Ooze
+	.byte 1 ;Horror
+	.byte 1 ;Campfire
 
 LEnemyAttack:
-	.byte 2 ;Zombie
-	.byte 10 ;Giant
-	.byte 35 ;Dragon
-LEnemySpeed:
+	.byte 1 ;Wolf
+	.byte 1 ;Druid
+	.byte 1 ;Shroom
+	.byte 1 ;Squire
+	.byte 1 ;Archer
+	.byte 1 ;Priest
+	.byte 1 ;Gift
+	.byte 1 ;Sword
+	.byte 1 ;Shield
 	.byte 1 ;Zombie
-	.byte 3 ;Giant
-	.byte 40 ;Dragon
+	.byte 1 ;Sklton
+	.byte 1 ;Mage
+	.byte 1 ;Goop
+	.byte 1 ;Warlok
+	.byte 1 ;Imp
+	.byte 1 ;Wisp
+	.byte 1 ;RedOrb
+	.byte 1 ;BluOrb
+	.byte 1 ;GrnOrb
+	.byte 1 ;GldOrb
+	.byte 1 ;Bear
+	.byte 1 ;Unicrn
+	.byte 1 ;Volcio
+	.byte 1 ;Glacia
+	.byte 1 ;Grgoyl
+	.byte 1 ;Mimic
+	.byte 1 ;Jester
+	.byte 1 ;Armor
+	.byte 1 ;Spider
+	.byte 1 ;Slime
+	.byte 1 ;Lich
+	.byte 1 ;Shfflr
+	.byte 1 ;Shmblr
+	.byte 1 ;Trophy
+	.byte 1 ;Thickt
+	.byte 1 ;Ooze
+	.byte 1 ;Horror
+	.byte 1 ;Campfire
+
+LEnemySpeed:
+	.byte 1 ;Wolf
+	.byte 1 ;Druid
+	.byte 1 ;Shroom
+	.byte 1 ;Squire
+	.byte 1 ;Archer
+	.byte 1 ;Priest
+	.byte 1 ;Gift
+	.byte 1 ;Sword
+	.byte 1 ;Shield
+	.byte 1 ;Zombie
+	.byte 1 ;Sklton
+	.byte 1 ;Mage
+	.byte 1 ;Goop
+	.byte 1 ;Warlok
+	.byte 1 ;Imp
+	.byte 1 ;Wisp
+	.byte 1 ;RedOrb
+	.byte 1 ;BluOrb
+	.byte 1 ;GrnOrb
+	.byte 1 ;GldOrb
+	.byte 1 ;Bear
+	.byte 1 ;Unicrn
+	.byte 1 ;Volcio
+	.byte 1 ;Glacia
+	.byte 1 ;Grgoyl
+	.byte 1 ;Mimic
+	.byte 1 ;Jester
+	.byte 1 ;Armor
+	.byte 1 ;Spider
+	.byte 1 ;Slime
+	.byte 1 ;Lich
+	.byte 1 ;Shfflr
+	.byte 1 ;Shmblr
+	.byte 1 ;Trophy
+	.byte 1 ;Thickt
+	.byte 1 ;Ooze
+	.byte 1 ;Horror
+	.byte 1 ;Campfire
+
 LEnemyMagic:
-	.byte 0 ;Zombie
-	.byte 0 ;Giant
-	.byte 20 ;Dragon
+	.byte 4 ;Wolf
+	.byte 1 ;Druid
+	.byte 1 ;Shroom
+	.byte 1 ;Squire
+	.byte 1 ;Archer
+	.byte 1 ;Priest
+	.byte 1 ;Gift
+	.byte 1 ;Sword
+	.byte 1 ;Shield
+	.byte 1 ;Zombie
+	.byte 1 ;Sklton
+	.byte 1 ;Mage
+	.byte 1 ;Goop
+	.byte 1 ;Warlok
+	.byte 1 ;Imp
+	.byte 1 ;Wisp
+	.byte 1 ;RedOrb
+	.byte 1 ;BluOrb
+	.byte 1 ;GrnOrb
+	.byte 1 ;GldOrb
+	.byte 1 ;Bear
+	.byte 1 ;Unicrn
+	.byte 1 ;Volcio
+	.byte 1 ;Glacia
+	.byte 1 ;Grgoyl
+	.byte 1 ;Mimic
+	.byte 1 ;Jester
+	.byte 1 ;Armor
+	.byte 1 ;Spider
+	.byte 1 ;Slime
+	.byte 1 ;Lich
+	.byte 1 ;Shfflr
+	.byte 1 ;Shmblr
+	.byte 1 ;Trophy
+	.byte 1 ;Thickt
+	.byte 1 ;Ooze
+	.byte 1 ;Horror
+	.byte 1 ;Campfire
+
 LEnemyHP:
+	.byte 20 ;Wolf
+	.byte 1 ;Druid
+	.byte 1 ;Shroom
+	.byte 1 ;Squire
+	.byte 1 ;Archer
+	.byte 1 ;Priest
+LGiftHP:
+	.byte 1 ;Gift
+	.byte 1 ;Sword
+	.byte 1 ;Shield
 LZombieHP:
+	.byte 1 ;Zombie
 LSkltonHP:
-	.byte 10 ;Zombie
-	.byte 40 ;Giant
-	.byte 150 ;Dragon
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
-	.byte 1
+	.byte 1 ;Sklton
+	.byte 1 ;Mage
+	.byte 1 ;Goop
+	.byte 1 ;Warlok
+	.byte 1 ;Imp
+	.byte 1 ;Wisp
+	.byte 1 ;RedOrb
+	.byte 1 ;BluOrb
+	.byte 1 ;GrnOrb
+	.byte 1 ;GldOrb
+	.byte 1 ;Bear
+	.byte 1 ;Unicrn
+	.byte 1 ;Volcio
+	.byte 1 ;Glacia
+	.byte 1 ;Grgoyl
+	.byte 1 ;Mimic
+	.byte 1 ;Jester
+	.byte 1 ;Armor
+	.byte 1 ;Spider
+	.byte 1 ;Slime
+	.byte 1 ;Lich
+	.byte 1 ;Shfflr
+	.byte 1 ;Shmblr
+	.byte 1 ;Trophy
+	.byte 1 ;Thickt
+	.byte 1 ;Ooze
+	.byte 1 ;Horror
 	.byte 1 ;Campfire
  
 ;Format is LPFIHEPR
 ;L : Legendary (bosses), P : Physical, F : Fire, I : Ice, H : Holy, E : Electric, P : Poison, R : isRanged (prevents riposte)
 LEnemyResistances:
-	.byte #%01011010 ;Zombie
-	.byte #%00000000 ;Giant
-	.byte #%10000010 ;Dragon
+	.byte #%01011010 ;Wolf
+	.byte #%00000000 ;Druid
+	.byte #%00000000 ;Shroom
+	.byte #%00000000 ;Squire
+	.byte #%00000000 ;Archer
+	.byte #%00000000 ;Priest
+	.byte #%00000000 ;Gift
+	.byte #%00000000 ;Sword
+	.byte #%00000000 ;Shield
+	.byte #%00000000 ;Zombie
+	.byte #%00000000 ;Sklton
+	.byte #%00000000 ;Mage
+	.byte #%00000000 ;Goop
+	.byte #%00000000 ;Warlok
+	.byte #%00000000 ;Imp
+	.byte #%00000000 ;Wisp
+	.byte #%00000000 ;RedOrb
+	.byte #%00000000 ;BluOrb
+	.byte #%00000000 ;GrnOrb
+	.byte #%00000000 ;GldOrb
+	.byte #%00000000 ;Bear
+	.byte #%00000000 ;Unicrn
+	.byte #%00000000 ;Volcio
+	.byte #%00000000 ;Glacia
+	.byte #%00000000 ;Grgoyl
+	.byte #%00000000 ;Mimic
+	.byte #%00000000 ;Jester
+	.byte #%00000000 ;Armor
+	.byte #%00000000 ;Spider
+	.byte #%00000000 ;Lich
+	.byte #%00000000 ;Shfflr
+	.byte #%00000000 ;Shmblr
+	.byte #%00000000 ;Trophy
+	.byte #%00000000 ;Thickt
+	.byte #%00000000 ;Ooze
+	.byte #%00000000 ;Horror
+	.byte #%00000000 ;Campfire
 
 	ORG $DE00 ;Used to hold miscellaneous data/lookup tables
 	RORG $FE00
 
 LEnemyFightMessages:
-	.byte $3 ;Zombie
-	.byte $2 ;Giant
-	.byte $4 ;Dragon
+	.byte $03 ;BITES - Wolf
+	.byte $00 ;----- - Druid
+	.byte $00 ;----- - Shroom
+	.byte $00 ;STABS - Squire
+	.byte $01 ;SHOOTS - Archer
+	.byte $00 ;----- - Priest
+	.byte $00 ;----- - Gift
+	.byte $04 ;SLICES - Sword
+	.byte $02 ;BASHES - Shield
+	.byte $03 ;BITES - Zombie
+	.byte $01 ;SHOOTS - Sklton
+	.byte $00 ;----- - Mage
+	.byte $31 ;MIRES - Goop
+	.byte $00 ;----- - Warlok
+	.byte $30 ;WHIPS - Imp
+	.byte $00 ;----- - Wisp
+	.byte $00 ;----- - RedOrb
+	.byte $00 ;----- - BluOrb
+	.byte $00 ;----- - GrnOrb
+	.byte $00 ;----- - GldOrb
+
+	.byte $2F ;CLAWS - Bear
+	.byte $00 ;STABS - Unicrn
+	.byte $00 ;----- - Volcio
+	.byte $00 ;----- - Glacia
+	.byte $2F ;CLAWS - Grgoyl
+	.byte $03 ;BITES - Mimic
+	.byte $00 ;STABS - Jester
+	.byte $00 ;----- - Armor
+	.byte $03 ;BITES - Spider
+	.byte $31 ;MIRES - Slime
+	.byte $00 ;----- - Lich
+	.byte $01 ;SHOOTS - Shfflr
+	.byte $2F ;CLAWS - Shmblr
+	.byte $00 ;----- - Trophy
+
+	.byte $30 ;WHIPS - Thickt
+	.byte $31 ;MIRES - Ooze
+	.byte $30 ;WHIPS - Horror
+	.byte $00 ;----- - Campfire
 
 LAllZeroes:
 	.byte 0

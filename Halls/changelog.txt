@@ -649,9 +649,25 @@
 	-Centered enemies more precisely, and fixed graphics overlap issues.
 	-Fixed bug with small enemy pointer generation
 	-Fixed small enemy targeting runtime issue
+9/22/23
+	-Added soft reset functionality, allowing player names and classes to be maintained between runs
+		-Needs more testing to ensure stability
+	-1st pass of enemy color table
+	-Added some more enemy fight messages, and filled in the respective table.
+	-1st pass encounter tables
+	-Filled in boss tables
+9/23/23
+	-Running now correctly calculates maximum enemy speed correctly.
+	-Had to duplicate SHIELD text.
+	-Enemy rendering no longer runs 1 scanline too long when targeting small enemies on the 2nd page.
+	-Title screen cursor is no longer off by 1 pixel
+	-Poked around enemy healing code, everything looks fine...
+	-Correct lots of out-of-date information in the notes document
+	-Started working on enemy AI tables
 
 KNOWN BUGS:
-	-Enemies not being healed properly by TRIAGE, possibly connected to the heals fully condition?
+	-Noticed a one-off scanline issue when exiting battle
+		-Wasn't even generating a new maze...
 
 TODO:
 	Mandatory:
@@ -664,10 +680,9 @@ TODO:
 		-ARMOR
 		-GRNORB?
 		-GLDORB?
+		-Add messages to support these abilities...
 	-Connect visual and sound effects
 		-Partially working?
-
-	-Rename mazeColor variable to be more accurate
 
 	Nice:
 	-Add call for excited avatar
@@ -675,10 +690,12 @@ TODO:
 	-Make enemies with legendary resistance take 50% less damage from all sources
 		-Preferably don't factor this in when showing damage messages
 		-Nerfs blight significantly against bosses...
-	-Soft reset to keep party classes and names populated
 
 	Ehh:
 	-Being guarded reduces blight damage, fix?
+	-Sharp increases attack power of unconscious party members
+
+	-Rename mazeColor variable to be more accurate
 
 	Additional sounds to consider:
 		-Footsteps
@@ -691,10 +708,13 @@ TODO:
 		-Crackling campfire sound (would need to be a loop, so it's almost certainly out of scope)
 
 	DOESN'T REQUIRE LOGIC:
+		-More text/messaging work
 		-Improve in-maze campfire graphics to look less squished when they appear
 		-Create all enemy graphics
 		-Create all enemy stats
 		-Create all enemy AI tables
+		-Tune all enemy stats
+		-Tune all enemy colors
 		-Create all encounter tables
 		-Tune maze exit tables
 		-Tune all visual effects

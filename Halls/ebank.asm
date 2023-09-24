@@ -24,21 +24,196 @@ ECheckDamageTarget: SUBROUTINE ;Determines whether or not this enemy needs to do
 	rts
 
 EEnemyAI: ;This table must be in order by enemy ID
+WolfAI:
+	.byte %00000000 ;Attack frontline
+	.byte %00000000
+	.byte %00000000
+	.byte %01000000 ;Attack any
+DruidAI:
+	.byte %11000011 ;Cast BLIZRD
+	.byte %11001111 ;Cast WITHER any
+	.byte %11001111 ;Cast WITHER any
+	.byte %11101001 ;Cast HEAL self
+ShroomAI:
+	.byte %11001101 ;Cast BLIGHT any
+	.byte %11001101 ;
+	.byte %11001101 ;
+	.byte %10000010 ;Cast SLEEP frontline
+SquireAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+ArcherAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+PriestAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+GiftAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+SwordAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+ShieldAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
 ZombieAI:
-	.byte $00 ;Attack frontline
-	.byte $00
-	.byte $CE ;Cast triage any
-	.byte $CE
-GiantAI:
-	.byte $20 ;Attack backline
-	.byte $20
-	.byte $20
-	.byte $20
-DragonAI:
-	.byte $C1 ;Cast fire any
-	.byte $C1
-	.byte $C1
-	.byte $C1
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+SkltonAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+MageAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+GoopAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+WarlokAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+ImpAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+WispAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+RedOrbAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+BluOrbAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+GrnOrbAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+GldOrbAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+BearAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+UnicrnAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+VolcioAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+GlaciaAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+GrgoylAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+MimicAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+JesterAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+ArmorAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+SpiderAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+SlimeAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+LichAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+ShfflrAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+ShmblrAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+TrophyAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+ThicktAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+OozeAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+HorrorAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+CampfireAI:
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
+	.byte %00000000 ;
 
 ERenderEffects:
 	sta WSYNC
@@ -120,9 +295,9 @@ EStorePlayfieldColor:
 	jmp EPrepLargeEnemy
 EPrepSmallEnemy:
 	sta returnValue ;enemyID
-	lda #$FD
-	sta tempPointer1+1
-	lda returnValue
+	tax
+	ldy #$FD
+	sty tempPointer1+1
 	asl
 	asl
 	asl
@@ -130,7 +305,6 @@ EPrepSmallEnemy:
 	clc
 	adc #$80
 	sta tempPointer1
-	ldx returnValue
 	cpx #$8
 	bcc .ESmallOnFirstPage
 	inc tempPointer1+1
@@ -931,12 +1105,12 @@ EToRunText:
 	.byte #R
 	.byte #U
 	.byte #N
-EUnallocatedText:
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
+EClawsText:
+	.byte #C
+	.byte #L
+	.byte #A
+	.byte #W
+	.byte #S
 	.byte #EMPTY
 EEffectText:
 	.byte #E
@@ -1159,12 +1333,12 @@ EFormAText:
 	.byte #M
 	.byte #EMPTY
 	.byte #A
-EUnallocated2Text:
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
+EWhipsText:
+	.byte #W
+	.byte #H
+	.byte #I
+	.byte #P
+	.byte #S
 	.byte #EMPTY
 ETeamText:
 	.byte #EMPTY
@@ -1194,6 +1368,13 @@ EShotAText:
 	.byte #T
 	.byte #EMPTY
 	.byte #A
+EMiresText:
+	.byte #M
+	.byte #I
+	.byte #R
+	.byte #E
+	.byte #S
+	.byte #EMPTY
 
 	ORG $E700 ;Contains the first 2 large enemies graphics data
 	RORG $F700
@@ -3327,118 +3508,134 @@ EEncounterSizes:
 	;Encounter tables must ALWAYS end with a small enemy, and every instance of a medium or large enemy MUST be IMMEDIATELY followed by a small enemy
 	;Encounter tables must be a multiple of 2 in size. 16 happens to be the most convenient size.
 EGroundsEnemies:
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
+	.byte $14 ;Bear
+	.byte $00 ;Wolf
+	.byte $15 ;Unicrn
+	.byte $01 ;Druid
+	.byte $14 ;Bear
+	.byte $00 ;Wolf
+	.byte $15 ;Unicrn
+	.byte $01 ;Druid
+	.byte $00 ;Wolf
+	.byte $01 ;Druid
+	.byte $02 ;Shroom
+	.byte $00 ;Wolf
+	.byte $01 ;Druid
+	.byte $02 ;Shroom
+	.byte $00 ;Wolf
+	.byte $01 ;Shroom
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
+	; .byte $00 ;Wolf
 
 ECastleEnemies:
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
+	.byte $18 ;Grgoyl
+	.byte $03 ;Squire
+	.byte $18 ;Grgoyl
+	.byte $04 ;Archer
+	.byte $18 ;Grgoyl
+	.byte $05 ;Priest
+	.byte $19 ;Mimic
+	.byte $03 ;Squire
+	.byte $19 ;Mimic
+	.byte $04 ;Archer
+	.byte $05 ;Priest
+	.byte $03 ;Squire
+	.byte $04 ;Archer
+	.byte $05 ;Priest
+	.byte $03 ;Squire
+	.byte $04 ;Archer
 
 ECatacombsEnemies:
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
+	.byte $1C ;Spider
+	.byte $09 ;Zombie
+	.byte $1D ;Slime
+	.byte $0A ;Sklton
+	.byte $1C ;Spider
+	.byte $0B ;Mage
+	.byte $1D ;Slime
+	.byte $09 ;Zombie
+	.byte $1D ;Slime
+	.byte $0A ;Sklton
+	.byte $0B ;Mage
+	.byte $09 ;Zombie
+	.byte $0A ;Sklton
+	.byte $0B ;Mage
+	.byte $09 ;Zombie
+	.byte $0A ;Sklton
 
 EAbyssEnemies:
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
-	.byte $01
-	.byte $00
+	.byte $1F ;Shfflr
+	.byte $0D ;Warlok
+	.byte $20 ;Shmblr
+	.byte $0E ;Imp
+	.byte $20 ;Shmblr
+	.byte $0F ;Wisp
+	.byte $20 ;Shmblr
+	.byte $0D ;Warlok
+	.byte $1F ;Shfflr
+	.byte $0E ;Imp
+	.byte $0F ;Wisp
+	.byte $0D ;Warlok
+	.byte $0E ;Imp
+	.byte $0F ;Wisp
+	.byte $0D ;Warlok
+	.byte $0E ;Imp
 
 EBossEncounters:
 	;GROUNDS BOSS 1
-	.byte $00
+	.byte $22 ;Thickt
 	.byte $FF
 	.byte $FF
 	.byte $FF
 	;GROUNDS BOSS 2
-	.byte $00
+	.byte $16 ;Volcio
 	.byte $FF
-	.byte $FF
+	.byte $17 ;Glacia
 	.byte $FF
 	;CASTLE BOSS 1
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
+	.byte $1A ;Jester
+	.byte $FF
+	.byte $FF
+	.byte $FF
 	;CASTLE BOSS 2
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
+	.byte $07 ;Sword
+	.byte $1B ;Armor
+	.byte $FF
+	.byte $08 ;Shield
 	;CRYPT BOSS 1
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
+	.byte $23 ;Ooze
+	.byte $FF
+	.byte $FF
+	.byte $FF
 	;CRYPT BOSS 2
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
+	.byte $1E ;Lich
+	.byte $FF
+	.byte $FF
+	.byte $FF
 	;ABYSS BOSS 1
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
+	.byte $24 ;Horror
+	.byte $FF
+	.byte $FF
+	.byte $FF
 	;ABYSS BOSS 2
-	.byte $00
-	.byte $00
-	.byte $00
-	.byte $00
+	.byte $10 ;RedOrb
+	.byte $11 ;BluOrb
+	.byte $12 ;GrnOrb
+	.byte $13 ;GldOrb
 
 EEffectLength:
 	.byte 0 ;No effect

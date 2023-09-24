@@ -854,7 +854,7 @@ RXBitesY:
 	.byte $0
 	.byte $7
 	.byte $1
-RXRushesY:
+RXSlicesY:
 	.byte $0
 	.byte $8
 	.byte $1
@@ -1026,6 +1026,18 @@ RIntoTheAbyss:
 	.byte $2F
 	.byte $2E
 	.byte $30
+RXClawsY:
+	.byte $0
+	.byte $1F
+	.byte $1
+RXWhipsY:
+	.byte $0
+	.byte $3F
+	.byte $1
+RXMiresY:
+	.byte $0
+	.byte $44
+	.byte $1
 
 RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 values correctly. Interprets A as the line of the message to set.
 	ldy #TEXT_HIGHLIGHTED_COLOR
@@ -1581,6 +1593,13 @@ RSwordText:
 	.byte #R
 	.byte #D
 	.byte #EMPTY
+RShieldEnemyText:
+	.byte #S
+	.byte #H
+	.byte #I
+	.byte #E
+	.byte #L
+	.byte #D
 RZombieText:
 	.byte #Z
 	.byte #O
@@ -1623,11 +1642,11 @@ RImpText:
 	.byte #EMPTY
 	.byte #EMPTY
 	.byte #EMPTY
-RAbyssHealerText:
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
-	.byte #EMPTY
+RWispText:
+	.byte #W
+	.byte #I
+	.byte #S
+	.byte #P
 	.byte #EMPTY
 	.byte #EMPTY
 RRedOrbText:
@@ -1749,13 +1768,6 @@ RShmblrText:
 	.byte #B
 	.byte #L
 	.byte #R
-RTrophyText:
-	.byte #T
-	.byte #R
-	.byte #O
-	.byte #P
-	.byte #H
-	.byte #Y
 RThicktText:
 	.byte #T
 	.byte #H
@@ -1986,14 +1998,14 @@ REnemyNameLookup: ;This table could be turned into a calculation RZombieText + (
 	.byte (RPriestText & $FF)
 	.byte (RGiftText & $FF)
 	.byte (RSwordText & $FF)
-	.byte (RShieldText & $FF)
+	.byte (RShieldEnemyText & $FF)
 	.byte (RZombieText & $FF)
 	.byte (RSkltonText & $FF)
 	.byte (RMageText & $FF)
 	.byte (RGoopText & $FF)
 	.byte (RWarlokText & $FF)
 	.byte (RImpText & $FF)
-	.byte (RAbyssHealerText & $FF)
+	.byte (RWispText & $FF)
 	.byte (RRedOrbText & $FF)
 	.byte (RBluOrbText & $FF)
 	.byte (RGrnOrbText & $FF)
@@ -2018,9 +2030,46 @@ REnemyNameLookup: ;This table could be turned into a calculation RZombieText + (
 	.byte 0 ;Campfire
 
 REnemyColorLookup:
+	.byte $0A ;Wolf
+	.byte $DA ;Druid
+	.byte $36 ;Shroom
+	.byte $38 ;Squire
+	.byte $B8 ;Archer
+	.byte $FC ;Priest
+	.byte $88 ;Gift
+	.byte $0C ;Sword
+	.byte $0C ;Shield
 	.byte $D6 ;Zombie
-	.byte $EA ;Giant
-	.byte $C8 ;Dragon
+	.byte $0E ;Sklton
+	.byte $9A ;Mage
+	.byte $C4 ;Goop
+	.byte $36 ;Warlok
+	.byte $56 ;Imp
+	.byte $8C ;Wisp
+	.byte $36 ;RedOrb
+	.byte $88 ;BluOrb
+	.byte $B8 ;GrnOrb
+	.byte $EC ;GldOrb
+
+	.byte $16 ;Bear
+	.byte $5C ;Unicrn
+	.byte $38 ;Volcio
+	.byte $88 ;Glacia
+	.byte $08 ;Grgoyl
+	.byte $16 ;Mimic
+	.byte $6A ;Jester
+	.byte $0C ;Armor
+	.byte $04 ;Spider
+	.byte $C4 ;Slime
+	.byte $A6 ;Lich
+	.byte $54 ;Shfflr
+	.byte $56 ;Shmblr
+	.byte $1C ;Trophy
+
+	.byte $B6 ;Thickt
+	.byte $C4 ;Ooze
+	.byte $46 ;Horror
+	.byte $2A ;Campfire
 
 	;Only around 8 more bytes can fit here...
 

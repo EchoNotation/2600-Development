@@ -1,28 +1,5 @@
---- HORRID HALLS --- (CATACRAWLER?)
+--- HORRID HALLS --- (CATACRAWLER)
 Targeted ROM size: 16K
-
-Each small enemy takes up 16 bytes.
-Each medium enemy takes up 64 bytes.
-Each large enemy takes up 192 bytes.	
-
-40 total enemies:
-16 small enemies would take up exactly 256 bytes of data
-16 medium enemies would take up exactly 1K of data
-8 large enemies would take up exactly 1.5K of data
-This would also take up 40 * 2 = 80 bytes of pointer data
-This would also take up 40 bytes of size data
-total = 256 + 1024 + 1536 + 80 + 40 = 2936 bytes of enemy data,
-	(not accounting for AI and encounter information, which would be stored elsewhere)
-	This would also require 6*40 + 40 = 280 bytes of name information, which would have to be stored in the rendering bank.
-	As well as another 40 bytes of color information in the rendering bank.
-		There does seem to currently be enough room for this...
-	-Encounter generation bank needs access to enemy size information
-
-If each spell effect is <=32 unique frames long, the total would be <=512 bytes of data.
-So it should be possible to have this enemy configuration with unique spell effects.
-Maybe spell effects can be updated every other frame, or every 4 frames, to create spells that could be longer.
-	-Would need to store effect frequency information as well (not necessarily)
-	-Ended up storing effect frequency information as part of the advanced effect system
 
 --- inBattle STATES ---
 $80 currently getting player actions, goes to $81 when complete
@@ -66,10 +43,44 @@ $FE Game completed! (player must reset)
 $FF (next button press ends the battle)
 
 --- ENEMY IDs ---
-$00 Small test (ZOMBIE)
-$01 Medium test (GIANT)
-$02 Large test (DRAGON)
-$27 Campfire
+$00 Wolf
+$01 Druid
+$02 Shroom
+$03 Squire
+$04 Archer
+$05 Priest
+$06 Gift
+$07 Sword
+$08 Shield
+$09 Zombie
+$0A Sklton
+$0B Mage
+$0C Goop
+$0D Warlok
+$0E Imp
+$0F Wisp
+$10 RedOrb
+$11 BluOrb
+$12 GrnOrb
+$13 GldOrb
+$14 Bear
+$15 Unicrn
+$16 Volcio
+$17 Glacia
+$18 Grgoyl
+$19 Mimic
+$1A Jester
+$1B Armor
+$1C Spider
+$1D Slime
+$1E Lich
+$1F Shfflr
+$20 Shmblr
+$21 Trophy
+$22 Thickt
+$23 Ooze
+$24 Horror
+$25 Campfire
 $FF No enemy
 
 --- MENU IDs ---
@@ -137,19 +148,49 @@ $06 - LLoadEffect
 00000111 : ???
 1TTIIIII : CAST --- Casting a spell
 
---- ENEMY AI ---
--Attack
--Cast
--Guard
--Parry
--Special
+--- ENEMY AI --- (STTIIIII) S: is Spell, TT: targeting mode, I: index
+TT:
+%00 Frontline
+%01 Backline
+%10 Any (should be used for allied effects or AoE spells)
+%11 Self
+I:
+%00000 Fight
+%00011 Guard
+%00100 Parry
+%00101 Special
+%spellID if S bit is 1
+All other actions are undefined
+
+
+SPELL LISTING
+0: BACK : Just for spell menuing purposes
+1: FIRE : Deals fire damage to a single target
+2: SLEEP : Attempts to put a single target to sleep
+3: BLIZRD : Deals ice damage to all enemies
+4: DRAIN : Deals non-elemental damage to a single target, then heals the caster by the damage dealt 
+5: THUNDR : Deals electric damage to the highest health enemy
+6: SHIELD : Gives one ally a shield
+7: METEOR : Deals physical damage to one enemy, then fire damage to all other enemies
+8: CHAOS : Deals damage of a random element to each enemy, also has a chance to inflict status
+9: HEAL : Heals a single ally
+A: SMITE : Deals damage to target based on attack and magic power
+B: VOLLEY : Deals half attack physical damage to all enemies
+C: SHARP : Doubles attack power of ally
+D: BLIGHT : Attempts to apply poisoned status to enemy
+E: TRIAGE : Heals all allies
+F: WITHER : Deals poison damage to a single target
+10: BANISH : Attempts to banish all enemies 
+11: TRANCE : Self sleep 1, regain mana (1/4 of max?) (party members only)
+12: WISH : Clear all allies' status, restore allies' HP and MP by half magic power (party members only)
+13: SHIFT : Inverts party position
 
 --- SPELL TARGETING LOOKUP ---
 $00: No targeting (BACK, TRANCE)
 $01: Target enemy (FIRE, SLEEP, DRAIN, SMITE, POISON, BLIGHT, WITHER)
 $82: Target all enemies (BLIZRD, CHAOS, BANISH, SHIFT)
-$03: Target any ally (SHIELD, HEAL, SHARP)
-$84: Target all allies (TRIAGE, WISH)
+$03: Target any ally (SHIELD, HEAL)
+$84: Target all allies (TRIAGE, SHARP, WISH)
 $05: Target highest health enemy (THUNDR)
 $86: Target specific enemy, but hit all (METEOR)
 
@@ -174,60 +215,48 @@ Speed : Determines turn order and ability to flee
 HP : Self explanatory
 MP : Self explanatory
 
-Classes:
-0-Fighter : High durability, good physical damage output, slow, frontline
-1-Rogue : Low durability, very good physical damage output, very fast, frontline
-2-Cleric : High durability, mediocre physical damage ouput, healing spells, slow, frontline or backline
-3-Wizard : Low durability, low physical extremely good magic damage output, medium speed, backline
-4-Ranger : Medium durability, good physical damage output, fast, inverse damage penalty from position
-5-Paladin : Medium durability, medium physical damage, medium speed, damage and healing spells just limited list
-
 Stats for classes:
-ATK, MAG, SPD start at 3 plus the per level value
-HP starts at 10 plus half the per level value
-MP starts at 5 plus the per level value
-
-Fighter:
-3 ATK per level
+Knight:
+2 ATK per level
 0 MAG per level
-2 SPD per level
-10 HP per level
+1 SPD per level
+20 + 4 HP per level
 0 MP per level
 
 Rogue:
-5 ATK per level
+3 ATK per level
 0 MAG per level
-5 SPD per level
-4 HP per level
+3 SPD per level
+10 + 2 HP per level
 0 MP per level
 
 Cleric:
 2 ATK per level
 3 MAG per level
 1 SPD per level
-8 HP per level
-3 MP per level
+15 + 3 HP per level
+20 + 4 MP per level
 
 Wizard:
 1 ATK per level
-5 MAG per level
-3 SPD per level
-2 HP per level
-5 MP per level
+3 MAG per level
+2 SPD per level
+10 + 2 HP per level
+20 + 4 MP per level
 
 Ranger:
-4 ATK per level
-2 MAG per level
-4 SPD per level
-4 HP per level
-2 MP per level
+3 ATK per level
+1 MAG per level
+3 SPD per level
+15 + 3 HP per level
+10 + 2 MP per level
 
 Paladin:
-3 ATK per level
-3 MAG per level
-3 SPD per level
-6 HP per level
-3 MP per level
+2 ATK per level
+1 MAG per level
+2 SPD per level
+15 + 3 HP per level
+10 + 2 MP per level
 
 MESSAGE COMPONENTS (& strings):	
 00: Source battler's name
@@ -261,7 +290,7 @@ MESSAGE COMPONENTS (& strings):
 1C: WINS
 1D: TRIES
 1E: TO RUN
-1F: Unallocated
+1F: CLAWS
 20: EFFECT
 21: CANNOT - This could be removed, message could be changed to NO ESCAPE instead of X CANNOT ESCAPE
 22: ESCAPE
@@ -293,20 +322,21 @@ MESSAGE COMPONENTS (& strings):
 3C: CAMP
 3D: LEAVE
 3E: FORM A
-3F: Unallocated
+3F: WHIPS
 40: TEAM
 41: PLAY
 42: SMITES
 43: SHOT A
+44: MIRES
 
-Only 20 more strings can be allocated!
+Only 19 more strings can be allocated!
 
 MESSAGES:
 00: X STABS Y
 01: X SHOOTS Y
 02: X BASHES Y
 03: X BITES Y
-04: X RUSHES Y
+04: X SLICES Y
 05: X CASTS Y
 06: X HEALS Y HP
 07: X LOSES Y HP
@@ -349,6 +379,9 @@ MESSAGES:
 2C: INTO THE CASTLE
 2D: INTO THE CRYPT
 2E: INTO THE ABYSS
+2F: X CLAWS Y
+30: X WHIPS Y
+31: X MIRES Y
 
 Status Effects:
 Pos:
@@ -357,31 +390,6 @@ Pos:
 Neg:
 -Asleep : Target is unable to take any actions for the next 2 turns.
 -Poisoned : Target takes 1/8th max HP damage per turn. Is cured on the next heal, but denies the HP gain from said heal.
-
-SPELL LISTING
-0: BACK : Just for spell menuing purposes
-
-1: FIRE : Deals fire damage to a single target
-2: SLEEP : Attempts to put a single target to sleep
-3: BLIZRD : Deals ice damage to all enemies
-4: DRAIN : Deals non-elemental damage to a single target, then heals the caster by the damage dealt 
-5: THUNDR : Deals electric damage to the highest health enemy
-6: SHIELD : Gives one ally a shield
-7: METEOR : Deals physical damage to one enemy, then fire damage to all other enemies
-8: CHAOS : Deals damage of a random element to each enemy, also has a chance to inflict status
-9: HEAL : Heals a single ally, removes blight instead of healing if blighted
-A: SMITE : Deals damage to target based on attack and magic power
-B: VOLLEY : Deals half attack physical damage to all enemies
-C: SHARP : Doubles attack power of ally
-D: BLIGHT : Attempts to apply poisoned status to enemy
-E: TRIAGE : Heals all allies
-F: WITHER : Deals poison damage to a single target
-10: BANISH : Attempts to banish all enemies 
-11: TRANCE : Self sleep 1, regain mana (1/4 of max?) (party members only)
-12: WISH : Clear all allies' status, restore allies' HP and MP by half magic power (party members only)
-
-ENEMY ONLY?
-13: SHIFT : Inverts party position
 
 Wizard Spell List:
 -FIRE - 1

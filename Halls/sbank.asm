@@ -32,16 +32,23 @@ SSkipSeeding:
 	sta currentInput
 	sta previousInput
 
-	jsr SClearMazeData ;Only used here, can save 4 bytes by injecting that code here...
-
-	dec currentMenu ;Should now be $FF
-
 	ldx #19
 	lda #A
 SClearNames:
 	sta name1,x
 	dex
 	bpl SClearNames
+
+SSoftReset:
+	jsr SClearMazeData ;Only used here, can save 4 bytes by injecting that code here...
+	ldx #$FF
+	stx currentMenu
+	inx
+	stx VDELBL
+	stx experienceToNextLevel
+	stx partyBattlePos
+	stx cursorIndexAndMessageY
+	stx inBattle
 
 #if BUILD_DEBUG
 	;Debug only code, do not include in final version!
@@ -51,22 +58,17 @@ SClearNames:
 	sta mazeAndPartyLevel
 	lda #$80
 	sta inBattle
-	lda #0
+	lda #$81
 	sta currentMenu
-	;lda #$FF
-	;sta hasAction
-	;sta enemyID+1
-	;sta enemyID+2
-	;sta enemyID+3
-	;lda #$03
-	;sta menuSize
+	lda #1
+	sta menuSize
 	lda #$10
 	sta enemyID
-	;lda #$16
-	;sta enemyID+2
+	lda #$11
+	sta enemyID+2
 	lda #1
 	sta enemyHP
-	;sta enemyHP+1
+	sta enemyHP+1
 	;sta enemyHP+2
 	;sta enemyHP+3
 	;lda #$13
@@ -94,7 +96,7 @@ SStartOfFrame:
 
 	lda #1
 	bit SWCHB
-	beq SGoToReset ;Reset the game if the console reset switch is pressed
+	beq SSoftReset ;Reset the game if the console reset switch is pressed
 
 	lda #VBLANK_TIMER_DURATION
 	sta TIM64T ;Set timer to complete at the end of VBLANK.
@@ -148,9 +150,6 @@ SJustExitedBattle:
 	lda #TRANSITIONING_TO_MAZE
 	jsr SSetupTransitionEffect
 	bne SMazeLogicVBlank
-
-SGoToReset:
-	jmp SReset
 
 SUpdateMenuRenderingVBlank:
 	jsr SUpdateMenuRendering
@@ -440,12 +439,12 @@ SNameLocations:
 	.byte (name5)
 
 SBallFineCoarsePositions:
-	.byte $F4
-	.byte $65
-	.byte $E5
-	.byte $56
-	.byte $D6
-	.byte $47
+	.byte $04
+	.byte $75
+	.byte $F5
+	.byte $66
+	.byte $E6
+	.byte $57
 
 SUpdateBallPosition: SUBROUTINE ;Calculates the fine and coarse position of the cursor on the setup screen.
 	lda #0
@@ -2650,6 +2649,8 @@ SSpellTargetingLookup:
 	.byte $84 ;WISH
 	.byte $82 ;SHIFT
 
+	;There's 96 bytes in here...
+
 	ORG $FEC0
 	RORG $FEC0
 
@@ -2662,6 +2663,8 @@ SLoadEnemyAI:
 	nop
 	nop
 	jmp SAfterLoadingEnemyAI
+
+	;There is 52 bytes in here...
 
 	ORG $FF00
 	RORG $FF00
