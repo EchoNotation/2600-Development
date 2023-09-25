@@ -40,175 +40,175 @@ ShroomAI:
 	.byte %11001101 ;
 	.byte %10000010 ;Cast SLEEP frontline
 SquireAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %00000000 ;Attack frontline
+	.byte %00000000 ; 
+	.byte %00000100 ;Parry
+	.byte %00000100 ;
 ArcherAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
+	.byte %01000000 ;
+	.byte %01000000 ;
+	.byte %11001011 ;Cast VOLLEY
 PriestAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %11001001 ;Cast HEAL any
+	.byte %11001001 ;
+	.byte %10001010 ;Cast SMITE frontline
+	.byte %10000001 ;Cast FIRE any
 GiftAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %00000101 ;Special
+	.byte %00000101 ;
+	.byte %00000101 ;
+	.byte %00000101 ;
 SwordAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %00000000 ;Attack frontline
+	.byte %01000000 ;Attack any
+	.byte %00000100 ;Parry
+	.byte %00000100 ;
 ShieldAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %00000000 ;Attack frontline
+	.byte %01000011 ;Guard any
+	.byte %01000011 ;Guard any
+	.byte %11000110 ;Cast SHIELD any
 ZombieAI:
+	.byte %00000000 ;Attack frontline
 	.byte %00000000 ;
 	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
 SkltonAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
+	.byte %01000000 ;
+	.byte %01000000 ;
+	.byte %11001011 ;Cast VOLLEY
 MageAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %10000010 ;Cast SLEEP frontline
+	.byte %11000001 ;Cast FIRE any
+	.byte %11000011 ;Cast BLIZRD
+	.byte %11100110 ;Cast SHIELD self
 GoopAI:
-	.byte %00000000 ;
+	.byte %00000000 ;Attack frontline
 	.byte %00000000 ;
 	.byte %00000000 ;
 	.byte %00000000 ;
 WarlokAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %10000100 ;Cast DRAIN frontline
+	.byte %11000101 ;Cast THUNDR 
+	.byte %11001100 ;Cast SHARP
+	.byte %10001101 ;Cast BLIGHT frontline
 ImpAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %00000000 ;Attack frontline
+	.byte %01000000 ;Attack any
+	.byte %11001000 ;Cast CHAOS
+	.byte %11010011 ;Cast SHIFT
 WispAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %11001001 ;Cast HEAL any
+	.byte %11001001 ;
+	.byte %11001001 ;
+	.byte %11001110 ;Cast TRIAGE
 RedOrbAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %11000001 ;Cast FIRE any
+	.byte %11000001 ;
+	.byte %11000001 ;
+	.byte %10000111 ;Cast METEOR frontline
 BluOrbAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %11001001 ;Cast HEAL any
+	.byte %11001001 ;
+	.byte %11001110 ;Cast TRIAGE
+	.byte %11001110 ;Cast TRIAGE
 GrnOrbAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %10000010 ;Cast SLEEP frontline
+	.byte %11001101 ;Cast BLIGHT any
+	.byte %11001000 ;Cast CHAOS
+	.byte %11000110 ;Cast SHIELD any
 GldOrbAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %10001010 ;Cast SMITE frontline
+	.byte %10001010 ;
+	.byte %11000101 ;Cast THUNDR
+	.byte %11000101 ;
 BearAI:
+	.byte %00000000 ;Attack frontline
 	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
+	.byte %01000011 ;Guard any
 UnicrnAI:
+	.byte %00000000 ;Attack frontline
 	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %11001001 ;Cast HEAL any
+	.byte %11001001 ;
 VolcioAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %11000001 ;Cast FIRE any
+	.byte %11000001 ;
+	.byte %11000001 ;
+	.byte %00000000 ;Attack frontline
 GlaciaAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %11000011 ;Cast BLIZRD
+	.byte %11000011 ;
+	.byte %00000000 ;Attack frontline
+	.byte %01000000 ;Attack any
 GrgoylAI:
+	.byte %00000000 ;Attack frontline
 	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
+	.byte %01000000 ;
 MimicAI:
+	.byte %00000000 ;Attack frontline
 	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
+	.byte %10000100 ;Cast DRAIN frontline
 JesterAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
+	.byte %01000000 ;
+	.byte %00000101 ;Special
+	.byte %00000101 ;
 ArmorAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %11101001 ;Cast HEAL self
+	.byte %00000101 ;Special
+	.byte %00000101 ;
+	.byte %00000101 ;
 SpiderAI:
+	.byte %00000000 ;Attack frontline
 	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
+	.byte %11001101 ;Cast BLIGHT any
 SlimeAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %00000101 ;Special
+	.byte %00000101 ;
+	.byte %00000101 ;
+	.byte %00000101 ;
 LichAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %11001111 ;Cast WITHER any
+	.byte %11101001 ;Cast HEAL self
+	.byte %00000101 ;Special
+	.byte %00000101 ;
 ShfflrAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %00100000 ;Attack backline
+	.byte %01000000 ;Attack any
+	.byte %11001011 ;Cast VOLLEY
+	.byte %11001011 ;
 ShmblrAI:
+	.byte %00000000 ;Attack frontline
 	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
+	.byte %10001101 ;Cast BLIGHT frontline
 TrophyAI:
 	.byte %00000000 ;
 	.byte %00000000 ;
 	.byte %00000000 ;
 	.byte %00000000 ;
 ThicktAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
+	.byte %01000000 ;
+	.byte %11001101 ;Cast BLIGHT any
+	.byte %10000100 ;Cast DRAIN frontline
 OozeAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %00000101 ;Special
+	.byte %00000101 ;
+	.byte %00000101 ;
+	.byte %00000101 ;
 HorrorAI:
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
-	.byte %00000000 ;
+	.byte %01000000 ;Attack any
+	.byte %01000000 ;
+	.byte %01000000 ;
+	.byte %01000000 ;
 CampfireAI:
 	.byte %00000000 ;
 	.byte %00000000 ;

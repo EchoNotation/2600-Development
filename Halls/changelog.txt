@@ -664,8 +664,12 @@
 	-Poked around enemy healing code, everything looks fine...
 	-Correct lots of out-of-date information in the notes document
 	-Started working on enemy AI tables
+9/24/23
+	-First pass enemy AI tables
+	-Fixed a bug where blight damage caused the flags value to be corrupted, causing a crash.
 
 KNOWN BUGS:
+	-Enemies cannot target other enemies... This is a major flaw with SDetermineEnemyAI
 	-Noticed a one-off scanline issue when exiting battle
 		-Wasn't even generating a new maze...
 
@@ -678,11 +682,8 @@ TODO:
 		-SLIME
 		-OOZE
 		-ARMOR
-		-GRNORB?
-		-GLDORB?
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
-		-Partially working?
 
 	Nice:
 	-Add call for excited avatar

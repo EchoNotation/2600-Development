@@ -2088,7 +2088,10 @@ LOverrideAvatar: SUBROUTINE ;Sets party member X's mood to Y. 17 bytes
 	and #$0F ;Get just the class
 	sta temp6
 	tya
-	jsr L4Asl
+	asl
+	asl
+	asl
+	asl
 	ora temp6
 	sta char1,x
 	rts
@@ -2480,8 +2483,8 @@ LEnemyFightMessages:
 
 	.byte $2F ;CLAWS - Bear
 	.byte $00 ;STABS - Unicrn
-	.byte $00 ;----- - Volcio
-	.byte $00 ;----- - Glacia
+	.byte $03 ;BITES - Volcio
+	.byte $03 ;BITES - Glacia
 	.byte $2F ;CLAWS - Grgoyl
 	.byte $03 ;BITES - Mimic
 	.byte $00 ;STABS - Jester
