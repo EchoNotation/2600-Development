@@ -476,7 +476,7 @@ EDrawSmallEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that ar
 	and #$04
 	bne .ENormalDrawing
 .EColorDrawing:
-	lda mazeColor
+	lda mazeAndEffectColor
 	sta COLUP0
 	jmp .EExitLoop
 .ENormalDrawing:
@@ -523,7 +523,7 @@ EDrawMediumEnemy: SUBROUTINE ;This subroutine is used for drawing enemies that a
 	sta GRP0
 	lda (tempPointer2),y
 	sta GRP1
-	lda mazeColor
+	lda mazeAndEffectColor
 	sta COLUP0
 	sta COLUP1
 	sta WSYNC
@@ -618,7 +618,7 @@ EDrawLargeEnemy: SUBROUTINE; This subroutine is used for drawing enemies that ar
 	sta GRP0
 	lda (tempPointer2),y
 	sta GRP1
-	lda mazeColor
+	lda mazeAndEffectColor
 	sta COLUP0
 	sta COLUP1
 	lda (tempPointer3),y
@@ -668,7 +668,7 @@ EUpdateEffects: SUBROUTINE
 	cpx #$8
 	bcc .ESpecialEffect
 .ENormalEffect:
-	ldy mazeColor
+	ldy mazeAndEffectColor
 	dey
 	lda effectCounter
 	and #$3
@@ -709,7 +709,7 @@ EUpdateEffects: SUBROUTINE
 	sta temp2
 	rts
 .EStartSpellEffect:
-	ldy mazeColor
+	ldy mazeAndEffectColor
 	dey
 	lda ESpellEffectLengths,y
 	sta effectCounter
@@ -887,7 +887,7 @@ ELoadEffect: SUBROUTINE ;Loads the effect of ID X.
 	sta effectCountdown
 	jmp EAfterLoadingEffect
 .ESpellDelayEffect:
-	ldy mazeColor
+	ldy mazeAndEffectColor
 	dey
 	lda ESpellDelays,y
 	sta effectCountdown

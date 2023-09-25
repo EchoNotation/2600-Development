@@ -89,7 +89,7 @@ WEST = $01
 MAZE_WIDTH = 8
 MAX_MAZE_LEVEL = 3
 STEP_GRACE_PERIOD = 4
-ENCOUNTER_RATE_MASK = $00 ;00 is 256/256, FF is 1/256
+ENCOUNTER_RATE_MASK = $03 ;00 is 256/256, FF is 1/256
 
 ;Battle related
 TIMER_MASK = $80
@@ -200,7 +200,7 @@ effectCountdown ds 1
 mazeAndPartyLevel ds 1
 flags ds 1
 fireMazeHeightAndMessageLine ds 1
-mazeColor ds 1
+mazeAndEffectColor ds 1
 returnValue ds 1
 
 	SEG CODE 

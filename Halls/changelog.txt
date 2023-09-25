@@ -667,10 +667,14 @@
 9/24/23
 	-First pass enemy AI tables
 	-Fixed a bug where blight damage caused the flags value to be corrupted, causing a crash.
+	-Some probably meaningless investigation into time to complete the game with different maze exit tables...
+	-Renamed mazeColor to mazeAndEffectColor
+9/25/23
+	-Fixed bug where initiating run against 4 enemies would take too long.
 
 KNOWN BUGS:
 	-Enemies cannot target other enemies... This is a major flaw with SDetermineEnemyAI
-	-Noticed a one-off scanline issue when exiting battle
+	-Noticed a scanline issue when exiting battle a few times
 		-Wasn't even generating a new maze...
 
 TODO:
@@ -696,8 +700,6 @@ TODO:
 	-Being guarded reduces blight damage, fix?
 	-Sharp increases attack power of unconscious party members
 
-	-Rename mazeColor variable to be more accurate
-
 	Additional sounds to consider:
 		-Footsteps
 		-Monster roar near exit
@@ -712,11 +714,19 @@ TODO:
 		-More text/messaging work
 		-Improve in-maze campfire graphics to look less squished when they appear
 		-Create all enemy graphics
-		-Create all enemy stats
-		-Create all enemy AI tables
+		-Tune all enemy AI tables
 		-Tune all enemy stats
 		-Tune all enemy colors
-		-Create all encounter tables
+		-Tune all encounter tables
 		-Tune maze exit tables
 		-Tune all visual effects
 		-Create all sound effects
+
+Data needed for Monster stat guessing: 
+	Scalings of party stats
+	Ability scalings
+	Party DPR by level
+	How many encounters per floor
+	How many turns each encounter should last
+		-Random, boss
+	How close are the margins? How close to death is the party when reaching the boss?

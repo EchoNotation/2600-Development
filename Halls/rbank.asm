@@ -31,7 +31,7 @@ RPlaceCompass:
 	lsr
 	lsr
 	tay
-	lda mazeColor
+	lda mazeAndEffectColor
 
 	sta COLUP0
 	sta COLUPF

@@ -408,7 +408,7 @@ LProcessCasting:
 
 	ldx cursorIndexAndMessageY ;spellID
 	jsr LLoadSoundInS
-	stx mazeColor
+	stx mazeAndEffectColor
 	ldx #7 ;Pre-spell delay
 	jsr LLoadEffect
 
@@ -1208,7 +1208,9 @@ LProcessRunning:
 	jsr LSetTotalAoETgtsOffensive
 .LFindMaxEnemySpeed
 	jsr LFindAoETgtOffensive ;X contains aoeTargetID after this call
-	jsr LGetBattlerSpeed
+	lda battleActions,x ;4 ahead of enemyID
+	tax
+	lda LEnemySpeed,x
 	cmp temp1
 	bcc .LNextIteration
 	sta temp1
@@ -1786,7 +1788,7 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 
 	;Y = 0 is non elemental, 1 is poison, 2 is electric, 3 is divine, 4 is ice, 5 is fire, 6 is physical
 	lda LDamageColors,y
-	sta mazeColor
+	sta mazeAndEffectColor
 
 	ldx temp3
 	lda battlerHP,x

@@ -49,6 +49,7 @@ SSoftReset:
 	stx partyBattlePos
 	stx cursorIndexAndMessageY
 	stx inBattle
+	stx currentSound
 
 #if BUILD_DEBUG
 	;Debug only code, do not include in final version!
@@ -72,7 +73,7 @@ SSoftReset:
 	;sta enemyHP+2
 	;sta enemyHP+3
 	;lda #$13
-	;sta mazeColor
+	;sta mazeAndEffectColor
 	;ldy #6 ;Function ID
 	;ldx #$07 ;Effect ID
 	;jsr SRunFunctionInLBank
@@ -141,8 +142,7 @@ SDontNeedANewBattler:
 	ldy #0 ;Subroutine ID for LDoBattle
 	jsr SRunFunctionInLBank
 	lda inBattle
-	bpl SJustExitedBattle
-	jmp SWaitForVblankTimer
+	bmi SWaitForVblankTimer
 
 SJustExitedBattle:
 	lda #STEP_GRACE_PERIOD
@@ -596,7 +596,7 @@ SSetupTransitionEffect: SUBROUTINE ;Interprets A as the transition flag constant
 	jsr SRunFunctionInLBank
 	rts
 
-SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate value based on the current game state
+SUpdateMazeColor: SUBROUTINE ;Updates the mazeAndEffectColor variable to the appropriate value based on the current game state
 	lda mazeAndPartyLevel
 	jsr S4Lsr
 	and #$0F ;A now contains the current maze level
@@ -617,7 +617,7 @@ SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate 
 .SSharedColorUpdating:
 	tay
 	lda SMazeColorsTransition,y
-	sta mazeColor
+	sta mazeAndEffectColor
 	lda #$FF
 	sta aoeValueAndCampfireControl ;Do not show the campfire if transitioning
 	rts
@@ -636,22 +636,28 @@ SUpdateMazeColor: SUBROUTINE ;Updates the mazeColor variable to the appropriate 
 .SNoTransition:
 	;Otherwise not in any transition, so just show normal colors
 	lda SMazeColors,y
-	sta mazeColor
+	sta mazeAndEffectColor
 	rts
 
 SInlineExits:
 	.byte 0
 	.byte 0
+	.byte 1
+	.byte 1
+	.byte 1
 	.byte 0
+	.byte 0
+	.byte 0
+
 SAdjacentExits:
 	.byte 0
 	.byte 0
-	.byte 1
-	.byte 1
-	.byte 1
 	.byte 0
 	.byte 0
 	.byte 0
+	.byte 1
+	.byte 1
+	.byte 1
 
 SGenerateMazeData: SUBROUTINE ;Will use the iterative algorithm I designed in order to generate a maze of size specified by #MAZE_WIDTH.
 							 ;Make sure to clear maze data before use.
