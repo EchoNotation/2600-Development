@@ -111,6 +111,7 @@ SStartOfFrame:
 SMazeLogicVBlank:
 	jsr SUpdateCampfireRendering
 	jsr SUpdateMazeRenderingPointers
+SMazeLogicVBlankAbridged:
 	jsr SUpdateCompassPointerBoss
 	jmp SGoToUpdateEffects ;Necessary for cursor flashing in party pos menu, and transitions to battle
 
@@ -149,7 +150,7 @@ SJustExitedBattle:
 	sta highlightedLineAndSteps
 	lda #TRANSITIONING_TO_MAZE
 	jsr SSetupTransitionEffect
-	bne SMazeLogicVBlank
+	jmp SMazeLogicVBlankAbridged
 
 SUpdateMenuRenderingVBlank:
 	jsr SUpdateMenuRendering
