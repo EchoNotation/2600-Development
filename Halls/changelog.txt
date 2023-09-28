@@ -671,11 +671,16 @@
 	-Renamed mazeColor to mazeAndEffectColor
 9/25/23
 	-Fixed bug where initiating run against 4 enemies would take too long.
+	-Maze pointers are no longer updated on the frame that battle is exited, hopefully this reduces the number of time overruns
+9/27/23
+	-Moved compass to the bottom of the maze instead of the top, and fixed complications to campfire configuration
+		-Stable at 263 scanlines.
 
 KNOWN BUGS:
 	-Enemies cannot target other enemies... This is a major flaw with SDetermineEnemyAI
 	-Noticed a scanline issue when exiting battle a few times
 		-Wasn't even generating a new maze...
+		-Possibly addressed as part of not rendering maze pointers on this frame anymore.
 
 TODO:
 	Mandatory:

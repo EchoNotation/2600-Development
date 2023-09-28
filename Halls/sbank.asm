@@ -40,7 +40,7 @@ SClearNames:
 	bpl SClearNames
 
 SSoftReset:
-	jsr SClearMazeData ;Only used here, can save 4 bytes by injecting that code here...
+	;jsr SClearMazeData ;Only used here, can save 4 bytes by injecting that code here...
 	ldx #$FF
 	stx currentMenu
 	inx
@@ -57,19 +57,27 @@ SSoftReset:
 	;sty cursorIndexAndMessageY
 	lda #$09 ;Maze level 0, party level 9
 	sta mazeAndPartyLevel
-	lda #$80
-	sta inBattle
-	lda #$81
+
+	lda #0
 	sta currentMenu
-	lda #1
-	sta menuSize
-	lda #$10
-	sta enemyID
-	lda #$11
-	sta enemyID+2
-	lda #1
-	sta enemyHP
-	sta enemyHP+1
+
+	lda #$20
+	sta campfireLocation
+	lda #$77
+	sta exitLocation
+	;lda #$80
+	;sta inBattle
+	;lda #$81
+	;sta currentMenu
+	;lda #1
+	;sta menuSize
+	;lda #$10
+	;sta enemyID
+	;lda #$11
+	;sta enemyID+2
+	;lda #1
+	;sta enemyHP
+	;sta enemyHP+1
 	;sta enemyHP+2
 	;sta enemyHP+3
 	;lda #$13
@@ -1340,9 +1348,9 @@ SUpdateCompassPointerBoss: SUBROUTINE ;Updates tempPointer1 in order to render a
 	cmp #$FF
 	bne .SNotOnExit
 	lda #(RLetterX & $FF)
-	sta tempPointer1
+	sta temp6
 	lda #(RLetterX >> 8 & $FF)
-	sta tempPointer1+1
+	sta tempPointer6
 	rts
 
 .SNotOnExit:
@@ -1365,12 +1373,12 @@ SUpdateCompassPointerBoss: SUBROUTINE ;Updates tempPointer1 in order to render a
 	;Set compass pointer and reflection state
 	tax
 	lda SArrowGraphicsLookup,X
-	sta tempPointer1
+	sta temp6
 	lda #(RArrowUp >> 8 & $FF)
-	sta tempPointer1+1
+	sta tempPointer6
 
 	lda SArrowReflectionLookup,X
-	sta REFP0
+	sta enemyAction
 	rts
 
 SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advances with the selected options if so.

@@ -23,47 +23,31 @@ RGoToRenderSetupScreen
 	jmp RRenderSetupScreen
 
 RRenderMazeView:
-RPlaceCompass:
-	sta WSYNC
-	lda mazeAndPartyLevel
-	lsr
-	lsr
-	lsr
-	lsr
-	tay
-	lda mazeAndEffectColor
-
-	sta COLUP0
-	sta COLUPF
-
-	;Delay in order to put the compass in the middle of the screen
-	cpx temp1
-	jsr RSpinWheels
-	lda #$C0
-	sta HMP0
-	sta RESP0
-	sta WSYNC
-	sta HMOVE
-	ldy #CHARACTER_HEIGHT
-RDrawCompass:
-	sta WSYNC
-	dey
-	bmi RPrepareToDrawMaze
-	lda (tempPointer1),y
-	sta GRP0
-	jmp RDrawCompass
 RPrepareToDrawMaze:
+	lda mazeAndEffectColor
+	sta COLUPF
 	lda #0
 	sta REFP0
 	sta HMCLR
-	iny
-	sty GRP0
+	sta GRP0
 	ldy #MAZE_HEIGHT
 	lda aoeValueAndCampfireControl
-	bmi RGoToDrawMazeNoFire
 	beq RConfigureNearFire
+	bmi RGoToDrawMazeNoFire
 RConfigureFarFire:
 	sta WSYNC
+	jsr RSpinWheels
+	jsr RSpinWheels
+	jsr RSpinWheels
+	nop
+	nop
+	nop
+	nop
+	sta RESP0
+	lda #$20
+	sta HMP0
+	sta WSYNC
+	sta HMOVE
 	lda #CAMPFIRE_COLOR
 	sta COLUP0
 	lda #(RDrawMazeFarFire >> 8 & $FF)
@@ -73,11 +57,15 @@ RConfigureFarFire:
 	lda #FAR_FIRE_MAZE_HEIGHT
 	bne RStoreFireMazeHeight
 RConfigureNearFire:
+	sta WSYNC
+	jsr RSpinWheels
+	jsr RSpinWheels
 	jsr RSpinWheels
 	nop
+	nop
+	lda #$10
 	sta RESP0
 	sta RESP1
-	lda #$10
 	sta HMP1
 	lda #CAMPFIRE_COLOR
 	sta COLUP0
@@ -92,6 +80,7 @@ RConfigureNearFire:
 	bne RStoreFireMazeHeight
 
 RGoToDrawMazeNoFire:
+	sta WSYNC
 	sta WSYNC
 	jmp RDrawMazeNoFire
 
@@ -300,8 +289,41 @@ RDoneDrawingMaze:
 	sty PF1
 	sty PF2
 	sty charIndex
+RPlaceCompass:
+	sta WSYNC
+	lda mazeAndPartyLevel
+	lsr
+	lsr
+	lsr
+	lsr
+	tay ;This doesn't do anything...
+	lda mazeAndEffectColor
+	sta COLUP0
+
+	;Delay in order to put the compass in the middle of the screen
+	;cpx temp1
+	jsr RSpinWheels
+	lda #$C0
+	sta HMP0
+	lda enemyAction
+	sta REFP0
+	sta RESP0
+	sta WSYNC
+	sta HMOVE
+	ldy #CHARACTER_HEIGHT
+RDrawCompass:
+	sta WSYNC
+	dey
+	bmi RDrawPartyInfoMaze
+	lda (temp6),y
+	sta GRP0
+	jmp RDrawCompass
 
 RDrawPartyInfoMaze:
+	cmp temp1
+	cmp temp1
+	cmp temp1
+
 	ldx #$03 ;Triplicate
 	stx NUSIZ0 ;Set both duplication registers to triplicate the sprites.
 	stx NUSIZ1
@@ -314,6 +336,8 @@ RDrawPartyInfoMaze:
 	cmp temp1
 	sta RESP0
 	sta RESP1
+
+	sta REFP0
 	
 	ldx #$E0 ;Moves one color clock to the left.
 	sta GRP1
