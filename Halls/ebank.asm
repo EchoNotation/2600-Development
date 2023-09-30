@@ -98,7 +98,7 @@ ImpAI:
 	.byte %00000000 ;Attack frontline
 	.byte %01000000 ;Attack any
 	.byte %11001000 ;Cast CHAOS
-	.byte %11010011 ;Cast SHIFT
+	.byte %11001000 ;
 WispAI:
 	.byte %11001001 ;Cast HEAL any
 	.byte %11001001 ;

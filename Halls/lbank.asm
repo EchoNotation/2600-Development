@@ -8,14 +8,14 @@ LReset:
 
 LBattleProcessLowBytes:
 	.byte (LProcessFighting & $FF)
-	.byte (LProcessMoving & $FF)
+	.byte (LProcessFighting & $FF)
 	.byte (LProcessRunning & $FF)
 	.byte (LProcessGuarding & $FF)
 	.byte (LProcessParrying & $FF)
 	.byte (LProcessSpecial & $FF)
 LBattleProcessHighBytes:
 	.byte (LProcessFighting >> 8 & $FF)
-	.byte (LProcessMoving >> 8 & $FF)
+	.byte (LProcessFighting >> 8 & $FF)
 	.byte (LProcessRunning >> 8 & $FF)
 	.byte (LProcessGuarding >> 8 & $FF)
 	.byte (LProcessParrying >> 8 & $FF)
@@ -778,14 +778,6 @@ LProcessCasting:
 	sta inBattle
 	rts
 
-.LShift:
-	lda partyBattlePos
-	eor #$0F
-	sta partyBattlePos
-	lda #$29 ;PARTY MIXED UP
-	sta currentMessage 
-	bne .LNormalTgtedExit
-
 .LTgtDamage:
 	ldx startingCursorIndexAndTargetID
 	jsr LApplyDamage
@@ -1014,7 +1006,6 @@ LHighSpellLogicLocations:
 	.byte (.LBanish >> 8 & $FF)
 	.byte (.LTrance >> 8 & $FF)
 	.byte (.LWish >> 8 & $FF)
-	.byte (.LShift >> 8 & $FF)
 	
 LLowSpellLogicLocations:
 	.byte $FF ;Back
@@ -1036,7 +1027,6 @@ LLowSpellLogicLocations:
 	.byte (.LBanish & $FF)
 	.byte (.LTrance & $FF)
 	.byte (.LWish & $FF)
-	.byte (.LShift & $FF)
 
 .LGoToCalculateFightDamage:
 	jmp .LCalculateFightDamage
@@ -1127,7 +1117,6 @@ LProcessFighting:
 	sta temp2 ;The raw damage number
 
 	ldx startingCursorIndexAndTargetID
-	jsr LApplyPositionalDamageModifier
 	jsr LApplySharpDamageModifier
 
 	ldx currentBattler
@@ -1148,7 +1137,6 @@ LProcessFighting:
 	sta temp2 ;Contains the raw damage number
 
 	ldx currentBattler
-	jsr LApplyPositionalDamageModifier
 	jsr LApplySharpDamageModifier
 
 	jsr LGetTargetFromActionOffensive ;Returns the target in X
@@ -1169,26 +1157,6 @@ LProcessFighting:
 	lda temp2
 	brk ;LBinaryToDecimal
 	sta cursorIndexAndMessageY
-	rts
-
-LProcessMoving:
-	lda #$81
-	sta inBattle
-	ldx currentBattler
-	lda partyBattlePos
-	eor LPartyPositionMasks,x
-	sta partyBattlePos
-	lda #$0C
-	sta temp2
-	lda partyBattlePos
-	and LPartyPositionMasks,x
-	beq .LBackline
-	bne .LSetMoveMessage
-.LBackline:
-	inc temp2
-.LSetMoveMessage:
-	lda temp2
-	sta currentMessage
 	rts
 
 LProcessRunning:
@@ -1479,7 +1447,7 @@ LEnterBattleSetup:
 	stx battleActions+1
 	stx battleActions+2
 	stx battleActions+3
-	lda #3
+	lda #2
 	sta menuSize
 	jsr LFindFirstLivingAlly
 	stx currentBattler
@@ -1689,30 +1657,6 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 .LSaveInBattle:
 	sta inBattle
 	lda #0 ;Return in LDoBattle
-	rts
-
-LApplyPositionalDamageModifier: SUBROUTINE ;Treats X as the absolute ID of the attacker, and modifies the binary damage in temp2 accordingly
-	cpx #4
-	bcs .LFullDamage ;Enemies do not have frontline/backline, so disregard the following checks
-
-	lda char1,x
-	and #$0F
-	tay ;Save the class of this battler for later
-	
-	lda LPartyPositionMasks,x
-	and partyBattlePos
-	bne .LBattlerInFrontline
-.LBattlerInBackline:
-	lda LFrontlineModifiers,y
-	eor #$01
-	bne .LHalfDamage
-	rts
-.LBattlerInFrontline:
-	lda LFrontlineModifiers,y
-	beq .LFullDamage
-.LHalfDamage:
-	lsr temp2
-.LFullDamage:
 	rts
 
 LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, and doubles their damage for this attack if so.
@@ -2199,12 +2143,6 @@ LClassFightMessages:
 	.byte $1 ;Wizard
 	.byte $1 ;Ranger
 	.byte $0 ;Paladin
-
-LPartyPositionMasks:
-	.byte $01
-	.byte $02
-	.byte $04
-	.byte $08
 
 LSpellListLookup:
 	.byte (LEmptySpellList & $FF)

@@ -147,7 +147,6 @@ mp1 ds 1
 mp2 ds 1
 mp3 ds 1
 mp4 ds 1
-partyBattlePos ds 1 ; ----4321 a 1 in that position indicates that that character is in the frontline ;Might be able to share
 playerX ds 1 ;0000XXXX
 playerY ds 1 ;0000YYYY
 playerFacing ds 1 ; 000000XX 00 is east, 01 is south, 10 is west, 11 is north

@@ -277,13 +277,6 @@ RDrawMazeNoFireNoExtraLine:
 	bcc RDrawMazeNoFireLoop
 RDoneDrawingMaze:
 	sta WSYNC
-	jsr RSpinWheels
-	jsr RSpinWheels
-	jsr RSpinWheels
-	sta RESBL
-	lda #1
-	sta VDELBL
-	sta WSYNC
 	ldy #0
 	sty PF0
 	sty PF1
@@ -608,15 +601,7 @@ RAfterSettingBattleMessage:
 	bcc RDrawBattleTextLoop
 
 RPostDrawingBattleText:
-	sta WSYNC
-	jsr RSpinWheels
-	jsr RSpinWheels
-	jsr RSpinWheels
-	sta RESBL
-	lda #1
-	sta VDELBL
-
-	ldx #1
+	ldx #2
 RWaitToDrawPlayerText:
 	sta WSYNC
 	dex
@@ -1234,17 +1219,6 @@ RDrawCharacterInfo: SUBROUTINE
 .RPostClassColorSetting:
 	sta WSYNC
 
-	lda partyBattlePos
-	and RPartyPositionMasks,x
-	beq .RBackline
-.RFrontline:
-	lda #FRONTLINE_INDICATOR_COLOR
-	jmp .RStoreIndicatorColor
-.RBackline:
-	lda #BACKLINE_INDICATOR_COLOR
-.RStoreIndicatorColor:
-	sta COLUPF
-
 	lda inBattle
 	beq .RNotInBattle
 	bne .RInBattle
@@ -1305,8 +1279,6 @@ RDrawCharacterInfo: SUBROUTINE
 	sta WSYNC
 .RNoExtraLine:
 
-	lda #2
-	sta ENABL
 	ldy #CHARACTER_HEIGHT-1
 	cmp temp1 ;Just used to delay 3 cycles
 .RDrawAvatarAndName:
@@ -1335,10 +1307,8 @@ RDrawCharacterInfo: SUBROUTINE
 	bpl .RDrawAvatarAndName
 
 	iny
-	sty ENABL
 	sty GRP0 ;Clear player graphics while HP, MP data is being prepared
 	sty GRP1
-	sty ENABL
 	sty GRP0
 	sty GRP1
 	rts
@@ -2287,12 +2257,6 @@ RCharacterHighLookupTable: ;Contains the high bytes of the pointers to all the c
 	.byte (RNumber7 >> 8 & $FF)
 	.byte (RNumber8 >> 8 & $FF)
 	.byte (RNumber9 >> 8 & $FF)
-
-RPartyPositionMasks:
-	.byte $01
-	.byte $02
-	.byte $04
-	.byte $08
 
 RLogoColors:
 	.byte $66
