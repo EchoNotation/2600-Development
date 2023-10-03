@@ -38,7 +38,7 @@ $F2 Party leveled up, check to see if member learned spell, else go to F3
 $F3 Check which type of positive conclusion this was (go to FD, FE, or FF)
 $F4 Party member learned spell, check to see if member learned spell, else go to F3
 $FC Game over! (player must reset)
-$FD THE MAZE AWAITS (next button press ends the battle, and moves to the next floor)
+$FD THE --- AWAITS (next button press ends the battle, and moves to the next floor)
 $FE Game completed! (player must reset)
 $FF (next button press ends the battle)
 
@@ -124,7 +124,7 @@ $0F - WITHER
 $10 - BANISH spell
 $11 - TRANCE
 $12 - WISH
-$13 - SHIFT
+$13 - Unallocated
 $14 - Menu move
 $15 - Menu confirm
 $16 - Menu nope
@@ -150,9 +150,9 @@ $06 - LLoadEffect
 
 --- ENEMY AI --- (STTIIIII) S: is Spell, TT: targeting mode, I: index
 TT:
-%00 Frontline
-%01 Backline
-%10 Any (should be used for allied effects or AoE spells)
+%00 None
+%01 Party
+%10 Enemies
 %11 Self
 I:
 %00000 Fight
@@ -183,12 +183,11 @@ F: WITHER : Deals poison damage to a single target
 10: BANISH : Attempts to banish all enemies 
 11: TRANCE : Self sleep 1, regain mana (1/4 of max?) (party members only)
 12: WISH : Clear all allies' status, restore allies' HP and MP by half magic power (party members only)
-13: SHIFT : Inverts party position
 
 --- SPELL TARGETING LOOKUP ---
 $00: No targeting (BACK, TRANCE)
 $01: Target enemy (FIRE, SLEEP, DRAIN, SMITE, POISON, BLIGHT, WITHER)
-$82: Target all enemies (BLIZRD, CHAOS, BANISH, SHIFT)
+$82: Target all enemies (BLIZRD, CHAOS, BANISH)
 $03: Target any ally (SHIELD, HEAL)
 $84: Target all allies (TRIAGE, SHARP, WISH)
 $05: Target highest health enemy (THUNDR)

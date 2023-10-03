@@ -46,7 +46,6 @@ SSoftReset:
 	inx
 	stx VDELBL
 	stx experienceToNextLevel
-	stx partyBattlePos
 	stx cursorIndexAndMessageY
 	stx inBattle
 	stx currentSound
@@ -63,8 +62,13 @@ SSoftReset:
 
 	lda #$20
 	sta campfireLocation
-	lda #$77
+	lda #$01
 	sta exitLocation
+	lda #10
+	sta hp1
+	sta hp2
+	sta hp3
+	sta hp4
 	;lda #$80
 	;sta inBattle
 	;lda #$81
@@ -138,8 +142,9 @@ SBattleLogicVBlank:
 	bne SDontNeedANewBattler
 	ldy #1 ;Subroutine ID for LDetermineNextBattler
 	jsr SRunFunctionInLBank
-	cmp #$FF
-	bne SDontNeedEnemyAI
+	ldx currentBattler
+	cpx #4
+	bcc SDontNeedEnemyAI
 	jsr SDetermineEnemyAI
 SDontNeedEnemyAI:
 	lda inBattle
@@ -189,6 +194,7 @@ SOverscan:
 	sta currentInput
 
 	jsr SUpdateSound
+	jsr SChangePartyInfo
 
 	lda inBattle
 	beq SMazeLogicOverscan ;Skip the following logic if we are in maze mode...
@@ -243,6 +249,7 @@ SMazeLogicWithoutSetupCheck:
 	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)
 	bne SPartyDidNotMove ;Party cannot move if in a transition
 	jsr SUpdatePlayerMovement
+	;jmp SPartyDidNotMove
 	cmp #$FF
 	bne SPartyDidNotMove
 	;Need to check for the maze exit and campfire location
@@ -348,8 +355,45 @@ SWaitForOverscanTimer:
 	lda INTIM
 	bne SWaitForOverscanTimer
 
-	sta WSYNC
 	jmp SStartOfFrame
+
+SChangePartyInfo: SUBROUTINE ;Changes whether RDrawCharacterInfo draws avatar and name, hp and mp, or class name
+	lda currentMenu
+	cmp #$FF
+	beq .SReturn
+	lda currentInput
+	eor previousInput
+	beq .SReturn
+	ldx inBattle
+	beq .SInMaze
+.SInBattle:
+	lda #RIGHT_MASK
+	bit currentInput
+	beq .SIncrement
+	lda #LEFT_MASK
+	bit currentInput
+	beq .SDecrement
+	rts
+.SInMaze:
+	lda #$08
+	bit currentInput
+	bne .SReturn
+.SIncrement:
+	ldx viewedPartyInfo
+	inx
+	cpx #3
+	bcc .SStoreAndReturn
+	ldx #0
+	beq .SStoreAndReturn
+.SDecrement:
+	ldx viewedPartyInfo
+	dex
+	bpl .SStoreAndReturn
+	ldx #2
+.SStoreAndReturn:
+	stx viewedPartyInfo
+.SReturn:
+	rts
 
 SMoveSetupCursor: SUBROUTINE ;Controls the movement of the cursor on the startup screen.
 	lda battleActions
@@ -1154,29 +1198,15 @@ SUpdateCampfireRendering: SUBROUTINE ;Updates the campfire control variable acco
 	rts
 
 SUpdatePlayerMovement: SUBROUTINE ;Checks the joystick input to see if the player should move in the maze
-	lda currentMenu
-	cmp #$80
-	beq .SInPositionSwapMenu
 	lda currentInput
 	cmp previousInput
 	beq .SReturnFromPlayerMovement2
-	lda #$08
-	bit currentInput
-	beq .SGoToForwardMovement
 	lda currentInput
 	bpl .SRightPressed
 	asl
 	bpl .SLeftPressed
 	asl
-	bmi .SGoToCheckForForwardMovement
-.SDownPressed:
-	lda #$80
-	sta currentMenu
-	lda #3
-	sta menuSize
-	ldx #1
-	ldy #6 ;LLoadEffect
-	jsr SRunFunctionInLBank
+	bmi .SCheckForForwardMovement
 	rts	
 .SRightPressed:
 	ldy playerFacing
@@ -1187,58 +1217,7 @@ SUpdatePlayerMovement: SUBROUTINE ;Checks the joystick input to see if the playe
 	ldy playerFacing
 	lda STurnLeft,y
 	sta playerFacing
-	rts
-.SInPositionSwapMenu:
-	lda currentInput
-	cmp previousInput
-	beq .SReturnFromPlayerMovement2
-	lda #$08 ;Mask for pressing button
-	bit currentInput
-	beq .SSwapBattlerPos
-	ldy currentBattler
-	lda #DOWN_MASK
-	bit currentInput
-	beq .SDownPressedInMenu
-	lda #UP_MASK
-	bit currentInput
-	beq .SUpPressedInMenu
 .SReturnFromPlayerMovement2:
-	rts
-.SGoToCheckForForwardMovement:
-	jmp .SCheckForForwardMovement
-.SGoToForwardMovement:
-	jmp .SMoveForward
-.SSwapBattlerPos:
-	lda #1
-	ldy currentBattler
-	iny
-.SPartyPosMaskLoop:
-	dey
-	beq .SAfterPartyPosMaskLoop
-	asl
-	jmp .SPartyPosMaskLoop
-.SAfterPartyPosMaskLoop:
-	eor partyBattlePos
-	sta partyBattlePos
-	rts
-.SDownPressedInMenu:
-	cpy menuSize
-	bcc .SNotAtLastPosition
-	rts
-.SNotAtLastPosition
-	iny
-	sty currentBattler
-	rts
-.SUpPressedInMenu:
-	ldy currentBattler
-	bne .SNotAtFirstPosition
-	lda #0
-	sta currentMenu
-	sta currentEffect
-	rts
-.SNotAtFirstPosition
-	dey
-	sty currentBattler
 	rts
 
 .SCheckForForwardMovement:
@@ -1468,8 +1447,6 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	beq .SSetFightAction
 	cmp #$81
 	beq .SEnterSpellMenu
-	cmp #$82
-	beq .SSetMoveAction
 	cmp #$83
 	beq .SSetRunAction
 	cmp #$84
@@ -1490,10 +1467,6 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	rts
 .SSetRunAction:
 	lda #$02
-	sta battleActions,x
-	jmp .SCheckNextBattler
-.SSetMoveAction:
-	lda #$01
 	sta battleActions,x
 	jmp .SCheckNextBattler
 .SSetFightAction:
@@ -1650,7 +1623,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	stx currentBattler ;Found another party member, keep getting actions!
 	lda #$80
 	sta currentMenu
-	lda #3
+	lda #2
 	sta menuSize
 	lda #0
 	sta cursorIndexAndMessageY
@@ -1710,16 +1683,14 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSt
 
 	jsr SSetMenuActiveLine
 
-	ldx #0
-	ldy startingCursorIndexAndTargetID
+	ldy #0
 .SOptionLinesLoop:
 	lda (tempPointer1),y
-	sta menuLines,x
-	inx
+	sta menuLines,y
 	iny
-	cpx #3
-	bcs .SReturn
-	bne .SOptionLinesLoop 
+	cpy #3
+	bcc .SOptionLinesLoop
+	rts
 
 .SSetupOtherAllyTargeting:
 	ldy cursorIndexAndMessageY
@@ -1972,6 +1943,14 @@ SCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in X, a
 	ldy tempPointer6
 	rts
 
+SClassTargetingBias:
+	.byte 3 ;Knight
+	.byte 2 ;Rogue
+	.byte 2 ;Cleric
+	.byte 1 ;Wizard
+	.byte 2 ;Ranger
+	.byte 3 ;Paladin
+
 SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
 	jmp SLoadEnemyAI
 SAfterLoadingEnemyAI:
@@ -1982,94 +1961,81 @@ SAfterLoadingEnemyAI:
 
 	lda temp5
 	and #$60 ;Get just the targeting mode
-	beq .SAITgtsFrontline
+	beq .STargetsNone
 	cmp #$20
-	beq .SAITgtsBackline
+	beq .STargetsParty
 	cmp #$40
-	beq .SAITgtsAny
-.SAITgtsSelf:
+	beq .STargetsEnemies
+.STargetsSelf:
 	lda currentBattler
 	and #$03
-	jmp .SSetActionTgt
-.SAITgtsFrontline:
-	lda partyBattlePos
-	beq .SAITgtsAny ;If no one is in the frontline, use random targeting
-	sta tempPointer4
-	bne .SPickTgtFromList
-
-.SAITgtsBackline:
-	lda partyBattlePos
-	eor #$0F
-	beq .SAITgtsAny ;If no one is in the backline, use random targeting
-	sta tempPointer4
-	bne .SPickTgtFromList
-
-.SAITgtsAny:
-	lda #$0F ;Include all conscious party members, regardless of their position
-	sta tempPointer4
-.SPickTgtFromList:
-	jsr SPopulatePlayerList
-
-	;Prevents infinite loop
-	lda temp1
-	and temp2
-	and temp3
-	and temp4
-	cmp #$FF
-	beq .SAITgtsAny
-
-	jsr SRandom
-	and #$03
+	jmp .SSaveAndExit
+	
+.STargetsParty:
+.SPopulatePlayerList:
+	ldx #0
+.SPopulatePlayerListLoop:
+	lda hp1,x
+	beq .SMemberUnconscious
+.SMemberConscious:
+	lda char1,x
+	and #$0F
 	tay
-	lda temp1,y
-	bpl .SSetActionTgt ;Got our target!
+	lda SClassTargetingBias,y
+.SMemberUnconscious:
+	sta tempPointer1,x
+	inx
+	cpx #4
+	bcc .SPopulatePlayerListLoop
 
+	ldx #0
 	jsr SRandom
-	and #$03
+	and #$0F
+.SFindPartyTargetLoop:
+	sec
+	sbc tempPointer1,x
+	bmi .SFoundPartyTarget
+	inx
+	cpx #4
+	bcc .SFindPartyTargetLoop
+	ldx #0
+	beq .SFindPartyTargetLoop
+.SFoundPartyTarget:
+	txa
+	jmp .SSaveAndExit
+
+.STargetsEnemies:
+	jsr SRandom
+	and #$03 ;A contains a random number between 0 and 3
 	tax
-	inx ;X now contains a random number from 1-4
-
-.SPickTgtLoop:
-	iny
-	tya
-	and #$03
-	tay
-	lda temp1,y
-	bmi .SPickTgtLoop
-.SValidTgt:
+	ldy #0
+.SFindEnemyLoop:
+	lda enemyHP,y
+	beq .SNoEnemyHere
 	dex
-	bne .SPickTgtLoop
-
-	lda temp1,y
-.SSetActionTgt:
+	bmi .SFoundEnemy
+.SNoEnemyHere:
+	iny
+	cpy #4
+	bcc .SFindEnemyLoop
+	ldy #0
+	beq .SFindEnemyLoop
+.SFoundEnemy:
+	tya ;A now contains the relative index of the enemy to target
+.STargetsNone:
+.SSaveAndExit:
 	jsr S5Asl
 	ora temp6
 	sta enemyAction
 	rts
 
-SPopulatePlayerList: SUBROUTINE ;Helper routine for enemy AI targeting
-	lda #$FF
-	ldx #4
-.SClearMemberList:
-	dex
-	sta temp1,x
-	bne .SClearMemberList
-
-	ldy #0
-.SFindTargetLoop:
-	lda hp1,x
-	beq .SNextPartyMember
-	lda SPartyPositionMasks,x
-	bit tempPointer4
-	beq .SNextPartyMember
-	txa
-	sta temp1,y
-	iny
-.SNextPartyMember:
-	inx
-	cpx #4
-	bcc .SFindTargetLoop
-	rts
+SPartyTargetingBias:
+	.byte 3
+	.byte 1
+	.byte 2
+	.byte 1
+	.byte 2
+	.byte 2
 
 	ORG $FC20
 	RORG $FC20
@@ -2090,26 +2056,17 @@ S4Asl:
 	asl
 	rts
 
-SPartyPositionMasks:
-	.byte $01
-	.byte $02
-	.byte $04
-	.byte $08
-
 SNormalBattleTable:
 	.byte $80
 	.byte $81
-	.byte $82
 	.byte $83
 SKnightBattleTable:
 	.byte $80
 	.byte $84
-	.byte $82
 	.byte $83
 SRogueBattleTable:
 	.byte $80
 	.byte $85
-	.byte $82
 	.byte $83
 
 SVoices:
@@ -2132,7 +2089,7 @@ SVoices:
 	.byte (SBanishSpellVoices & $FF)
 	.byte (STranceVoices & $FF)
 	.byte (SWishVoices & $FF)
-	.byte (SShiftVoices & $FF)
+	.byte 0
 	.byte (SMenuMoveVoices & $FF)
 	.byte (SMenuMoveVoices & $FF) ;Confirm and move are the same length using the same voices
 	.byte (SWitherVoices & $FF) ;Menu nope only uses 1 sample of voice 7
@@ -2310,13 +2267,6 @@ SWishVoices:
 	.byte $C
 	.byte $C
 	.byte $C
-SShiftVoices:
-	.byte $7
-	.byte $7
-	.byte $7
-	.byte $7
-	.byte $7
-	.byte $7
 SMenuMoveVoices:
 	.byte $C
 	.byte $C
@@ -2336,7 +2286,7 @@ SSoundLengths:
 	.byte 11 ;CHAOS
 	.byte 4 ;HEAL
 	.byte 10 ;SMITE
-	.byte 0 ;POISON??
+	.byte 0
 	.byte 8 ;SHARP
 	.byte 12 ;BLIGHT spell
 	.byte 9 ;TRIAGE
@@ -2344,7 +2294,7 @@ SSoundLengths:
 	.byte 10 ;BANISH
 	.byte 8 ;TRANCE
 	.byte 8 ;WISH
-	.byte 6 ;SHIFT
+	.byte 0
 	.byte 2 ;Menu move
 	.byte 2 ;Menu confirm
 	.byte 1 ;Menu nope
@@ -2361,7 +2311,7 @@ SSoundFrequencies:
 	.byte 4 ;CHAOS
 	.byte 5 ;HEAL
 	.byte 5 ;SMITE
-	.byte 1 ;POISON??
+	.byte 1 ;VOLLEY
 	.byte 5 ;SHARP
 	.byte 2 ;BLIGHT spell
 	.byte 5 ;TRIAGE
@@ -2369,7 +2319,7 @@ SSoundFrequencies:
 	.byte 6 ;BANISH
 	.byte 6 ;TRANCE
 	.byte 6 ;WISH
-	.byte 6 ;SHIFT
+	.byte 0
 	.byte 4 ;Menu move
 	.byte 4 ;Menu confirm
 	.byte 8 ;Menu nope
@@ -2394,7 +2344,7 @@ SPitches:
 	.byte (SBanishSpellPitches & $FF)
 	.byte (STrancePitches & $FF)
 	.byte (SWishPitches & $FF)
-	.byte (SShiftPitches & $FF)
+	.byte 0
 	.byte (SMenuMovePitches & $FF)
 	.byte (SMenuConfirmPitches & $FF)
 	.byte (SMenuNopePitches & $FF)
@@ -2572,13 +2522,6 @@ SWishPitches:
 	.byte $9
 	.byte $7
 	.byte $7
-SShiftPitches:
-	.byte $E
-	.byte $F
-	.byte $E
-	.byte $D
-	.byte $E
-	.byte $F
 SMenuMovePitches:
 	.byte $5
 	.byte $4

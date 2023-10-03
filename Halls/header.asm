@@ -1,7 +1,7 @@
 	processor 6502
 	include "vcs.h"
 
-BUILD_DEBUG = 1
+BUILD_DEBUG = 0
 
 ; --- Constants ---
 ;Kernel related
@@ -89,7 +89,7 @@ WEST = $01
 MAZE_WIDTH = 8
 MAX_MAZE_LEVEL = 3
 STEP_GRACE_PERIOD = 4
-ENCOUNTER_RATE_MASK = $FF ;$03 ;00 is 256/256, FF is 1/256
+ENCOUNTER_RATE_MASK = $00 ;$03 ;00 is 256/256, FF is 1/256
 
 ;Battle related
 TIMER_MASK = $80
@@ -147,7 +147,6 @@ mp1 ds 1
 mp2 ds 1
 mp3 ds 1
 mp4 ds 1
-partyBattlePos ds 1 ; ----4321 a 1 in that position indicates that that character is in the frontline ;Might be able to share
 playerX ds 1 ;0000XXXX
 playerY ds 1 ;0000YYYY
 playerFacing ds 1 ; 000000XX 00 is east, 01 is south, 10 is west, 11 is north
@@ -199,6 +198,7 @@ effectCounter ds 1
 effectCountdown ds 1
 mazeAndPartyLevel ds 1
 flags ds 1
+viewedPartyInfo ds 1
 fireMazeHeightAndMessageLine ds 1
 mazeAndEffectColor ds 1
 returnValue ds 1

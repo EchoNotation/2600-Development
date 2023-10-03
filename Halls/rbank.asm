@@ -277,13 +277,6 @@ RDrawMazeNoFireNoExtraLine:
 	bcc RDrawMazeNoFireLoop
 RDoneDrawingMaze:
 	sta WSYNC
-	jsr RSpinWheels
-	jsr RSpinWheels
-	jsr RSpinWheels
-	sta RESBL
-	lda #1
-	sta VDELBL
-	sta WSYNC
 	ldy #0
 	sty PF0
 	sty PF1
@@ -608,15 +601,7 @@ RAfterSettingBattleMessage:
 	bcc RDrawBattleTextLoop
 
 RPostDrawingBattleText:
-	sta WSYNC
-	jsr RSpinWheels
-	jsr RSpinWheels
-	jsr RSpinWheels
-	sta RESBL
-	lda #1
-	sta VDELBL
-
-	ldx #1
+	ldx #2
 RWaitToDrawPlayerText:
 	sta WSYNC
 	dex
@@ -625,12 +610,16 @@ RWaitToDrawPlayerText:
 RDrawPartyInfoBattle:
 	lda #0
 	sta charIndex
+	sta WSYNC
 	jsr RDrawCharacterInfo
 	inc charIndex
+	sta WSYNC
 	jsr RDrawCharacterInfo
 	inc charIndex
+	sta WSYNC
 	jsr RDrawCharacterInfo
 	inc charIndex
+	sta WSYNC
 	jsr RDrawCharacterInfo
 	lda #0
 	sta NUSIZ0
@@ -651,7 +640,7 @@ RAfterRendering:
 	jmp RGoToOverscan
 
 RRenderSetupScreen:
-	ldx #3
+	ldx #4
 RWaitToDrawSetupScreenLoop:
 	sta WSYNC
 	dex
@@ -1210,7 +1199,7 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	bpl .RSetEmptyLoop
 	rts
 
-RDrawCharacterInfo: SUBROUTINE
+RDrawCharacterInfo: SUBROUTINE ;Draws one party members mood and name, hp and mp, or class name depending on viewedPartyInfo variable
 	ldx charIndex ;Determine which character's data is about to be drawn
 	lda char1,x
 	and #$0F ;Get the class of this character
@@ -1234,35 +1223,10 @@ RDrawCharacterInfo: SUBROUTINE
 .RPostClassColorSetting:
 	sta WSYNC
 
-	lda partyBattlePos
-	and RPartyPositionMasks,x
-	beq .RBackline
-.RFrontline:
-	lda #FRONTLINE_INDICATOR_COLOR
-	jmp .RStoreIndicatorColor
-.RBackline:
-	lda #BACKLINE_INDICATOR_COLOR
-.RStoreIndicatorColor:
-	sta COLUPF
-
-	lda inBattle
-	beq .RNotInBattle
-	bne .RInBattle
-.RGoToShowingHPAndMP:
-	jmp .RShowingHPAndMP
-
-.RNotInBattle:
-	lda currentMenu
-	bne .RInBattlePosMenu
+	lda viewedPartyInfo
 	beq .RSetupMood
-.RInBattle
-.RInBattlePosMenu:
-	lda #LEFT_MASK
-	bit currentInput
-	beq .RGoToShowingHPAndMP
-	lda #RIGHT_MASK
-	bit currentInput
-	bne .RSetupMood
+	cmp #1
+	beq .RShowingHPAndMP
 	jmp .RShowingClassAndLevel
 
 .RSetupMood:
@@ -1280,11 +1244,6 @@ RDrawCharacterInfo: SUBROUTINE
 	sta temp6
 	jsr RSetTextPointers
 
-	lda currentMenu
-	bne .RCurrentlyInMenu
-	sta WSYNC
-.RCurrentlyInMenu:
-
 	ldx charIndex
 	lda char1,x
 	lsr
@@ -1298,15 +1257,9 @@ RDrawCharacterInfo: SUBROUTINE
 	sta tempPointer1
 	lda #(RAvatarHappy >> 8 & $FF)
 	sta tempPointer1+1
+	sta WSYNC
 
 .RDrawTheText:	
-	lda inBattle
-	beq .RNoExtraLine
-	sta WSYNC
-.RNoExtraLine:
-
-	lda #2
-	sta ENABL
 	ldy #CHARACTER_HEIGHT-1
 	cmp temp1 ;Just used to delay 3 cycles
 .RDrawAvatarAndName:
@@ -1335,10 +1288,8 @@ RDrawCharacterInfo: SUBROUTINE
 	bpl .RDrawAvatarAndName
 
 	iny
-	sty ENABL
 	sty GRP0 ;Clear player graphics while HP, MP data is being prepared
 	sty GRP1
-	sty ENABL
 	sty GRP0
 	sty GRP1
 	rts
@@ -2287,12 +2238,6 @@ RCharacterHighLookupTable: ;Contains the high bytes of the pointers to all the c
 	.byte (RNumber7 >> 8 & $FF)
 	.byte (RNumber8 >> 8 & $FF)
 	.byte (RNumber9 >> 8 & $FF)
-
-RPartyPositionMasks:
-	.byte $01
-	.byte $02
-	.byte $04
-	.byte $08
 
 RLogoColors:
 	.byte $66

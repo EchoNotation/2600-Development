@@ -675,12 +675,20 @@
 9/27/23
 	-Moved compass to the bottom of the maze instead of the top, and fixed complications to campfire configuration
 		-Stable at 263 scanlines.
+	-Started experimental branch for removing all party-position related code
+9/28/23
+	-Fixed bug where player moving through maze caused a miraculous timing issue where the screen would be 1 scanline bigger
+10/1/23
+	-Worked on a couple sound effects
+10/2/23
+	-Seemingly fixed enemy AI targeting
+	-Fixed off-by-one scanline issue on setup screen
+	-Changed RDrawCharacterInfo to pull from a state byte instead
+		-Press the button in the maze scene, left and right cycle in the battle scene
+		-No effect on the setup screen
+		-Fixed a few scanline issues
 
 KNOWN BUGS:
-	-Enemies cannot target other enemies... This is a major flaw with SDetermineEnemyAI
-	-Noticed a scanline issue when exiting battle a few times
-		-Wasn't even generating a new maze...
-		-Possibly addressed as part of not rendering maze pointers on this frame anymore.
 
 TODO:
 	Mandatory:
@@ -691,6 +699,7 @@ TODO:
 		-SLIME
 		-OOZE
 		-ARMOR
+		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
 
@@ -708,19 +717,21 @@ TODO:
 	Additional sounds to consider:
 		-Footsteps
 		-Monster roar near exit
+		-Enter battle sound
 		-Level up jingle
 		-Battle victory jingle
 		-Game victory jingle
 		-Game over jingle
-		-Going down stairs sound
-		-Crackling campfire sound (would need to be a loop, so it's almost certainly out of scope)
+		-Going down stairs sound?
 
 	DOESN'T REQUIRE LOGIC:
 		-More text/messaging work
+		-Add updated font
 		-Improve in-maze campfire graphics to look less squished when they appear
 		-Create all enemy graphics
 		-Tune all enemy AI tables
 		-Tune all enemy stats
+		-Pick all enemy resistances
 		-Tune all enemy colors
 		-Tune all encounter tables
 		-Tune maze exit tables
