@@ -610,12 +610,16 @@ RWaitToDrawPlayerText:
 RDrawPartyInfoBattle:
 	lda #0
 	sta charIndex
+	sta WSYNC
 	jsr RDrawCharacterInfo
 	inc charIndex
+	sta WSYNC
 	jsr RDrawCharacterInfo
 	inc charIndex
+	sta WSYNC
 	jsr RDrawCharacterInfo
 	inc charIndex
+	sta WSYNC
 	jsr RDrawCharacterInfo
 	lda #0
 	sta NUSIZ0
@@ -636,7 +640,7 @@ RAfterRendering:
 	jmp RGoToOverscan
 
 RRenderSetupScreen:
-	ldx #3
+	ldx #4
 RWaitToDrawSetupScreenLoop:
 	sta WSYNC
 	dex
@@ -1195,7 +1199,7 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	bpl .RSetEmptyLoop
 	rts
 
-RDrawCharacterInfo: SUBROUTINE
+RDrawCharacterInfo: SUBROUTINE ;Draws one party members mood and name, hp and mp, or class name depending on viewedPartyInfo variable
 	ldx charIndex ;Determine which character's data is about to be drawn
 	lda char1,x
 	and #$0F ;Get the class of this character
@@ -1219,24 +1223,10 @@ RDrawCharacterInfo: SUBROUTINE
 .RPostClassColorSetting:
 	sta WSYNC
 
-	lda inBattle
-	beq .RNotInBattle
-	bne .RInBattle
-.RGoToShowingHPAndMP:
-	jmp .RShowingHPAndMP
-
-.RNotInBattle:
-	lda currentMenu
-	bne .RInBattlePosMenu
+	lda viewedPartyInfo
 	beq .RSetupMood
-.RInBattle
-.RInBattlePosMenu:
-	lda #LEFT_MASK
-	bit currentInput
-	beq .RGoToShowingHPAndMP
-	lda #RIGHT_MASK
-	bit currentInput
-	bne .RSetupMood
+	cmp #1
+	beq .RShowingHPAndMP
 	jmp .RShowingClassAndLevel
 
 .RSetupMood:
@@ -1254,11 +1244,6 @@ RDrawCharacterInfo: SUBROUTINE
 	sta temp6
 	jsr RSetTextPointers
 
-	lda currentMenu
-	bne .RCurrentlyInMenu
-	sta WSYNC
-.RCurrentlyInMenu:
-
 	ldx charIndex
 	lda char1,x
 	lsr
@@ -1272,13 +1257,9 @@ RDrawCharacterInfo: SUBROUTINE
 	sta tempPointer1
 	lda #(RAvatarHappy >> 8 & $FF)
 	sta tempPointer1+1
+	sta WSYNC
 
 .RDrawTheText:	
-	lda inBattle
-	beq .RNoExtraLine
-	sta WSYNC
-.RNoExtraLine:
-
 	ldy #CHARACTER_HEIGHT-1
 	cmp temp1 ;Just used to delay 3 cycles
 .RDrawAvatarAndName:

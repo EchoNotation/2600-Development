@@ -142,8 +142,9 @@ SBattleLogicVBlank:
 	bne SDontNeedANewBattler
 	ldy #1 ;Subroutine ID for LDetermineNextBattler
 	jsr SRunFunctionInLBank
-	cmp #$FF
-	bne SDontNeedEnemyAI
+	ldx currentBattler
+	cpx #4
+	bcc SDontNeedEnemyAI
 	jsr SDetermineEnemyAI
 SDontNeedEnemyAI:
 	lda inBattle
@@ -193,6 +194,7 @@ SOverscan:
 	sta currentInput
 
 	jsr SUpdateSound
+	jsr SChangePartyInfo
 
 	lda inBattle
 	beq SMazeLogicOverscan ;Skip the following logic if we are in maze mode...
@@ -354,6 +356,44 @@ SWaitForOverscanTimer:
 	bne SWaitForOverscanTimer
 
 	jmp SStartOfFrame
+
+SChangePartyInfo: SUBROUTINE ;Changes whether RDrawCharacterInfo draws avatar and name, hp and mp, or class name
+	lda currentMenu
+	cmp #$FF
+	beq .SReturn
+	lda currentInput
+	eor previousInput
+	beq .SReturn
+	ldx inBattle
+	beq .SInMaze
+.SInBattle:
+	lda #RIGHT_MASK
+	bit currentInput
+	beq .SIncrement
+	lda #LEFT_MASK
+	bit currentInput
+	beq .SDecrement
+	rts
+.SInMaze:
+	lda #$08
+	bit currentInput
+	bne .SReturn
+.SIncrement:
+	ldx viewedPartyInfo
+	inx
+	cpx #3
+	bcc .SStoreAndReturn
+	ldx #0
+	beq .SStoreAndReturn
+.SDecrement:
+	ldx viewedPartyInfo
+	dex
+	bpl .SStoreAndReturn
+	ldx #2
+.SStoreAndReturn:
+	stx viewedPartyInfo
+.SReturn:
+	rts
 
 SMoveSetupCursor: SUBROUTINE ;Controls the movement of the cursor on the startup screen.
 	lda battleActions
@@ -1161,9 +1201,6 @@ SUpdatePlayerMovement: SUBROUTINE ;Checks the joystick input to see if the playe
 	lda currentInput
 	cmp previousInput
 	beq .SReturnFromPlayerMovement2
-	lda #$08
-	bit currentInput
-	beq .SMoveForward
 	lda currentInput
 	bpl .SRightPressed
 	asl
@@ -1912,7 +1949,7 @@ SClassTargetingBias:
 	.byte 2 ;Cleric
 	.byte 1 ;Wizard
 	.byte 2 ;Ranger
-	.byte 2 ;Paladin
+	.byte 3 ;Paladin
 
 SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
 	jmp SLoadEnemyAI
@@ -1933,16 +1970,39 @@ SAfterLoadingEnemyAI:
 	lda currentBattler
 	and #$03
 	jmp .SSaveAndExit
+	
 .STargetsParty:
+.SPopulatePlayerList:
+	ldx #0
+.SPopulatePlayerListLoop:
+	lda hp1,x
+	beq .SMemberUnconscious
+.SMemberConscious:
+	lda char1,x
+	and #$0F
+	tay
+	lda SClassTargetingBias,y
+.SMemberUnconscious:
+	sta tempPointer1,x
+	inx
+	cpx #4
+	bcc .SPopulatePlayerListLoop
+
+	ldx #0
 	jsr SRandom
-	tax
-	lda #0
-	sta aoeTargetID
-	
-	lda char1,y
-	
-
-
+	and #$0F
+.SFindPartyTargetLoop:
+	sec
+	sbc tempPointer1,x
+	bmi .SFoundPartyTarget
+	inx
+	cpx #4
+	bcc .SFindPartyTargetLoop
+	ldx #0
+	beq .SFindPartyTargetLoop
+.SFoundPartyTarget:
+	txa
+	jmp .SSaveAndExit
 
 .STargetsEnemies:
 	jsr SRandom
@@ -1968,6 +2028,14 @@ SAfterLoadingEnemyAI:
 	ora temp6
 	sta enemyAction
 	rts
+
+SPartyTargetingBias:
+	.byte 3
+	.byte 1
+	.byte 2
+	.byte 1
+	.byte 2
+	.byte 2
 
 	ORG $FC20
 	RORG $FC20
@@ -2021,7 +2089,7 @@ SVoices:
 	.byte (SBanishSpellVoices & $FF)
 	.byte (STranceVoices & $FF)
 	.byte (SWishVoices & $FF)
-	.byte (SShiftVoices & $FF)
+	.byte 0
 	.byte (SMenuMoveVoices & $FF)
 	.byte (SMenuMoveVoices & $FF) ;Confirm and move are the same length using the same voices
 	.byte (SWitherVoices & $FF) ;Menu nope only uses 1 sample of voice 7
@@ -2199,13 +2267,6 @@ SWishVoices:
 	.byte $C
 	.byte $C
 	.byte $C
-SShiftVoices:
-	.byte $7
-	.byte $7
-	.byte $7
-	.byte $7
-	.byte $7
-	.byte $7
 SMenuMoveVoices:
 	.byte $C
 	.byte $C
@@ -2225,7 +2286,7 @@ SSoundLengths:
 	.byte 11 ;CHAOS
 	.byte 4 ;HEAL
 	.byte 10 ;SMITE
-	.byte 0 ;POISON??
+	.byte 0
 	.byte 8 ;SHARP
 	.byte 12 ;BLIGHT spell
 	.byte 9 ;TRIAGE
@@ -2233,7 +2294,7 @@ SSoundLengths:
 	.byte 10 ;BANISH
 	.byte 8 ;TRANCE
 	.byte 8 ;WISH
-	.byte 6 ;SHIFT
+	.byte 0
 	.byte 2 ;Menu move
 	.byte 2 ;Menu confirm
 	.byte 1 ;Menu nope
@@ -2250,7 +2311,7 @@ SSoundFrequencies:
 	.byte 4 ;CHAOS
 	.byte 5 ;HEAL
 	.byte 5 ;SMITE
-	.byte 1 ;POISON??
+	.byte 1 ;VOLLEY
 	.byte 5 ;SHARP
 	.byte 2 ;BLIGHT spell
 	.byte 5 ;TRIAGE
@@ -2258,7 +2319,7 @@ SSoundFrequencies:
 	.byte 6 ;BANISH
 	.byte 6 ;TRANCE
 	.byte 6 ;WISH
-	.byte 6 ;SHIFT
+	.byte 0
 	.byte 4 ;Menu move
 	.byte 4 ;Menu confirm
 	.byte 8 ;Menu nope
@@ -2283,7 +2344,7 @@ SPitches:
 	.byte (SBanishSpellPitches & $FF)
 	.byte (STrancePitches & $FF)
 	.byte (SWishPitches & $FF)
-	.byte (SShiftPitches & $FF)
+	.byte 0
 	.byte (SMenuMovePitches & $FF)
 	.byte (SMenuConfirmPitches & $FF)
 	.byte (SMenuNopePitches & $FF)
@@ -2461,13 +2522,6 @@ SWishPitches:
 	.byte $9
 	.byte $7
 	.byte $7
-SShiftPitches:
-	.byte $E
-	.byte $F
-	.byte $E
-	.byte $D
-	.byte $E
-	.byte $F
 SMenuMovePitches:
 	.byte $5
 	.byte $4

@@ -1250,18 +1250,20 @@ LProcessParrying:
 LProcessSpecial:
 	ldx currentBattler
 	lda battleActions,x ;battleActions is 4 bytes before enemyID
-	cmp #$1E ;TODO replace with LICH id
+	cmp #$1E
 	beq .LLichSpecial
 	cmp #$1A
 	beq .LJesterSpecial
-	cmp #$6 ;TODO replace with GIFT id
+	cmp #$6
 	beq .LGiftSpecial
-	cmp #$23 ;TODO replace with OOZE id
+	cmp #$23
 	beq .LOozeSpecial
-	cmp #$1D ;TODO replace with SLIME id
+	cmp #$1D
 	beq .LSlimeSpecial
 	cmp #$1B
 	beq .LArmorSpecial
+	cmp #$24
+	beq .LHorrorSpecial
 	rts
 
 .LLichSpecial:
@@ -1317,6 +1319,9 @@ LProcessSpecial:
 	rts
 
 .LArmorSpecial:
+	rts
+
+.LHorrorSpecial:
 	rts
 
 LFindNextEmptySpot: SUBROUTINE ;Starting from position X, returns the first empty spot in X. #$FF if no spot exists
@@ -1490,10 +1495,6 @@ LEnterBattleSetup:
 	eor hasAction
 	sta hasAction ;Mark that this battler has already taken their action
 	cpx #4
-	bcs .LDetermineEnemyAI
-	rts
-.LDetermineEnemyAI
-	lda #$FF ;Signal the S bank to determine enemy AI
 	rts
 
 LCheckSpellHit: SUBROUTINE ;Determines if the spell corresponding to ID X should miss (because the target battler is unconscious or dead). Returns FF if the spell misses
