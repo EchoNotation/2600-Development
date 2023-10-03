@@ -687,6 +687,9 @@
 		-Press the button in the maze scene, left and right cycle in the battle scene
 		-No effect on the setup screen
 		-Fixed a few scanline issues
+	-Fixed bug where leaving the cast menu would set the wrong menuSize
+	-Entering cast menu now starts the cursor on the first spell instead of the back button
+	-Possibly unhinged font choices
 
 KNOWN BUGS:
 
@@ -726,7 +729,6 @@ TODO:
 
 	DOESN'T REQUIRE LOGIC:
 		-More text/messaging work
-		-Add updated font
 		-Improve in-maze campfire graphics to look less squished when they appear
 		-Create all enemy graphics
 		-Tune all enemy AI tables

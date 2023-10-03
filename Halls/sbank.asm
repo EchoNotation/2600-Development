@@ -1509,8 +1509,6 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	dex
 .SDontClampLevel:
 	stx menuSize
-	ldy #0
-	sty cursorIndexAndMessageY
 	lda #$84
 	sta currentMenu
 	rts
@@ -1536,7 +1534,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	sta currentMenu
 	lda #1 ;Put the cursor on CAST
 	sta cursorIndexAndMessageY
-	lda #3
+	lda #2
 	sta menuSize
 	rts
 .SCheckSpellLogic:
