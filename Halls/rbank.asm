@@ -2006,12 +2006,12 @@ REnemyNameLookup: ;This table could be turned into a calculation RZombieText + (
 
 REnemyColorLookup:
 	.byte $0A ;Wolf
-	.byte $DA ;Druid
-	.byte $36 ;Shroom
-	.byte $38 ;Squire
-	.byte $B8 ;Archer
+	.byte $B6 ;Druid
+	.byte $46 ;Shroom
+	.byte $44 ;Squire
+	.byte $D6 ;Archer
 	.byte $FC ;Priest
-	.byte $88 ;Gift
+	.byte $96 ;Gift
 	.byte $0C ;Sword
 	.byte $0C ;Shield
 	.byte $D6 ;Zombie

@@ -40,7 +40,7 @@ SClearNames:
 	bpl SClearNames
 
 SSoftReset:
-	;jsr SClearMazeData ;Only used here, can save 4 bytes by injecting that code here...
+	jsr SClearMazeData ;Only used here, can save 4 bytes by injecting that code here...
 	ldx #$FF
 	stx currentMenu
 	inx
@@ -54,21 +54,22 @@ SSoftReset:
 	;Debug only code, do not include in final version!
 	;ldy #0
 	;sty cursorIndexAndMessageY
-	lda #$09 ;Maze level 0, party level 9
-	sta mazeAndPartyLevel
+	;lda #$09 ;Maze level 0, party level 9
+	;sta mazeAndPartyLevel
+	lda #24
+	sta cursorIndexAndMessageY
+	;lda #0
+	;sta currentMenu
 
-	lda #0
-	sta currentMenu
-
-	lda #$20
-	sta campfireLocation
-	lda #$01
-	sta exitLocation
-	lda #10
-	sta hp1
-	sta hp2
-	sta hp3
-	sta hp4
+	;lda #$20
+	;sta campfireLocation
+	;lda #$01
+	;sta exitLocation
+	;lda #10
+	;sta hp1
+	;sta hp2
+	;sta hp3
+	;sta hp4
 	;lda #$80
 	;sta inBattle
 	;lda #$81
@@ -361,6 +362,9 @@ SChangePartyInfo: SUBROUTINE ;Changes whether RDrawCharacterInfo draws avatar an
 	lda currentMenu
 	cmp #$FF
 	beq .SReturn
+	lda flags
+	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_MAZE | TRANSITIONING_TO_CAMPFIRE)
+	bne .SReturn
 	lda currentInput
 	eor previousInput
 	beq .SReturn
@@ -879,6 +883,11 @@ SClearMazeData: SUBROUTINE ;Sets all the vertical and horizontal edges of the ma
 
 SGetMazeRoomData: SUBROUTINE ;Returns the four edges (0000NSEW) of the room specified by X and Y
 	dec $FC ;Remove the unused byte from the brk instruction
+	lda $FC
+	cmp #$FF
+	bne .SNoExtraDecrementNeeded
+	dec $FD
+.SNoExtraDecrementNeeded:
 	stx temp4
 	sty temp5
 	lda #0
@@ -1852,7 +1861,7 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSt
 	bpl .SEnforceSpellLoop
 	rts
 
-SSetMenuActiveLine: SUBROUTINE
+SSetMenuActiveLine: SUBROUTINE ;Determines which of the three menu lines is currently hovered by the cursor
 	lda menuSize
 	cmp #3
 	bcs .SAtLeastThree
@@ -2026,14 +2035,6 @@ SAfterLoadingEnemyAI:
 	ora temp6
 	sta enemyAction
 	rts
-
-SPartyTargetingBias:
-	.byte 3
-	.byte 1
-	.byte 2
-	.byte 1
-	.byte 2
-	.byte 2
 
 	ORG $FC20
 	RORG $FC20
@@ -2603,7 +2604,6 @@ SSpellTargetingLookup:
 	.byte $82 ;BANISH
 	.byte $0 ;TRANCE
 	.byte $84 ;WISH
-	.byte $82 ;SHIFT
 
 	;There's 96 bytes in here...
 

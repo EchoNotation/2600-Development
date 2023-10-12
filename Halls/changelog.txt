@@ -690,32 +690,41 @@
 	-Fixed bug where leaving the cast menu would set the wrong menuSize
 	-Entering cast menu now starts the cursor on the first spell instead of the back button
 	-Possibly unhinged font choices
+10/7/23
+	-Added random damage bumps based loosely on level
+		-Buffs blight quite a lot at lower levels...
+10/8/23
+	-It is no longer possible to run from boss fights
+	-Enemies with legendary resistance now take 50% reduced damage from all sources, separately from their elemental resistance.
+	-Party members are excited by leveling up
+10/9/23
+	-Viewed party info can no longer be updated during transitions
+	-THUNDR spell now targets correctly
 
 KNOWN BUGS:
 
 TODO:
-	Mandatory:
+	Shortlist:
 	-Implement all enemy special abilities
 		-LICH (untested)
 		-JESTER (untested)
 		-GIFT (untested)
 		-SLIME
 		-OOZE
-		-ARMOR
+		-ARMOR (revive sword and shield, otherwise cast SHARP?)
 		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
+	-Sleep chance is not affected by Legendary resistance if attempted during CHAOS
+	-Running should be slightly random anyway?
 
-	Nice:
-	-Add call for excited avatar
-	-Random damage and healing offsets
-	-Make enemies with legendary resistance take 50% less damage from all sources
-		-Preferably don't factor this in when showing damage messages
-		-Nerfs blight significantly against bosses...
-
-	Ehh:
+	Longlist:
+	-Better input handling technique
 	-Being guarded reduces blight damage, fix?
 	-Sharp increases attack power of unconscious party members
+	-Maybe need to buff blight to 1/4 max HP per round
+	-Enemies can GUARD themselves
+		-Could consider making target enemies AI pattern exclude the user
 
 	Additional sounds to consider:
 		-Footsteps
@@ -729,22 +738,17 @@ TODO:
 
 	DOESN'T REQUIRE LOGIC:
 		-More text/messaging work
+		-Improve font
 		-Improve in-maze campfire graphics to look less squished when they appear
 		-Create all enemy graphics
 		-Tune all enemy AI tables
 		-Tune all enemy stats
+			-Attack, magic, speed, HP, experience
 		-Pick all enemy resistances
 		-Tune all enemy colors
 		-Tune all encounter tables
+		-Tune spell mana costs
 		-Tune maze exit tables
+		-Tune encounter rate
 		-Tune all visual effects
 		-Create all sound effects
-
-Data needed for Monster stat guessing: 
-	Scalings of party stats
-	Ability scalings
-	Party DPR by level
-	How many encounters per floor
-	How many turns each encounter should last
-		-Random, boss
-	How close are the margins? How close to death is the party when reaching the boss?

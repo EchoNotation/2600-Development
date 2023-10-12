@@ -214,6 +214,8 @@ LProcessCharacterAdvancement:
 	lda char1,x
 	and #$0f
 	tay
+	ora #(EXCITED << 4)
+	sta char1,x
 	lda hp1,x
 	clc
 	adc LHPDeltas,y
@@ -222,6 +224,7 @@ LProcessCharacterAdvancement:
 	clc
 	adc LMPDeltas,y
 	sta mp1,x
+
 	dex
 	bpl .LApplyLevelUpDeltas
 	cld
@@ -563,9 +566,9 @@ LProcessCasting:
 .LHighestHPTargetingEnemy:
 	ldx currentBattler
 	cpx #4
-	bcs .LFindMaxHPEnemy
+	bcc .LFindMaxHPEnemy
 	ldy #0
-	bne .LFindMaxHP
+	beq .LFindMaxHP
 .LFindMaxHPEnemy:
 	ldy #4
 .LFindMaxHP:
@@ -1171,6 +1174,13 @@ LProcessRunning:
 .LInitiateRun:
 	lda #$14 ;X TRIES TO RUN
 	sta currentMessage
+
+	lda playerX
+	jsr L4Asl
+	ora playerY
+	cmp exitLocation
+	beq .LCannotRunAway
+
 	lda #0
 	sta temp1
 	jsr LSetTotalAoETgtsOffensive
@@ -1671,10 +1681,24 @@ LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, 
 .LNoSharp:
 	rts
 
-LApplyRandomModifier: SUBROUTINE
+LApplyRandomModifier: SUBROUTINE ;Adds a random number between 0-1 if the party is level 1, 2, or 3, otherwise adds a random number between 0-7
 	lda mazeAndPartyLevel
 	and #$0F
-	
+	lsr
+	lsr
+	beq .LLevel123
+.LEveryLevelGreaterThan3
+	lda #$03
+	bne .LCalculate
+.LLevel123
+	lda #$01
+.LCalculate:
+	sta tempPointer1
+	jsr LRandom
+	and tempPointer1
+	clc
+	adc temp2
+	sta temp2
 	rts
 
 LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
@@ -1682,9 +1706,13 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
 	stx temp3
 	sty temp4
+	jsr LApplyRandomModifier
+	ldx temp3
+	ldy temp4
 	cpy #$FF
 	beq .LCheckIfGuarded
 	jsr LGetBattlerResistances
+	sta temp5 ;The resistances for this battler
 	and temp4
 	beq .LCheckIfGuarded
 	lsr temp2
@@ -1696,6 +1724,11 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	lsr temp2
 	lsr temp2
 .LNotGuarded:
+	;Determine if this battler benefits from Legendary resistance
+	lda temp5
+	bpl .LNotBoss
+	lsr temp2
+.LNotBoss:
 	lda temp2 ;A now contains the final binary damage that should be dealt to target X
 	bne .LNonZeroDamage
 	lda #1
@@ -1742,10 +1775,18 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	beq .LDied
 	bcc .LDied
 .LSurvived:
+	ldy temp5
+	bpl .LNormalEnemyLived
+	asl temp2
+.LNormalEnemyLived:
 	sta battlerHP,x
 	lda #0
 	rts
 .LDied:
+	ldy temp5
+	bpl .LNormalEnemyDied
+	asl temp2
+.LNormalEnemyDied
 	lda #$FF
 	rts
 
@@ -2274,7 +2315,7 @@ LEnemySpeed:
 	.byte 1 ;Campfire
 
 LEnemyMagic:
-	.byte 4 ;Wolf
+	.byte 1 ;Wolf
 	.byte 1 ;Druid
 	.byte 1 ;Shroom
 	.byte 1 ;Squire
@@ -2314,7 +2355,7 @@ LEnemyMagic:
 	.byte 1 ;Campfire
 
 LEnemyHP:
-	.byte 20 ;Wolf
+	.byte 1 ;Wolf
 	.byte 1 ;Druid
 	.byte 1 ;Shroom
 	.byte 1 ;Squire
@@ -2329,6 +2370,7 @@ LZombieHP:
 LSkltonHP:
 	.byte 1 ;Sklton
 	.byte 1 ;Mage
+LGoopHP:
 	.byte 1 ;Goop
 	.byte 1 ;Warlok
 	.byte 1 ;Imp
@@ -2346,6 +2388,7 @@ LSkltonHP:
 	.byte 1 ;Jester
 	.byte 1 ;Armor
 	.byte 1 ;Spider
+LSlimeHP:
 	.byte 1 ;Slime
 	.byte 1 ;Lich
 	.byte 1 ;Shfflr
@@ -2359,7 +2402,7 @@ LSkltonHP:
 ;Format is LPFIHEPR
 ;L : Legendary (bosses), P : Physical, F : Fire, I : Ice, H : Holy, E : Electric, P : Poison, R : isRanged (prevents riposte)
 LEnemyResistances:
-	.byte #%01011010 ;Wolf
+	.byte #%00000000 ;Wolf
 	.byte #%00000000 ;Druid
 	.byte #%00000000 ;Shroom
 	.byte #%00000000 ;Squire
@@ -2703,6 +2746,8 @@ LBinaryToDecimal: SUBROUTINE ;Will interpret A as the number in binary to conver
 	inx
 	inx
 	dec $00,x ;Trim the extra address increment that happens as part of brk
+
+	;Consider adding overflow protection here like in SGetMazeRoomData
 
 	ldx #0
 .LRemove10s:
