@@ -700,6 +700,10 @@
 10/9/23
 	-Viewed party info can no longer be updated during transitions
 	-THUNDR spell now targets correctly
+10/12/23
+	-Added starting monster experience and level experience requirements
+	-Ranger no longer has the same max attack scaling of Rogue
+	-Changed HP, MP and speed scalings
 
 KNOWN BUGS:
 
@@ -716,15 +720,16 @@ TODO:
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
 	-Sleep chance is not affected by Legendary resistance if attempted during CHAOS
-	-Running should be slightly random anyway?
+	-Healing spells probably need higher magic power scalings to account for scaling difference between magic and HP
+	-Enemies can GUARD themselves
+		-Could consider making target enemies AI pattern exclude the user
 
 	Longlist:
 	-Better input handling technique
 	-Being guarded reduces blight damage, fix?
 	-Sharp increases attack power of unconscious party members
 	-Maybe need to buff blight to 1/4 max HP per round
-	-Enemies can GUARD themselves
-		-Could consider making target enemies AI pattern exclude the user
+	-Running should be slightly random anyway?
 
 	Additional sounds to consider:
 		-Footsteps

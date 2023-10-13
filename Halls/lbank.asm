@@ -1683,14 +1683,12 @@ LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, 
 
 LApplyRandomModifier: SUBROUTINE ;Adds a random number between 0-1 if the party is level 1, 2, or 3, otherwise adds a random number between 0-7
 	lda mazeAndPartyLevel
-	and #$0F
-	lsr
-	lsr
-	beq .LLevel123
-.LEveryLevelGreaterThan3
+	and #$0f
+	cmp #6
+	bcc .LLevelLessThan6
 	lda #$03
 	bne .LCalculate
-.LLevel123
+.LLevelLessThan6:
 	lda #$01
 .LCalculate:
 	sta tempPointer1
@@ -2167,16 +2165,16 @@ LMPDeltas:
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
 	RORG $FD00
 
-LXPToNextLevel: ;TODO balance this
+LXPToNextLevel:
 	.byte #0 ;Shouldn't be used, xp for level 0 -> 1
-	.byte #8 ; 1 -> 2
-	.byte #16 ; 2 -> 3
-	.byte #26
-	.byte #36
-	.byte #51
-	.byte #66
-	.byte #86
-	.byte #106 ; 8 -> 9
+	.byte #15 ; 1 -> 2
+	.byte #30 ; 2 -> 3
+	.byte #30
+	.byte #60
+	.byte #60
+	.byte #120
+	.byte #120
+	.byte #180 ; 8 -> 9
 
 LClassFightMessages:
 	.byte $4 ;Knight
@@ -2198,41 +2196,41 @@ LEnemyExperience:
 	.byte 1 ;Wolf
 	.byte 1 ;Druid
 	.byte 1 ;Shroom
-	.byte 1 ;Squire
-	.byte 1 ;Archer
-	.byte 1 ;Priest
-	.byte 1 ;Gift
-	.byte 1 ;Sword
-	.byte 1 ;Shield
-	.byte 1 ;Zombie
-	.byte 1 ;Sklton
-	.byte 1 ;Mage
-	.byte 1 ;Goop
-	.byte 1 ;Warlok
-	.byte 1 ;Imp
-	.byte 1 ;Wisp
-	.byte 1 ;RedOrb
-	.byte 1 ;BluOrb
-	.byte 1 ;GrnOrb
-	.byte 1 ;GldOrb
-	.byte 1 ;Bear
-	.byte 1 ;Unicrn
-	.byte 1 ;Volcio
-	.byte 1 ;Glacia
-	.byte 1 ;Grgoyl
-	.byte 1 ;Mimic
-	.byte 1 ;Jester
-	.byte 1 ;Armor
-	.byte 1 ;Spider
-	.byte 1 ;Slime
-	.byte 1 ;Lich
-	.byte 1 ;Shfflr
-	.byte 1 ;Shmblr
-	.byte 1 ;Trophy
-	.byte 1 ;Thickt
-	.byte 1 ;Ooze
-	.byte 1 ;Horror
-	.byte 1 ;Campfire
+	.byte 2 ;Squire
+	.byte 2 ;Archer
+	.byte 2 ;Priest
+	.byte 0 ;Gift
+	.byte 0 ;Sword
+	.byte 0 ;Shield
+	.byte 4 ;Zombie
+	.byte 4 ;Sklton
+	.byte 4 ;Mage
+	.byte 4 ;Goop
+	.byte 8 ;Warlok
+	.byte 8 ;Imp
+	.byte 8 ;Wisp
+	.byte 0 ;RedOrb
+	.byte 0 ;BluOrb
+	.byte 0 ;GrnOrb
+	.byte 0 ;GldOrb
+	.byte 2 ;Bear
+	.byte 2 ;Unicrn
+	.byte 8 ;Volcio
+	.byte 7 ;Glacia
+	.byte 4 ;Grgoyl
+	.byte 4 ;Mimic
+	.byte 30 ;Jester
+	.byte 30 ;Armor
+	.byte 8 ;Spider
+	.byte 8 ;Slime
+	.byte 60 ;Lich
+	.byte 16 ;Shfflr
+	.byte 16 ;Shmblr
+	.byte 0 ;Trophy
+	.byte 15 ;Thickt
+	.byte 60 ;Ooze
+	.byte 0 ;Horror
+	.byte 0 ;Campfire
 
 LEnemyAttack:
 	.byte 1 ;Wolf
@@ -2526,26 +2524,6 @@ LHighStatGrowth:
 	.byte 24
 	.byte 27
 LLowHPGrowth:
-	.byte 10
-	.byte 12
-	.byte 14
-	.byte 16
-	.byte 18
-	.byte 20
-	.byte 22
-	.byte 24
-	.byte 26
-LMidHPGrowth:
-	.byte 15
-	.byte 18
-	.byte 21
-	.byte 24
-	.byte 27
-	.byte 30
-	.byte 33
-	.byte 36
-	.byte 39
-LHighHPGrowth:
 	.byte 20
 	.byte 24
 	.byte 28
@@ -2555,13 +2533,33 @@ LHighHPGrowth:
 	.byte 44
 	.byte 48
 	.byte 52
+LMidHPGrowth:
+	.byte 30
+	.byte 36
+	.byte 42
+	.byte 48
+	.byte 54
+	.byte 60
+	.byte 66
+	.byte 72
+	.byte 78
+LHighHPGrowth:
+	.byte 40
+	.byte 48
+	.byte 56
+	.byte 64
+	.byte 72
+	.byte 80
+	.byte 88
+	.byte 96
+	.byte 99
 
 LClassAttackLookup:
 	.byte (LMidStatGrowth & $FF) ;Knight
 	.byte (LHighStatGrowth & $FF) ;Rogue
 	.byte (LMidStatGrowth & $FF) ;Cleric
 	.byte (LLowStatGrowth & $FF) ;Wizard
-	.byte (LHighStatGrowth & $FF) ;Ranger
+	.byte (LMidStatGrowth & $FF) ;Ranger
 	.byte (LMidStatGrowth & $FF) ;Paladin
 LClassMagicLookup:
 	.byte (LAllZeroes & $FF)
@@ -2571,12 +2569,12 @@ LClassMagicLookup:
 	.byte (LLowStatGrowth & $FF)
 	.byte (LLowStatGrowth & $FF)
 LClassSpeedLookup:
-	.byte (LLowStatGrowth & $FF)
-	.byte (LHighStatGrowth & $FF)
-	.byte (LLowStatGrowth & $FF)
-	.byte (LMidStatGrowth & $FF)
-	.byte (LHighStatGrowth & $FF)
-	.byte (LMidStatGrowth & $FF)
+	.byte (LLowHPGrowth & $FF)
+	.byte (LHighHPGrowth & $FF)
+	.byte (LLowHPGrowth & $FF)
+	.byte (LMidHPGrowth & $FF)
+	.byte (LHighHPGrowth & $FF)
+	.byte (LMidHPGrowth & $FF)
 LClassHPLookup:
 	.byte (LHighHPGrowth & $FF)
 	.byte (LLowHPGrowth & $FF)
