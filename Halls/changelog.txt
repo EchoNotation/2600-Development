@@ -704,8 +704,12 @@
 	-Added starting monster experience and level experience requirements
 	-Ranger no longer has the same max attack scaling of Rogue
 	-Changed HP, MP and speed scalings
+10/13/23
+	-Put in some starting values for enemy attack, magic, and health
+	-Added starting values for mana costs
 
 KNOWN BUGS:
+	-LUpdateAvatars seems to break at high health values
 
 TODO:
 	Shortlist:

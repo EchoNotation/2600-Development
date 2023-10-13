@@ -2808,24 +2808,24 @@ SRunFunctionInLBank:
 	nop $1FF7 ;Go to bank 1
 SSpellManaLookup:
 	.byte 0 ;BACK
-	.byte 1 ;FIRE
-	.byte 1 ;SLEEP
-	.byte 1 ;BLIZRD
-	.byte 1 ;DRAIN
-	.byte 1 ;THUNDR
-	.byte 1 ;SHIELD
-	.byte 1 ;METEOR
-	.byte 1 ;CHAOS
-	.byte 1 ;HEAL
-	.byte 1 ;SMITE
-	.byte 1 ;VOLLEY
-	.byte 1 ;SHARP
-	.byte 1 ;BLIGHT
-	.byte 1 ;TRIAGE
-	.byte 1 ;WITHER
-	.byte 1 ;BANISH
-	.byte 1 ;TRANCE
-	.byte 1 ;WISH
+	.byte 4 ;FIRE
+	.byte 6 ;SLEEP
+	.byte 6 ;BLIZRD
+	.byte 8 ;DRAIN
+	.byte 6 ;THUNDR
+	.byte 6 ;SHIELD
+	.byte 8 ;METEOR
+	.byte 6 ;CHAOS
+	.byte 5 ;HEAL
+	.byte 4 ;SMITE
+	.byte 5 ;VOLLEY
+	.byte 8 ;SHARP
+	.byte 8 ;BLIGHT
+	.byte 5 ;TRIAGE
+	.byte 4 ;WITHER
+	.byte 5 ;BANISH
+	.byte 0 ;TRANCE
+	.byte 15 ;WISH
 	.byte 0 ;SHIFT
 	nop
 	nop

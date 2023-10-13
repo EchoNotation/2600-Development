@@ -2234,43 +2234,43 @@ LEnemyExperience:
 
 LEnemyAttack:
 	.byte 1 ;Wolf
-	.byte 1 ;Druid
-	.byte 1 ;Shroom
+	.byte 0 ;Druid
+	.byte 0 ;Shroom
 	.byte 1 ;Squire
-	.byte 1 ;Archer
-	.byte 1 ;Priest
-	.byte 1 ;Gift
-	.byte 1 ;Sword
+	.byte 2 ;Archer
+	.byte 0 ;Priest
+	.byte 0 ;Gift
+	.byte 3 ;Sword
 	.byte 1 ;Shield
-	.byte 1 ;Zombie
-	.byte 1 ;Sklton
-	.byte 1 ;Mage
-	.byte 1 ;Goop
-	.byte 1 ;Warlok
-	.byte 1 ;Imp
-	.byte 1 ;Wisp
-	.byte 1 ;RedOrb
-	.byte 1 ;BluOrb
-	.byte 1 ;GrnOrb
-	.byte 1 ;GldOrb
-	.byte 1 ;Bear
-	.byte 1 ;Unicrn
-	.byte 1 ;Volcio
-	.byte 1 ;Glacia
-	.byte 1 ;Grgoyl
-	.byte 1 ;Mimic
-	.byte 1 ;Jester
+	.byte 2 ;Zombie
+	.byte 2 ;Sklton
+	.byte 0 ;Mage
+	.byte 2 ;Goop
+	.byte 0 ;Warlok
+	.byte 2 ;Imp
+	.byte 0 ;Wisp
+	.byte 0 ;RedOrb
+	.byte 0 ;BluOrb
+	.byte 0 ;GrnOrb
+	.byte 5 ;GldOrb
+	.byte 3 ;Bear
+	.byte 2 ;Unicrn
+	.byte 4 ;Volcio
+	.byte 4 ;Glacia
+	.byte 4 ;Grgoyl
+	.byte 4 ;Mimic
+	.byte 8 ;Jester
 	.byte 1 ;Armor
-	.byte 1 ;Spider
-	.byte 1 ;Slime
-	.byte 1 ;Lich
-	.byte 1 ;Shfflr
-	.byte 1 ;Shmblr
-	.byte 1 ;Trophy
-	.byte 1 ;Thickt
-	.byte 1 ;Ooze
-	.byte 1 ;Horror
-	.byte 1 ;Campfire
+	.byte 5 ;Spider
+	.byte 5 ;Slime
+	.byte 0 ;Lich
+	.byte 7 ;Shfflr
+	.byte 5 ;Shmblr
+	.byte 0 ;Trophy
+	.byte 9 ;Thickt
+	.byte 12 ;Ooze
+	.byte 30 ;Horror
+	.byte 0 ;Campfire
 
 LEnemySpeed:
 	.byte 1 ;Wolf
@@ -2313,88 +2313,88 @@ LEnemySpeed:
 	.byte 1 ;Campfire
 
 LEnemyMagic:
-	.byte 1 ;Wolf
+	.byte 0 ;Wolf
 	.byte 1 ;Druid
-	.byte 1 ;Shroom
-	.byte 1 ;Squire
-	.byte 1 ;Archer
-	.byte 1 ;Priest
-	.byte 1 ;Gift
-	.byte 1 ;Sword
-	.byte 1 ;Shield
-	.byte 1 ;Zombie
-	.byte 1 ;Sklton
-	.byte 1 ;Mage
-	.byte 1 ;Goop
-	.byte 1 ;Warlok
-	.byte 1 ;Imp
-	.byte 1 ;Wisp
-	.byte 1 ;RedOrb
-	.byte 1 ;BluOrb
-	.byte 1 ;GrnOrb
-	.byte 1 ;GldOrb
-	.byte 1 ;Bear
-	.byte 1 ;Unicrn
-	.byte 1 ;Volcio
-	.byte 1 ;Glacia
-	.byte 1 ;Grgoyl
-	.byte 1 ;Mimic
-	.byte 1 ;Jester
-	.byte 1 ;Armor
-	.byte 1 ;Spider
-	.byte 1 ;Slime
-	.byte 1 ;Lich
-	.byte 1 ;Shfflr
-	.byte 1 ;Shmblr
-	.byte 1 ;Trophy
-	.byte 1 ;Thickt
-	.byte 1 ;Ooze
-	.byte 1 ;Horror
-	.byte 1 ;Campfire
+	.byte 0 ;Shroom
+	.byte 0 ;Squire
+	.byte 0 ;Archer
+	.byte 2 ;Priest
+	.byte 0 ;Gift
+	.byte 0 ;Sword
+	.byte 0 ;Shield
+	.byte 0 ;Zombie
+	.byte 0 ;Sklton
+	.byte 3 ;Mage
+	.byte 0 ;Goop
+	.byte 4 ;Warlok
+	.byte 3 ;Imp
+	.byte 4 ;Wisp
+	.byte 15 ;RedOrb
+	.byte 15 ;BluOrb
+	.byte 15 ;GrnOrb
+	.byte 15 ;GldOrb
+	.byte 0 ;Bear
+	.byte 2 ;Unicrn
+	.byte 6 ;Volcio
+	.byte 6 ;Glacia
+	.byte 0 ;Grgoyl
+	.byte 0 ;Mimic
+	.byte 0 ;Jester
+	.byte 0 ;Armor
+	.byte 0 ;Spider
+	.byte 0 ;Slime
+	.byte 10 ;Lich
+	.byte 0 ;Shfflr
+	.byte 0 ;Shmblr
+	.byte 0 ;Trophy
+	.byte 0 ;Thickt
+	.byte 0 ;Ooze
+	.byte 0 ;Horror
+	.byte 0 ;Campfire
 
 LEnemyHP:
-	.byte 1 ;Wolf
-	.byte 1 ;Druid
-	.byte 1 ;Shroom
-	.byte 1 ;Squire
-	.byte 1 ;Archer
-	.byte 1 ;Priest
+	.byte 7 ;Wolf
+	.byte 5 ;Druid
+	.byte 8 ;Shroom
+	.byte 18 ;Squire
+	.byte 12 ;Archer
+	.byte 10 ;Priest
 LGiftHP:
-	.byte 1 ;Gift
-	.byte 1 ;Sword
-	.byte 1 ;Shield
+	.byte 20 ;Gift
+	.byte 20 ;Sword
+	.byte 20 ;Shield
 LZombieHP:
-	.byte 1 ;Zombie
+	.byte 30 ;Zombie
 LSkltonHP:
-	.byte 1 ;Sklton
-	.byte 1 ;Mage
+	.byte 24 ;Sklton
+	.byte 20 ;Mage
 LGoopHP:
-	.byte 1 ;Goop
-	.byte 1 ;Warlok
-	.byte 1 ;Imp
-	.byte 1 ;Wisp
-	.byte 1 ;RedOrb
-	.byte 1 ;BluOrb
-	.byte 1 ;GrnOrb
-	.byte 1 ;GldOrb
-	.byte 1 ;Bear
-	.byte 1 ;Unicrn
-	.byte 1 ;Volcio
-	.byte 1 ;Glacia
-	.byte 1 ;Grgoyl
-	.byte 1 ;Mimic
-	.byte 1 ;Jester
-	.byte 1 ;Armor
-	.byte 1 ;Spider
+	.byte 20 ;Goop
+	.byte 30 ;Warlok
+	.byte 35 ;Imp
+	.byte 30 ;Wisp
+	.byte 70 ;RedOrb
+	.byte 70 ;BluOrb
+	.byte 70 ;GrnOrb
+	.byte 70 ;GldOrb
+	.byte 16 ;Bear
+	.byte 14 ;Unicrn
+	.byte 20 ;Volcio
+	.byte 20 ;Glacia
+	.byte 34 ;Grgoyl
+	.byte 36 ;Mimic
+	.byte 50 ;Jester
+	.byte 50 ;Armor
+	.byte 50 ;Spider
 LSlimeHP:
-	.byte 1 ;Slime
-	.byte 1 ;Lich
-	.byte 1 ;Shfflr
-	.byte 1 ;Shmblr
+	.byte 60 ;Slime
+	.byte 85 ;Lich
+	.byte 70 ;Shfflr
+	.byte 85 ;Shmblr
 	.byte 1 ;Trophy
-	.byte 1 ;Thickt
-	.byte 1 ;Ooze
-	.byte 1 ;Horror
+	.byte 35 ;Thickt
+	.byte 150 ;Ooze
+	.byte 200 ;Horror
 	.byte 1 ;Campfire
  
 ;Format is LPFIHEPR
@@ -2661,29 +2661,27 @@ LSpellTargetingLookup:
 	.byte $82 ;BANISH
 	.byte $0 ;TRANCE
 	.byte $0 ;WISH
-	.byte $82 ;SHIFT
 
 LSpellManaLookup:
 	.byte 0 ;BACK
-	.byte 1 ;FIRE
-	.byte 1 ;SLEEP
-	.byte 1 ;BLIZRD
-	.byte 1 ;DRAIN
-	.byte 1 ;THUNDR
-	.byte 1 ;SHIELD
-	.byte 1 ;METEOR
-	.byte 1 ;CHAOS
-	.byte 1 ;HEAL
-	.byte 1 ;SMITE
-	.byte 1 ;VOLLEY
-	.byte 1 ;SHARP
-	.byte 1 ;BLIGHT
-	.byte 1 ;TRIAGE
-	.byte 1 ;WITHER
-	.byte 1 ;BANISH
+	.byte 4 ;FIRE
+	.byte 6 ;SLEEP
+	.byte 6 ;BLIZRD
+	.byte 8 ;DRAIN
+	.byte 6 ;THUNDR
+	.byte 6 ;SHIELD
+	.byte 8 ;METEOR
+	.byte 6 ;CHAOS
+	.byte 5 ;HEAL
+	.byte 4 ;SMITE
+	.byte 5 ;VOLLEY
+	.byte 8 ;SHARP
+	.byte 8 ;BLIGHT
+	.byte 5 ;TRIAGE
+	.byte 4 ;WITHER
+	.byte 5 ;BANISH
 	.byte 0 ;TRANCE
-	.byte 1 ;WISH
-	.byte 0 ;SHIFT
+	.byte 15 ;WISH
 
 LLowAllyStatPointers:
 	.byte (LClassAttackLookup & $FF)
