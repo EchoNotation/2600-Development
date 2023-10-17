@@ -152,7 +152,7 @@ GrgoylAI:
 MimicAI:
 	.byte %00100000 ;Attack party
 	.byte %00100000 ;
-	.byte %00100000 ;Attack
+	.byte %00100000 ;
 	.byte %10100100 ;Cast DRAIN party
 JesterAI:
 	.byte %00100000 ;Attack party
@@ -161,8 +161,8 @@ JesterAI:
 	.byte %00000101 ;
 ArmorAI:
 	.byte %11101001 ;Cast HEAL self
+	.byte %10001100 ;Cast SHARP
 	.byte %00000101 ;Special
-	.byte %00000101 ;
 	.byte %00000101 ;
 SpiderAI:
 	.byte %00100000 ;Attack party
@@ -170,10 +170,10 @@ SpiderAI:
 	.byte %00100000 ;
 	.byte %10101101 ;Cast BLIGHT party
 SlimeAI:
-	.byte %00000101 ;Special
-	.byte %00000101 ;
-	.byte %00000101 ;
-	.byte %00000101 ;
+	.byte %00100101 ;Special
+	.byte %00100101 ;
+	.byte %00100101 ;
+	.byte %00100101 ;
 LichAI:
 	.byte %10101111 ;Cast WITHER party
 	.byte %11101001 ;Cast HEAL self
@@ -200,15 +200,19 @@ ThicktAI:
 	.byte %10101101 ;Cast BLIGHT party
 	.byte %10100100 ;Cast DRAIN party
 OozeAI:
-	.byte %00000101 ;Special
-	.byte %00000101 ;
-	.byte %00000101 ;
-	.byte %00000101 ;
+	.byte %00100101 ;Special
+	.byte %00100101 ;
+	.byte %00100101 ;
+	.byte %00100101 ;
 HorrorAI:
-	.byte %00000101 ;Special
-	.byte %00000101 ;
-	.byte %00000101 ;
-	.byte %00000101 ;
+	.byte %00100000 ;Attack party
+	.byte %00100000 ;Attack party
+	.byte %00100000 ;Attack party
+	.byte %00100000 ;Attack party
+	; .byte %00100101 ;Special
+	; .byte %00100101 ;
+	; .byte %00100101 ;
+	; .byte %00100101 ;
 CampfireAI:
 	.byte %00000000 ;
 	.byte %00000000 ;
@@ -1368,13 +1372,69 @@ EShotAText:
 	.byte #T
 	.byte #EMPTY
 	.byte #A
-EMiresText:
-	.byte #M
+ESlimesText:
+	.byte #S
+	.byte #L
 	.byte #I
-	.byte #R
+	.byte #M
 	.byte #E
 	.byte #S
+ESplitsText:
+	.byte #S
+	.byte #P
+	.byte #L
+	.byte #I
+	.byte #T
+	.byte #S
+EApartText:
+	.byte #A
+	.byte #P
+	.byte #A
+	.byte #R
+	.byte #T
 	.byte #EMPTY
+ESlimeText:
+	.byte #S
+	.byte #L
+	.byte #I
+	.byte #M
+	.byte #E
+	.byte #EMPTY
+EOozeText:
+	.byte #O
+	.byte #O
+	.byte #Z
+	.byte #E
+	.byte #EMPTY
+	.byte #EMPTY
+ERaisesText:
+	.byte #R
+	.byte #A
+	.byte #I
+	.byte #S
+	.byte #E
+	.byte #S
+ELeavesText:
+	.byte #L
+	.byte #E
+	.byte #A
+	.byte #V
+	.byte #E
+	.byte #S
+EBlowsText:
+	.byte #B
+	.byte #L
+	.byte #O
+	.byte #W
+	.byte #S
+	.byte #EMPTY
+ESummonText:
+	.byte #S
+	.byte #U
+	.byte #M
+	.byte #M
+	.byte #O
+	.byte #N
 
 	ORG $E700 ;Contains the first 2 large enemies graphics data
 	RORG $F700
@@ -3611,27 +3671,42 @@ EBossEncounters:
 	.byte $FF
 	.byte $FF
 	.byte $FF
+	
+	.byte $1A ;Jester
+	.byte $FF
+	.byte $FF
+	.byte $FF
 	;CASTLE BOSS 2
-	.byte $07 ;Sword
-	.byte $1B ;Armor
-	.byte $FF
-	.byte $08 ;Shield
+	; .byte $07 ;Sword
+	; .byte $1B ;Armor
+	; .byte $FF
+	; .byte $08 ;Shield
 	;CRYPT BOSS 1
-	.byte $23 ;Ooze
-	.byte $FF
-	.byte $FF
-	.byte $FF
+	; .byte $23 ;Ooze
+	; .byte $FF
+	; .byte $FF
+	; .byte $FF
 	;CRYPT BOSS 2
 	.byte $1E ;Lich
 	.byte $FF
 	.byte $FF
 	.byte $FF
+
+	.byte $1E ;Lich
+	.byte $FF
+	.byte $FF
+	.byte $FF
 	;ABYSS BOSS 1
-	.byte $24 ;Horror
-	.byte $FF
-	.byte $FF
-	.byte $FF
+	; .byte $24 ;Horror
+	; .byte $FF
+	; .byte $FF
+	; .byte $FF
 	;ABYSS BOSS 2
+	.byte $10 ;RedOrb
+	.byte $11 ;BluOrb
+	.byte $12 ;GrnOrb
+	.byte $13 ;GldOrb
+
 	.byte $10 ;RedOrb
 	.byte $11 ;BluOrb
 	.byte $12 ;GrnOrb
@@ -3680,26 +3755,26 @@ ESpellDelays:
 	.byte 8
 
 ESpellEffectLengths:
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-	.byte 32
-
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	.byte 16
+	
 ESpellEffectBaseColors:
 	.byte $F8
 	.byte $B8

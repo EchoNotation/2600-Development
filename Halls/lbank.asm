@@ -1257,6 +1257,11 @@ LProcessParrying:
 	jsr LApplyStatus
 	rts
 
+.LGoToArmorSpecial:
+	jmp .LArmorSpecial
+.LGoToHorrorSpecial:
+	jmp .LHorrorSpecial
+
 LProcessSpecial:
 	ldx currentBattler
 	lda battleActions,x ;battleActions is 4 bytes before enemyID
@@ -1271,16 +1276,16 @@ LProcessSpecial:
 	cmp #$1D
 	beq .LSlimeSpecial
 	cmp #$1B
-	beq .LArmorSpecial
+	beq .LGoToArmorSpecial
 	cmp #$24
-	beq .LHorrorSpecial
+	beq .LGoToHorrorSpecial
 	rts
 
 .LLichSpecial:
 	jsr LFindNextEmptySpot
 	cpx #$FF
 	beq .LCantSummon
-	lda #$9D ;TODO X CALLS Y
+	lda #$34 ;TODO X RAISES Y
 	sta temp2
 	lda rand8
 	bpl .LSummonZombie
@@ -1297,7 +1302,7 @@ LProcessSpecial:
 	jsr LFindNextEmptySpot
 	cpx #$FF
 	beq .LCantSummon
-	lda #$9C ;TODO X LEAVES Y
+	lda #$35 ;X LEAVES Y
 	sta temp2
 	lda #$6
 	ldy #30 ;TODO GIFT hp
@@ -1311,11 +1316,13 @@ LProcessSpecial:
 	jmp .LNormalTgtedExitSaveMessage
 
 .LCantSummon:
-	lda #$81 ;TODO X CANNOT SUMMON
+	lda #$37 ;X CANNOT SUMMON
 	jmp .LNormalTgtedExitSaveMessage
 
 .LGiftSpecial:
-	lda #$FE ;TODO X BLOWS UP
+	lda #0
+	sta battlerHP,x
+	lda #$36 ;X BLOWS UP
 	sta currentMessage
 	lda #$83 ;Cast BLIZRD (can't tell the difference between this and FIRE)
 	sta enemyAction
@@ -1325,20 +1332,64 @@ LProcessSpecial:
 .LOozeSpecial:
 	rts
 
+LSummonActionMasks:
+	.byte $0C
+	.byte $06
+	.byte $03
+
 .LSlimeSpecial:
+	lda battlerHP,x
+	cmp #(SLIME_HP / 2)
+	bcs .LAtOrAboveHalf
+.LSlimeNeedsToSplit:
+	lda #$32 ;replace with message
+	sta currentMessage
+	lda #$0C ;GOOP enemy id
+	sta battleActions,x ;4 bytes before enemyID
+	sta battleActions+1,x
+	lda #GOOP_HP
+	sta battlerHP,x
+	sta battlerHP+1,x
+	;Need to give them actions this turn
+	dex
+	dex
+	dex
+	dex
+	lda LSummonActionMasks,x
+	ora hasAction
+	sta hasAction
 	rts
+.LAtOrAboveHalf:
+	lda enemyAction
+	and #$60
+	sta temp1
+	sta enemyAction
+	jmp .LSetFightWindup
 
 .LArmorSpecial:
+	lda enemyHP
+	ora enemyHP+3
+	bne .LDontResummon
+.LResummon:
+	;The sword and shield have both died...
+	lda #30
+	sta enemyHP
+	sta enemyHP+3
+	lda #$FF ;message
+	sta currentMessage
+	rts
+.LDontResummon:
+	;Need to figure our what the ARMOR should do here...
 	rts
 
 .LHorrorSpecial:
 	rts
 
-LFindNextEmptySpot: SUBROUTINE ;Starting from position X, returns the first empty spot in X. #$FF if no spot exists
+LFindNextEmptySpot: SUBROUTINE ;Starting from position 2, returns the first empty spot in X. #$FF if no spot exists
 	ldx #2
 .LFindNextEmptySpotLoop:
 	lda enemyHP,x
-	bmi .LGotIt
+	beq .LGotIt
 	inx
 	cpx #4
 	bcc .LFindNextEmptySpotLoop
@@ -1537,10 +1588,10 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 .LHasShield:
 	;Make sure that allied spells are not blocked
 	txa
-	and #$40
+	and #$04
 	sta temp5
 	lda currentBattler
-	and #$40
+	and #$04
 	eor temp5
 	beq .LAlliedSpellsNotBlocked
 
@@ -2122,7 +2173,7 @@ LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to conve
 .LRemove16s:
 	sec
 	sbc #$16
-	bmi .LDoneRemoving16s
+	bcc .LDoneRemoving16s
 	inx
 	bne .LRemove16s
 .LDoneRemoving16s:

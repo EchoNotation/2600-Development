@@ -1,7 +1,7 @@
 	processor 6502
 	include "vcs.h"
 
-BUILD_DEBUG = 1
+BUILD_DEBUG = 0
 
 ; --- Constants ---
 ;Kernel related
@@ -89,7 +89,7 @@ WEST = $01
 MAZE_WIDTH = 8
 MAX_MAZE_LEVEL = 3
 STEP_GRACE_PERIOD = 1
-ENCOUNTER_RATE_MASK = $01 ;$03 ;00 is 256/256, FF is 1/256
+ENCOUNTER_RATE_MASK = $01 ;00 is 256/256, FF is 1/256
 
 ;Battle related
 TIMER_MASK = $80
@@ -113,6 +113,10 @@ FULL_MAGIC = 0
 HALF_MAGIC = 1
 THREE_HALVES_MAGIC = 2
 ATTACK_AND_HALF_MAGIC = 3
+
+;Summoning related
+GOOP_HP = 20
+SLIME_HP = 60
 
 ;Avatar related
 DEAD = 0

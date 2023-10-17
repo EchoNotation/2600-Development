@@ -1051,6 +1051,30 @@ RXMiresY:
 	.byte $0
 	.byte $44
 	.byte $1
+RSlimeSplitsApart:
+	.byte $47
+	.byte $45
+	.byte $46
+ROozeSplitsApart:
+	.byte $48
+	.byte $45
+	.byte $46
+RXRaisesY:
+	.byte $0
+	.byte $49
+	.byte $1
+RXLeavesY:
+	.byte $0
+	.byte $4A
+	.byte $1
+RXBlowsUp:
+	.byte $0
+	.byte $4B
+	.byte $E
+RXCannotSummon:
+	.byte $0
+	.byte $21
+	.byte $4C
 
 RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 values correctly. Interprets A as the line of the message to set.
 	ldy #TEXT_HIGHLIGHTED_COLOR

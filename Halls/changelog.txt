@@ -707,17 +707,20 @@
 10/13/23
 	-Put in some starting values for enemy attack, magic, and health
 	-Added starting values for mana costs
+	-Implemented and tested SLIME special, seems to work well
+	-Implemented and tested LICH special, seems to work well
+	-Implemented and tested JESTER special, seems to work well
+	-Implemented and tested GIFT special, seems to work well
+		-Needs to set a fire effect?
+	-Fixed bug in LDecimalToBinary that caused high values to be calculated incorrectly
+	-Fixed bug in LCheckSpellShield that caused spells to never be blocked by shields...
 
 KNOWN BUGS:
-	-LUpdateAvatars seems to break at high health values
+	-Avatars don't clear status when healed exiting battle
 
 TODO:
 	Shortlist:
 	-Implement all enemy special abilities
-		-LICH (untested)
-		-JESTER (untested)
-		-GIFT (untested)
-		-SLIME
 		-OOZE
 		-ARMOR (revive sword and shield, otherwise cast SHARP?)
 		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
