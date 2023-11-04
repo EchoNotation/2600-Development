@@ -117,6 +117,7 @@ ATTACK_AND_HALF_MAGIC = 3
 ;Summoning related
 GOOP_HP = 20
 SLIME_HP = 60
+OOZE_HP = 150
 
 ;Avatar related
 DEAD = 0

@@ -2024,8 +2024,8 @@ REnemyNameLookup: ;This table could be turned into a calculation RZombieText + (
 	.byte (RShmblrText & $FF)
 	.byte 0 ;Trophy
 	.byte (RThicktText & $FF)
-	.byte (ROozeText & $FF)
 	.byte (RHorrorText & $FF)
+	.byte (ROozeText & $FF)
 	.byte 0 ;Campfire
 
 REnemyColorLookup:
@@ -2066,8 +2066,8 @@ REnemyColorLookup:
 	.byte $1C ;Trophy
 
 	.byte $B6 ;Thickt
-	.byte $C4 ;Ooze
 	.byte $46 ;Horror
+	.byte $C4 ;Ooze
 	.byte $2A ;Campfire
 
 	;Only around 8 more bytes can fit here...

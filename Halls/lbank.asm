@@ -1271,8 +1271,8 @@ LProcessSpecial:
 	beq .LJesterSpecial
 	cmp #$6
 	beq .LGiftSpecial
-	cmp #$23
-	beq .LOozeSpecial
+	cmp #$24
+	beq .LOozeSpecial 
 	cmp #$1D
 	beq .LSlimeSpecial
 	cmp #$1B
@@ -1320,6 +1320,7 @@ LProcessSpecial:
 	jmp .LNormalTgtedExitSaveMessage
 
 .LGiftSpecial:
+	;Need to set a firey effect here
 	lda #0
 	sta battlerHP,x
 	lda #$36 ;X BLOWS UP
@@ -1329,35 +1330,73 @@ LProcessSpecial:
 	sta temp1 ;Inject the new enemyAction
 	jmp .LIsOffensive ;Jumps into the relevant part of AoE spell setup code
 
-.LOozeSpecial:
-	rts
+
+
+LSlimeSummonID:
+	.byte $1D ;Slime
+	.byte $0C ;Goop
+
+LSlimeSummonHP:
+	.byte SLIME_HP
+	.byte GOOP_HP
+
+LSplitHP:
+	.byte (OOZE_HP / 2)
+	.byte (SLIME_HP / 2) 
+
+LSplitMessages:
+	.byte $33 ;OOZE SPLITS APART
+	.byte $32 ;SLIME SPLITS APART
 
 LSummonActionMasks:
-	.byte $0C
-	.byte $06
-	.byte $03
+	.byte $0A ;OOZE POSITION 1
+	.byte $0C ;SLIME POSITION 1
+	.byte $06 ;SLIME POSITION 2
+	.byte $03 ;SLIME POSITION 3
 
 .LSlimeSpecial:
-	lda battlerHP,x
-	cmp #(SLIME_HP / 2)
-	bcs .LAtOrAboveHalf
-.LSlimeNeedsToSplit:
-	lda #$32 ;replace with message
+.LOozeSpecial:
+	and #$01 ;A already contains the enemy ID
+	sta temp2 ;The low bit of the enemyID
+	tay
+
+	lda LSplitHP,y
+	cmp battlerHP,x
+	bcc .LAtOrAboveHalf ;DONT SPLIT IF TAKEN
+
+	lda LSplitMessages,y
 	sta currentMessage
-	lda #$0C ;GOOP enemy id
-	sta battleActions,x ;4 bytes before enemyID
-	sta battleActions+1,x
-	lda #GOOP_HP
-	sta battlerHP,x
-	sta battlerHP+1,x
-	;Need to give them actions this turn
-	dex
-	dex
-	dex
-	dex
-	lda LSummonActionMasks,x
+
+	lda LSlimeSummonID,y
+	sta temp3 ;the new enemy id
+	lda LSlimeSummonHP,y
+	sta temp4 ;the hp to summon the new enemies at
+
+	tya
+	clc
+	adc currentBattler
+	sec
+	sbc #4
+	tay ;Y now contains the position of this battler, plus 1 if it is a SLIME, OOZEs should always be 0
+	lda LSummonActionMasks,y
 	ora hasAction
-	sta hasAction
+	sta hasAction ;Give the summons their actions this turn
+
+	;Set enemy ID
+	;Set HP
+	lda temp3
+	sta battleActions,x
+	lda temp4
+	sta battlerHP,x
+
+	ldy temp2
+	bne .LOnly1Increment
+	inx
+.LOnly1Increment:
+	inx
+	sta battlerHP,x
+	lda temp3
+	sta battleActions,x
 	rts
 .LAtOrAboveHalf:
 	lda enemyAction
@@ -1365,6 +1404,8 @@ LSummonActionMasks:
 	sta temp1
 	sta enemyAction
 	jmp .LSetFightWindup
+
+
 
 .LArmorSpecial:
 	lda enemyHP
@@ -2279,8 +2320,8 @@ LEnemyExperience:
 	.byte 16 ;Shmblr
 	.byte 0 ;Trophy
 	.byte 15 ;Thickt
-	.byte 60 ;Ooze
 	.byte 0 ;Horror
+	.byte 60 ;Ooze
 	.byte 0 ;Campfire
 
 LEnemyAttack:
@@ -2319,8 +2360,8 @@ LEnemyAttack:
 	.byte 5 ;Shmblr
 	.byte 0 ;Trophy
 	.byte 9 ;Thickt
-	.byte 12 ;Ooze
 	.byte 30 ;Horror
+	.byte 12 ;Ooze
 	.byte 0 ;Campfire
 
 LEnemySpeed:
@@ -2359,8 +2400,8 @@ LEnemySpeed:
 	.byte 1 ;Shmblr
 	.byte 1 ;Trophy
 	.byte 1 ;Thickt
-	.byte 1 ;Ooze
 	.byte 1 ;Horror
+	.byte 1 ;Ooze
 	.byte 1 ;Campfire
 
 LEnemyMagic:
@@ -2399,8 +2440,8 @@ LEnemyMagic:
 	.byte 0 ;Shmblr
 	.byte 0 ;Trophy
 	.byte 0 ;Thickt
-	.byte 0 ;Ooze
 	.byte 0 ;Horror
+	.byte 0 ;Ooze
 	.byte 0 ;Campfire
 
 LEnemyHP:
@@ -2444,8 +2485,8 @@ LSlimeHP:
 	.byte 85 ;Shmblr
 	.byte 1 ;Trophy
 	.byte 35 ;Thickt
-	.byte 150 ;Ooze
 	.byte 200 ;Horror
+	.byte 150 ;Ooze
 	.byte 1 ;Campfire
  
 ;Format is LPFIHEPR
@@ -2480,13 +2521,14 @@ LEnemyResistances:
 	.byte #%00000000 ;Jester
 	.byte #%00000000 ;Armor
 	.byte #%00000000 ;Spider
+	.byte #%00000000 ;Slime
 	.byte #%00000000 ;Lich
 	.byte #%00000000 ;Shfflr
 	.byte #%00000000 ;Shmblr
 	.byte #%00000000 ;Trophy
 	.byte #%00000000 ;Thickt
-	.byte #%00000000 ;Ooze
 	.byte #%00000000 ;Horror
+	.byte #%00000000 ;Ooze
 	.byte #%00000000 ;Campfire
 
 	ORG $DE00 ;Used to hold miscellaneous data/lookup tables
@@ -2530,8 +2572,8 @@ LEnemyFightMessages:
 	.byte $00 ;----- - Trophy
 
 	.byte $30 ;WHIPS - Thickt
-	.byte $31 ;MIRES - Ooze
 	.byte $30 ;WHIPS - Horror
+	.byte $31 ;MIRES - Ooze
 	.byte $00 ;----- - Campfire
 
 LAllZeroes:
