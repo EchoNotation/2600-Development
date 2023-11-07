@@ -1330,73 +1330,42 @@ LProcessSpecial:
 	sta temp1 ;Inject the new enemyAction
 	jmp .LIsOffensive ;Jumps into the relevant part of AoE spell setup code
 
-
-
-LSlimeSummonID:
-	.byte $1D ;Slime
-	.byte $0C ;Goop
-
-LSlimeSummonHP:
-	.byte SLIME_HP
-	.byte GOOP_HP
-
-LSplitHP:
-	.byte (OOZE_HP / 2)
-	.byte (SLIME_HP / 2) 
-
-LSplitMessages:
-	.byte $33 ;OOZE SPLITS APART
-	.byte $32 ;SLIME SPLITS APART
-
-LSummonActionMasks:
-	.byte $0A ;OOZE POSITION 1
-	.byte $0C ;SLIME POSITION 1
-	.byte $06 ;SLIME POSITION 2
-	.byte $03 ;SLIME POSITION 3
-
-.LSlimeSpecial:
 .LOozeSpecial:
-	and #$01 ;A already contains the enemy ID
-	sta temp2 ;The low bit of the enemyID
-	tay
-
-	lda LSplitHP,y
-	cmp battlerHP,x
-	bcc .LAtOrAboveHalf ;DONT SPLIT IF TAKEN
-
-	lda LSplitMessages,y
+	lda enemyHP
+	cmp #(OOZE_HP / 2)
+	bcs .LAtOrAboveHalf
+	;Ooze needs to split
+	lda #$33 ;OOZE SPLITS APART
 	sta currentMessage
-
-	lda LSlimeSummonID,y
-	sta temp3 ;the new enemy id
-	lda LSlimeSummonHP,y
-	sta temp4 ;the hp to summon the new enemies at
-
-	tya
-	clc
-	adc currentBattler
-	sec
-	sbc #4
-	tay ;Y now contains the position of this battler, plus 1 if it is a SLIME, OOZEs should always be 0
-	lda LSummonActionMasks,y
+	lda #$1D ;Slime ID
+	sta enemyID
+	sta enemyID+2
+	lda #SLIME_HP
+	sta enemyHP
+	sta enemyHP+2
+	lda #$0A
 	ora hasAction
-	sta hasAction ;Give the summons their actions this turn
-
-	;Set enemy ID
-	;Set HP
-	lda temp3
+	sta hasAction
+	rts
+.LSlimeSpecial:
+	lda battlerHP,x
+	cmp #(SLIME_HP / 2)
+	bcs .LAtOrAboveHalf
+	;Slime needs to split
+	lda #$32 ;SLIME SPLITS APART
+	sta currentMessage
+	txa
+	tay
+	iny
+	lda #$0C ;Goop ID
 	sta battleActions,x
-	lda temp4
+	sta battleActions,y
+	lda #GOOP_HP
 	sta battlerHP,x
-
-	ldy temp2
-	bne .LOnly1Increment
-	inx
-.LOnly1Increment:
-	inx
-	sta battlerHP,x
-	lda temp3
-	sta battleActions,x
+	sta battlerHP,y
+	lda LSlimeActionMasks,x ;Index savings...
+	ora hasAction
+	sta hasAction
 	rts
 .LAtOrAboveHalf:
 	lda enemyAction
@@ -2249,10 +2218,15 @@ LHPDeltas:
 LMPDeltas:
 	.byte 0
 	.byte 0
+LSlimeActionMasks: ;Must be exactly 4 bytes before .byte $0C
 	.byte 4
 	.byte 4
 	.byte 2
 	.byte 2
+
+	.byte $0C
+	.byte $06
+	.byte $03
 
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
 	RORG $FD00

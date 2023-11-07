@@ -717,6 +717,9 @@
 11/3/23
 	-Seeimngly functional SLIME and OOZE specials, just needed to move the OOZE id to be before the HORROR.
 		-Need to do some more thorough analysis in order to verify that this is more space efficient...
+11/6/23
+	-Did more thorough analysis to determine that writing them separately is more efficient by around 10 bytes, so now the OOZE and SLIME are hopefully done.
+	-Fixed boss encounter ID mix-up
 
 KNOWN BUGS:
 	-Avatars don't clear status when healed exiting battle

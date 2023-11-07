@@ -3681,23 +3681,20 @@ EBossEncounters:
 	; .byte $1B ;Armor
 	; .byte $FF
 	; .byte $08 ;Shield
+
 	;CRYPT BOSS 1
-	; .byte $23 ;Ooze
-	; .byte $FF
-	; .byte $FF
-	; .byte $FF
-	;CRYPT BOSS 2
+	.byte $24 ;Ooze
+	.byte $FF
+	.byte $FF
+	.byte $FF
+	; ;CRYPT BOSS 2
 	.byte $1E ;Lich
 	.byte $FF
 	.byte $FF
 	.byte $FF
 
-	.byte $1E ;Lich
-	.byte $FF
-	.byte $FF
-	.byte $FF
 	;ABYSS BOSS 1
-	; .byte $24 ;Horror
+	; .byte $23 ;Horror
 	; .byte $FF
 	; .byte $FF
 	; .byte $FF
