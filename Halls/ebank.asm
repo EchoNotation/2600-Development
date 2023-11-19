@@ -113,7 +113,7 @@ BluOrbAI:
 	.byte %11001001 ;Cast HEAL enemies
 	.byte %11001001 ;
 	.byte %10001110 ;Cast TRIAGE
-	.byte %10001110 ;Cast TRIAGE
+	.byte %10001110 ;
 GrnOrbAI:
 	.byte %10100010 ;Cast SLEEP party
 	.byte %10101101 ;Cast BLIGHT party

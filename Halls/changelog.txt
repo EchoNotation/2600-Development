@@ -720,9 +720,25 @@
 11/6/23
 	-Did more thorough analysis to determine that writing them separately is more efficient by around 10 bytes, so now the OOZE and SLIME are hopefully done.
 	-Fixed boss encounter ID mix-up
+11/8/23
+	-9 byte optimization moving the maze clearing into the S bank.
+11/9/23
+	-11 byte optimization in LUpdateAvatars
+11/17/23
+	-Fixed maximum recursion depth exception in LApplyRandomModifier
+	-First pass at enemy speed values
+11/18/23
+	-Did some sound data restructuring
+		-Added footstep sound
+		-Added menu nope sound
+		-Added hit sound
+			-Pretty annoying though, probably need another similar sound to pick from
+		-Added swing sound
+	-Fixed bug where the party dying would crash the game
 
 KNOWN BUGS:
 	-Avatars don't clear status when healed exiting battle
+	-Enemies say HEALS FULLY when they probably shouldn't have been?
 
 TODO:
 	Shortlist:
@@ -734,7 +750,7 @@ TODO:
 	-Sleep chance is not affected by Legendary resistance if attempted during CHAOS
 	-Healing spells probably need higher magic power scalings to account for scaling difference between magic and HP
 	-Enemies can GUARD themselves
-		-Could consider making target enemies AI pattern exclude the user
+		-Could consider making target enemies AI pattern exclude the user, this has ramifications for healing and shield spells though...
 
 	Longlist:
 	-Better input handling technique

@@ -98,13 +98,6 @@ LProcessCharacterAdvancement:
 	lda flags
 	ora #NEED_NEW_MAZE
 	sta flags
-	;Clear the mazeData
-	ldy #14
-	lda #%11111111
-.LClearMazeLoop:
-	sta #vEdges,y
-	dey
-	bpl .LClearMazeLoop
 
 	lda mazeAndPartyLevel
 	and #$0F
@@ -1049,6 +1042,8 @@ LProcessFighting:
 	cmp #$94
 	beq .LRetortDamage
 .LSetFightWindup:
+	ldx #$19 ;Swing
+	jsr LLoadSoundInS
 	jsr LGetTargetFromActionOffensive ;Returns the absolute target ID from the currentBattler's action in X 
 	lda battlerHP,x
 	beq .LAttackMissed 
@@ -1753,7 +1748,7 @@ LApplyRandomModifier: SUBROUTINE ;Adds a random number between 0-1 if the party 
 	lda #$01
 .LCalculate:
 	sta tempPointer1
-	jsr LRandom
+	lda rand8 ;Preferably would've been jsr LRandom, but this exceeds recursion depth when ally takes blight damage...
 	and tempPointer1
 	clc
 	adc temp2
@@ -1765,6 +1760,11 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
 	stx temp3
 	sty temp4
+
+	ldx #$18 ;Hit
+	jsr LLoadSoundInS
+
+	jsr LRandom ;Moved to here because of recursion depth exception in LApplyRandomModifier
 	jsr LApplyRandomModifier
 	ldx temp3
 	ldy temp4
@@ -2049,19 +2049,11 @@ LSetTotalAoETgtsDefensive: SUBROUTINE ;Sets the aoeTargetsRemaining byte to the 
 	rts
 
 LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their status and health
-	lda inBattle
-	bpl .LContinue
-	lda #$08
-	bit currentInput
-	beq .LContinue
-	rts
-.LContinue:
 	ldy #3
 	sty charIndex
 .LUpdateAvatarLoop:
 	;Check for status effect
 	ldy charIndex
-
 	lda battlerStatus,y
 	sta tempPointer1
 	and #ASLEEP_MASK
@@ -2339,44 +2331,44 @@ LEnemyAttack:
 	.byte 0 ;Campfire
 
 LEnemySpeed:
-	.byte 1 ;Wolf
-	.byte 1 ;Druid
-	.byte 1 ;Shroom
-	.byte 1 ;Squire
-	.byte 1 ;Archer
-	.byte 1 ;Priest
-	.byte 1 ;Gift
-	.byte 1 ;Sword
-	.byte 1 ;Shield
-	.byte 1 ;Zombie
-	.byte 1 ;Sklton
-	.byte 1 ;Mage
-	.byte 1 ;Goop
-	.byte 1 ;Warlok
-	.byte 1 ;Imp
-	.byte 1 ;Wisp
-	.byte 1 ;RedOrb
-	.byte 1 ;BluOrb
-	.byte 1 ;GrnOrb
-	.byte 1 ;GldOrb
-	.byte 1 ;Bear
-	.byte 1 ;Unicrn
-	.byte 1 ;Volcio
-	.byte 1 ;Glacia
-	.byte 1 ;Grgoyl
-	.byte 1 ;Mimic
-	.byte 1 ;Jester
-	.byte 1 ;Armor
-	.byte 1 ;Spider
-	.byte 1 ;Slime
-	.byte 1 ;Lich
-	.byte 1 ;Shfflr
-	.byte 1 ;Shmblr
-	.byte 1 ;Trophy
-	.byte 1 ;Thickt
-	.byte 1 ;Horror
-	.byte 1 ;Ooze
-	.byte 1 ;Campfire
+	.byte 32 ;Wolf -- Outspeeds mid at level 1
+	.byte 38 ;Druid -- Outspeeds mid at level 2
+	.byte 1 ;Shroom -- Always slowest
+	.byte 35 ;Squire -- Outspeeds slow at level 4
+	.byte 50 ;Archer -- Outspeeds mid at level 4
+	.byte 1 ;Priest -- Always slowest
+	.byte 1 ;Gift -- Always slowest
+	.byte 65 ;Sword -- Outspeeds fast at level 4
+	.byte 45 ;Shield -- Outspeeds mid at level 3
+	.byte 38 ;Zombie -- Outspeeds slow at level 5
+	.byte 76 ;Sklton -- Outspeeds fast at level 5
+	.byte 65 ;Mage -- Outspeeds mid at level 6
+	.byte 1 ;Goop -- Always slowest
+	.byte 60 ;Warlok -- Outspeeds slow
+	.byte 90 ;Imp -- Outspeeds fast at level 7
+	.byte 1 ;Wisp -- Always slowest
+	.byte 70 ;RedOrb -- Outspeeds mid at level 7
+	.byte 1 ;BluOrb -- Always slowest
+	.byte 50 ;GrnOrb -- Outspeeds slow at level 8
+	.byte 90 ;GldOrb -- Outspeeds fast at level 7
+	.byte 25 ;Bear -- Outspeeds slow at level 2
+	.byte 1 ;Unicrn -- Always slowest
+	.byte 38 ;Volcio -- Outspeeds mid at level 2
+	.byte 38 ;Glacia -- Outspeeds mid at level 2
+	.byte 30 ;Grgoyl -- Outspeeds slow at level 3
+	.byte 45 ;Mimic -- Outspeeds mid at level 3
+	.byte 60 ;Jester -- Outspeeds fast at level 3
+	.byte 35 ;Armor -- Outspeeds slow at level 4
+	.byte 55 ;Spider -- Outspeeds mid at level 5
+	.byte 1 ;Slime -- Always slowest
+	.byte 55 ;Lich -- Outspeeds mid at level 5
+	.byte 70 ;Shfflr -- Outspeeds mid at level 7
+	.byte 70 ;Shmblr -- Outspeeds mid at level 7
+	.byte 1 ;Trophy -- N/A
+	.byte 32 ;Thickt -- Outspeeds mid at level 1
+	.byte 75 ;Horror -- Outspeeds mid at level 8
+	.byte 1 ;Ooze -- Always slowest
+	.byte 1 ;Campfire -- N/A
 
 LEnemyMagic:
 	.byte 0 ;Wolf
@@ -2385,7 +2377,7 @@ LEnemyMagic:
 	.byte 0 ;Squire
 	.byte 0 ;Archer
 	.byte 2 ;Priest
-	.byte 0 ;Gift
+	.byte 15 ;Gift
 	.byte 0 ;Sword
 	.byte 0 ;Shield
 	.byte 0 ;Zombie

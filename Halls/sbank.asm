@@ -40,7 +40,6 @@ SClearNames:
 	bpl SClearNames
 
 SSoftReset:
-	jsr SClearMazeData ;Only used here, can save 4 bytes by injecting that code here...
 	ldx #$FF
 	stx currentMenu
 	inx
@@ -94,6 +93,8 @@ SSoftReset:
 	;jsr STryLoadSound
 #endif
 	
+	ldx #$1A
+	jsr STryLoadSound
 
 SStartOfFrame:
 	lda #$82
@@ -143,6 +144,10 @@ SBattleLogicVBlank:
 	bne SDontNeedANewBattler
 	ldy #1 ;Subroutine ID for LDetermineNextBattler
 	jsr SRunFunctionInLBank
+	lda inBattle
+	and #$F0
+	cmp #$F0
+	beq SDontNeedEnemyAI
 	ldx currentBattler
 	cpx #4
 	bcc SDontNeedEnemyAI
@@ -250,7 +255,6 @@ SMazeLogicWithoutSetupCheck:
 	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)
 	bne SPartyDidNotMove ;Party cannot move if in a transition
 	jsr SUpdatePlayerMovement
-	;jmp SPartyDidNotMove
 	cmp #$FF
 	bne SPartyDidNotMove
 	;Need to check for the maze exit and campfire location
@@ -266,6 +270,8 @@ SDidNotTriggerCampfire:
 	beq SGenerateEncounter ;Always trigger an encounter if stepping onto the exit
 SDidNotTriggerExit:
 	;Check to see if a random encounter should occur
+	ldx #$17 ;Footstep
+	jsr STryLoadSound
 	ldx highlightedLineAndSteps
 	bne SNoRandomEncounter
 	lda rand8
@@ -616,6 +622,7 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 	sta flags
 	rts
 .SFirstGeneration:
+	jsr SClearMazeData ;Only used here... Can save 4 bytes by injecting that code here.
 	jsr SGenerateMazeData
 	rts	
 .SUsualGeneration:
@@ -1552,6 +1559,8 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	ldy highlightedLineAndSteps
 	bpl .SConfirmSpell
 	;Not enough mana to select this spell. Play an error sound effect
+	ldx #$16 ;Menu nope
+	jsr STryLoadSound
 	rts
 .SConfirmSpell:	
 	;Need to determine what the targeting of this spell is in order to advance to none or correct targeting
@@ -2038,9 +2047,6 @@ SAfterLoadingEnemyAI:
 	sta enemyAction
 	rts
 
-	ORG $FC20
-	RORG $FC20
-
 S4Lsr: SUBROUTINE
 	lsr
 	lsr
@@ -2070,30 +2076,8 @@ SRogueBattleTable:
 	.byte $85
 	.byte $83
 
-SVoices:
-	.byte 0
-	.byte (SFireVoices & $FF)
-	.byte (SSleepVoices & $FF)
-	.byte (SBlizrdVoices & $FF)
-	.byte (SDrainVoices & $FF)
-	.byte (SThundrVoices & $FF)
-	.byte (SShieldVoices & $FF)
-	.byte (SMeteorVoices & $FF)
-	.byte (SChaosVoices & $FF)
-	.byte (SHealSpellVoices & $FF)
-	.byte (SSmiteVoices & $FF)
-	.byte 0
-	.byte (SSharpVoices & $FF)
-	.byte (SBlightSpellVoices & $FF)
-	.byte (STriageVoices & $FF)
-	.byte (SWitherVoices & $FF)
-	.byte (SBanishSpellVoices & $FF)
-	.byte (STranceVoices & $FF)
-	.byte (SWishVoices & $FF)
-	.byte 0
-	.byte (SMenuMoveVoices & $FF)
-	.byte (SMenuMoveVoices & $FF) ;Confirm and move are the same length using the same voices
-	.byte (SWitherVoices & $FF) ;Menu nope only uses 1 sample of voice 7
+	ORG $FC00
+	RORG $FC00
 
 SFireVoices:
 	.byte $8
@@ -2271,84 +2255,27 @@ SWishVoices:
 SMenuMoveVoices:
 	.byte $C
 	.byte $C
+SFootstepVoices:
+	.byte $6
+	.byte $6
+SHitVoices:
+	.byte $8
+	.byte $8
+	.byte $8
+	.byte $8
+SSwingVoices:
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
+STinkVoices:
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
 
 	ORG $FD00
 	RORG $FD00
-
-SSoundLengths:
-	.byte 0 ;No sound
-	.byte 8 ;FIRE
-	.byte 6 ;SLEEP
-	.byte 13 ;BLIZRD
-	.byte 6 ;DRAIN
-	.byte 10 ;THUNDR
-	.byte 8 ;SHIELD
-	.byte 16 ;METEOR
-	.byte 11 ;CHAOS
-	.byte 4 ;HEAL
-	.byte 10 ;SMITE
-	.byte 0
-	.byte 8 ;SHARP
-	.byte 12 ;BLIGHT spell
-	.byte 9 ;TRIAGE
-	.byte 9 ;WITHER
-	.byte 10 ;BANISH
-	.byte 8 ;TRANCE
-	.byte 8 ;WISH
-	.byte 0
-	.byte 2 ;Menu move
-	.byte 2 ;Menu confirm
-	.byte 1 ;Menu nope
-
-SSoundFrequencies:
-	.byte 0 ;No sound
-	.byte 10 ;FIRE
-	.byte 8 ;SLEEP
-	.byte 5 ;BLIZRD
-	.byte 4 ;DRAIN
-	.byte 5 ;THUNDR
-	.byte 4 ;SHIELD
-	.byte 5 ;METEOR
-	.byte 4 ;CHAOS
-	.byte 5 ;HEAL
-	.byte 5 ;SMITE
-	.byte 1 ;VOLLEY
-	.byte 5 ;SHARP
-	.byte 2 ;BLIGHT spell
-	.byte 5 ;TRIAGE
-	.byte 4 ;WITHER
-	.byte 6 ;BANISH
-	.byte 6 ;TRANCE
-	.byte 6 ;WISH
-	.byte 0
-	.byte 4 ;Menu move
-	.byte 4 ;Menu confirm
-	.byte 8 ;Menu nope
-
-SPitches:
-	.byte 0
-	.byte (SFirePitches & $FF)
-	.byte (SSleepPitches & $FF)
-	.byte (SBlizrdPitches & $FF)
-	.byte (SDrainPitches & $FF)
-	.byte (SThundrPitches & $FF)
-	.byte (SShieldPitches & $FF)
-	.byte (SMeteorPitches & $FF)
-	.byte (SChaosPitches & $FF)
-	.byte (SHealSpellPitches & $FF)
-	.byte (SSmitePitches & $FF)
-	.byte 0
-	.byte (SSharpPitches & $FF)
-	.byte (SBlightSpellPitches & $FF)
-	.byte (STriagePitches & $FF)
-	.byte (SWitherPitches & $FF)
-	.byte (SBanishSpellPitches & $FF)
-	.byte (STrancePitches & $FF)
-	.byte (SWishPitches & $FF)
-	.byte 0
-	.byte (SMenuMovePitches & $FF)
-	.byte (SMenuConfirmPitches & $FF)
-	.byte (SMenuNopePitches & $FF)
 
 SFirePitches:
 	.byte $1F
@@ -2529,8 +2456,25 @@ SMenuMovePitches:
 SMenuConfirmPitches:
 	.byte $3
 	.byte $7
+SFootstepPitches:
+	.byte $B
 SMenuNopePitches:
-	.byte $7
+	.byte $F
+SHitPitches:
+	.byte $6
+	.byte $2
+	.byte $3
+	.byte $2
+SSwingPitches:
+	.byte $10
+	.byte $D
+	.byte $D
+	.byte $10
+STinkPitches:
+	.byte $3
+	.byte $3
+	.byte $3
+	.byte $5
 
 	ORG $FDFE
 	RORG $FDFE
@@ -2586,6 +2530,135 @@ SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
 .SReturn:
 	rts
 
+SSoundLengths:
+	.byte 0 ;No sound
+	.byte 8 ;FIRE
+	.byte 6 ;SLEEP
+	.byte 13 ;BLIZRD
+	.byte 6 ;DRAIN
+	.byte 10 ;THUNDR
+	.byte 8 ;SHIELD
+	.byte 16 ;METEOR
+	.byte 11 ;CHAOS
+	.byte 4 ;HEAL
+	.byte 10 ;SMITE
+	.byte 0
+	.byte 8 ;SHARP
+	.byte 12 ;BLIGHT spell
+	.byte 9 ;TRIAGE
+	.byte 9 ;WITHER
+	.byte 10 ;BANISH
+	.byte 8 ;TRANCE
+	.byte 8 ;WISH
+	.byte 0
+	.byte 2 ;Menu move
+	.byte 2 ;Menu confirm
+	.byte 1 ;Menu nope
+	.byte 2 ;Footstep
+	.byte 4 ;Hit
+	.byte 4 ;Swing
+	.byte 4 ;Tink
+
+SSoundFrequencies:
+	.byte 0 ;No sound
+	.byte 10 ;FIRE
+	.byte 8 ;SLEEP
+	.byte 5 ;BLIZRD
+	.byte 4 ;DRAIN
+	.byte 5 ;THUNDR
+	.byte 4 ;SHIELD
+	.byte 5 ;METEOR
+	.byte 4 ;CHAOS
+	.byte 5 ;HEAL
+	.byte 5 ;SMITE
+	.byte 1 ;VOLLEY
+	.byte 5 ;SHARP
+	.byte 2 ;BLIGHT spell
+	.byte 5 ;TRIAGE
+	.byte 4 ;WITHER
+	.byte 6 ;BANISH
+	.byte 6 ;TRANCE
+	.byte 6 ;WISH
+	.byte 0
+	.byte 4 ;Menu move
+	.byte 4 ;Menu confirm
+	.byte 8 ;Menu nope
+	.byte 2 ;Footstep
+	.byte 3 ;Hit
+	.byte 4 ;Swing
+	.byte 4 ;Tink
+
+SVoices:
+	.byte 0
+	.byte (SFireVoices & $FF)
+	.byte (SSleepVoices & $FF)
+	.byte (SBlizrdVoices & $FF)
+	.byte (SDrainVoices & $FF)
+	.byte (SThundrVoices & $FF)
+	.byte (SShieldVoices & $FF)
+	.byte (SMeteorVoices & $FF)
+	.byte (SChaosVoices & $FF)
+	.byte (SHealSpellVoices & $FF)
+	.byte (SSmiteVoices & $FF)
+	.byte 0
+	.byte (SSharpVoices & $FF)
+	.byte (SBlightSpellVoices & $FF)
+	.byte (STriageVoices & $FF)
+	.byte (SWitherVoices & $FF)
+	.byte (SBanishSpellVoices & $FF)
+	.byte (STranceVoices & $FF)
+	.byte (SWishVoices & $FF)
+	.byte 0
+	.byte (SMenuMoveVoices & $FF)
+	.byte (SMenuMoveVoices & $FF) ;Confirm and move are the same length using the same voices
+	.byte (SWitherVoices & $FF) ;Menu nope only uses 1 sample of voice 7
+	.byte (SFootstepVoices & $FF)
+	.byte (SHitVoices & $FF)
+	.byte (SSwingVoices & $FF)
+	.byte (STinkVoices & $FF)
+
+SPitches:
+	.byte 0
+	.byte (SFirePitches & $FF)
+	.byte (SSleepPitches & $FF)
+	.byte (SBlizrdPitches & $FF)
+	.byte (SDrainPitches & $FF)
+	.byte (SThundrPitches & $FF)
+	.byte (SShieldPitches & $FF)
+	.byte (SMeteorPitches & $FF)
+	.byte (SChaosPitches & $FF)
+	.byte (SHealSpellPitches & $FF)
+	.byte (SSmitePitches & $FF)
+	.byte 0
+	.byte (SSharpPitches & $FF)
+	.byte (SBlightSpellPitches & $FF)
+	.byte (STriagePitches & $FF)
+	.byte (SWitherPitches & $FF)
+	.byte (SBanishSpellPitches & $FF)
+	.byte (STrancePitches & $FF)
+	.byte (SWishPitches & $FF)
+	.byte 0
+	.byte (SMenuMovePitches & $FF)
+	.byte (SMenuConfirmPitches & $FF)
+	.byte (SMenuNopePitches & $FF)
+	.byte (SFootstepPitches & $FF)
+	.byte (SHitPitches & $FF)
+	.byte (SSwingPitches & $FF)
+	.byte (STinkPitches & $FF)
+
+	ORG $FEC0
+	RORG $FEC0
+
+SLoadEnemyAI:
+	sta $1FF8 ;Go to bank 2
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	jmp SAfterLoadingEnemyAI
+
 SSpellTargetingLookup:
 	.byte $0 ;BACK
 	.byte $1 ;FIRE
@@ -2607,22 +2680,7 @@ SSpellTargetingLookup:
 	.byte $0 ;TRANCE
 	.byte $84 ;WISH
 
-	;There's 96 bytes in here...
-
-	ORG $FEC0
-	RORG $FEC0
-
-SLoadEnemyAI:
-	sta $1FF8 ;Go to bank 2
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	jmp SAfterLoadingEnemyAI
-
-	;There is 52 bytes in here...
+	;There is 33 bytes in here...
 
 	ORG $FF00
 	RORG $FF00

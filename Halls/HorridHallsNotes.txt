@@ -128,6 +128,10 @@ $13 - Unallocated
 $14 - Menu move
 $15 - Menu confirm
 $16 - Menu nope
+$17 - Footstep
+$18 - Hit
+$19 - Swing
+$1A - Tink
 
 --- SUBROUTINE IDs ---
 $00 - LDoBattle
