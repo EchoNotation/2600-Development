@@ -735,10 +735,13 @@
 			-Pretty annoying though, probably need another similar sound to pick from
 		-Added swing sound
 	-Fixed bug where the party dying would crash the game
+11/19/23
+	-The menu confirm sound can always be overridden
+	-Fixed bug where the wrong person would be put to sleep
 
 KNOWN BUGS:
 	-Avatars don't clear status when healed exiting battle
-	-Enemies say HEALS FULLY when they probably shouldn't have been?
+	-Enemies say HEALS FULLY when they probably shouldn't have been? Not 100% sure on this
 
 TODO:
 	Shortlist:

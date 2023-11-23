@@ -132,6 +132,7 @@ $17 - Footstep
 $18 - Hit
 $19 - Swing
 $1A - Tink
+$1B - Heal
 
 --- SUBROUTINE IDs ---
 $00 - LDoBattle

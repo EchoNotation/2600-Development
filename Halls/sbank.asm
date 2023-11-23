@@ -93,7 +93,7 @@ SSoftReset:
 	;jsr STryLoadSound
 #endif
 	
-	ldx #$1A
+	ldx #$1B
 	jsr STryLoadSound
 
 SStartOfFrame:
@@ -2273,6 +2273,13 @@ STinkVoices:
 	.byte $4
 	.byte $4
 	.byte $4
+SHealVoices:
+	.byte $E
+	.byte $E
+	.byte $E
+	.byte $0
+	.byte $E
+	.byte $E
 
 	ORG $FD00
 	RORG $FD00
@@ -2475,13 +2482,24 @@ STinkPitches:
 	.byte $3
 	.byte $3
 	.byte $5
+SHealPitches:
+	.byte $1
+	.byte $2
+	.byte $4
+	.byte $0
+	.byte $2
+	.byte $4
 
-	ORG $FDFE
-	RORG $FDFE
+	ORG $FDF0
+	RORG $FDF0
 
 STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
+	lda currentSound
+	cmp #$15
+	beq .SForceLoad
 	cpx currentSound
 	bcc .SDontLoad ;Don't load a sound if ID is lower than one that is already playing
+.SForceLoad:
 	stx currentSound
 	lda SSoundLengths,x
 	sta soundOffset
@@ -2558,6 +2576,7 @@ SSoundLengths:
 	.byte 4 ;Hit
 	.byte 4 ;Swing
 	.byte 4 ;Tink
+	.byte 6 ;Heal
 
 SSoundFrequencies:
 	.byte 0 ;No sound
@@ -2587,6 +2606,7 @@ SSoundFrequencies:
 	.byte 3 ;Hit
 	.byte 4 ;Swing
 	.byte 4 ;Tink
+	.byte 4 ;Heal
 
 SVoices:
 	.byte 0
@@ -2616,6 +2636,7 @@ SVoices:
 	.byte (SHitVoices & $FF)
 	.byte (SSwingVoices & $FF)
 	.byte (STinkVoices & $FF)
+	.byte (SHealVoices & $FF)
 
 SPitches:
 	.byte 0
@@ -2645,6 +2666,7 @@ SPitches:
 	.byte (SHitPitches & $FF)
 	.byte (SSwingPitches & $FF)
 	.byte (STinkPitches & $FF)
+	.byte (SHealPitches & $FF)
 
 	ORG $FEC0
 	RORG $FEC0

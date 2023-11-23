@@ -647,6 +647,7 @@ LProcessCasting:
 	beq .LSleepFailed
 .LSleepSuccessful:
 	lda #ASLEEP_MASK
+	ldx startingCursorIndexAndTargetID
 	jsr LApplyStatus
 	lda #$1B ;X FELL ASLEEP
 .LStoreAndLeaveSleep:
@@ -1814,7 +1815,7 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	bcs .LSurvived
 .LDealDamageToEnemy:
 	ldx #5 ;Enemy damage flash effect
-	jsr LLoadEffect
+	jsr LLoadEffect ;This goes into a different bank, and so exceeds recursion depth when caused by blight damage
 
 	lda temp4 ;The damage mask
 	ldy #$FF
@@ -1876,6 +1877,11 @@ LApplyStatus: SUBROUTINE ;Applies additional status A to target X
 LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if healing was denied by blight, 0 if this battler's health was maxed out, else the decimal amount that was healed
 	stx temp5 ;target index
 	sta temp2 ;binary amount to regain
+
+	ldx #$1B ;Heal
+	jsr LLoadSoundInS
+	ldx temp5
+
 	lda #BLIGHTED_MASK
 	and battlerStatus,x
 	beq .LNoBlight
