@@ -1091,7 +1091,7 @@ LProcessFighting:
 	sta inBattle
 	rts
 .LTargetWasParrying:
-	lda #$1A ;Tink
+	ldx #$1A ;Tink
 	jsr LLoadSoundInS
 	lda #$23 ;X BLOCKS
 	sta currentMessage
@@ -1107,7 +1107,7 @@ LProcessFighting:
 	sta inBattle
 	rts
 .LRetortDescription:
-	lda #$19 ;Swing
+	ldx #$19 ;Swing
 	jsr LLoadSoundInS
 	lda #$22 ;X STABS Y (parry version)
 	sta currentMessage
@@ -1115,7 +1115,7 @@ LProcessFighting:
 	sta inBattle
 	rts
 .LRetortDamage:
-	lda #$18 ;Hit
+	ldx #$18 ;Hit
 	jsr LLoadSoundInS
 	
 	ldx startingCursorIndexAndTargetID ;The person who was parrying
@@ -2071,54 +2071,40 @@ LSetTotalAoETgtsDefensive: SUBROUTINE ;Sets the aoeTargetsRemaining byte to the 
 	rts
 
 LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their status and health
-	ldy #3
-	sty charIndex
+	ldx #3
 .LUpdateAvatarLoop:
 	;Check for status effect
-	ldy charIndex
-	lda battlerStatus,y
-	sta tempPointer1
+	stx charIndex
+	lda battlerStatus,x
 	and #ASLEEP_MASK
 	bne .LAsleep
-	lda tempPointer1
+	lda battlerStatus,x
 	and #BLIGHTED_MASK
 	bne .LBlighted
 
 	;Check for HP
-
-	lda hp1,y
+	lda hp1,x
 	beq .LDead
-	jsr LDecimalToBinary
-	sta tempPointer1 ;Now contains the current HP for this party member in binary
+	sta tempPointer2 ;current HP in decimal
 
+	jsr LGetBattlerMaxHP ;Doesn't change X
+	brk ;LBinaryToDecimal
+	;A now contains the max hp of this battler in decimal
+	sed
+	sec
+	sbc tempPointer2 ;Repeatedly subtract the current HP
+	sbc tempPointer2
+	bcc .LAboveHalf ;jump if A would be < 0
+	sbc tempPointer2
+	bcc .LAboveThird
 
-	;This code takes a lot of space, can't we just use LGetBattlerMaxHP?
-	;lda char1,y
-	;and #$0F
-	;tax
-	;lda LClassHPLookup,x
-	;sta tempPointer2
-	;lda #(LLowStatGrowth >> 8 & $FF)
-	;sta tempPointer2+1
-
-	lda mazeAndPartyLevel
-	and #$0F
-	tay
-	dey
-	lda (tempPointer2),y ;A now contains the max HP for this party member
-	lsr
-	cmp tempPointer1
-	bcc .LAboveHalf
-	lsr
-	cmp tempPointer1
-	bcc .LAboveQuarter
-	lda #$10 ;Mood 1
+	lda #$10 ;Mood 1 -- Sad
 	bne .LChangeMood
 .LAboveHalf:
-	lda #$30 ;Mood 3
+	lda #$30 ;Mood 3 -- Happy
 	bne .LChangeMood
-.LAboveQuarter:
-	lda #$20 ;Mood 2
+.LAboveThird:
+	lda #$20 ;Mood 2 -- Neutral
 	bne .LChangeMood
 .LAsleep:
 	lda #$60 ;Mood 6
@@ -2132,18 +2118,16 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 	lda #$00 ;Mood 0
 .LChangeMood:
 	sta tempPointer1
-
-	ldy charIndex
-
+	ldx charIndex
 .LChangeMoodLater:
-	lda char1,y
+	cld
+	lda char1,x
 	and #$0F
 	ora tempPointer1
-	sta char1,y
+	sta char1,x
 	
-	dec charIndex
+	dex
 	bpl .LUpdateAvatarLoop
-	inc charIndex
 	rts
 
 LOverrideAvatar: SUBROUTINE ;Sets party member X's mood to Y. 17 bytes
@@ -2188,33 +2172,6 @@ LLoadEnemyHP: SUBROUTINE ;Loads the correct starting HP values for all enemies b
 .LNextIteration:
 	dex
 	bpl .LLoadEnemyHPLoop
-	rts
-
-LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to convert to binary. Returns the result in A.
-	ldx #0
-	sed
-.LRemove16s:
-	sec
-	sbc #$16
-	bcc .LDoneRemoving16s
-	inx
-	bne .LRemove16s
-.LDoneRemoving16s:
-	adc #$16
-	cld
-	cmp #$10
-	bcs .LOver10
-	sta tempPointer2
-	bcc .LCombine ;Should always be taken
-.LOver10:
-	and #$0F
-	clc
-	adc #10
-	sta tempPointer2
-.LCombine:
-	txa
-	jsr L4Asl
-	ora tempPointer2
 	rts
 
 LHPDeltas:

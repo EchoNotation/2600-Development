@@ -746,6 +746,9 @@
 		-Find out later if this is too strong for monsters
 12/19/23
 	-Added connection for "tink" sound, as well as connections for sounds related to parrying and riposting.
+12/20/23
+	-Optimized LUpdateAvatars for rom size while only changing the functionality a little
+		-Runs too slowly though...
 
 KNOWN BUGS:
 	-Avatars don't clear status when healed exiting battle
