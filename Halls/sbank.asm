@@ -332,7 +332,7 @@ STryStartGame:
 	cpy #24 ;The ready button
 	bne SWaitForOverscanTimer
 	;If here, that means that the button was pressed when on the ready option
-	lda #$01 ;Maze level 1, party level 1
+	lda #$09 ;Maze level 1, party level 1
 	sta mazeAndPartyLevel
 	lda #15
 	sta experienceToNextLevel
@@ -598,6 +598,7 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 	ldy #5 ;LLoadPlayerVars
 	jsr SRunFunctionInLBank ;This operation restores all party members to max HP and MP
 	;Need to position player, exit, and campfire
+
 	jsr SRandom
 	and #$07
 	tay
@@ -2026,20 +2027,36 @@ SAfterLoadingEnemyAI:
 	jsr SRandom
 	and #$03 ;A contains a random number between 0 and 3
 	tax
-	ldy #0
+	stx tempPointer5 ;Infinite loop breaking...
+	ldy #4
 .SFindEnemyLoop:
-	lda enemyHP,y
+	lda temp6
+	cmp #$03 ;GUARD action
+	bne .SNormalCheck
+	;If here, then this is a guard action, so need to make sure Y is not the current battler
+	cpy currentBattler
+	beq .SNoEnemyHere
+.SNormalCheck:
+	lda battlerHP,y
 	beq .SNoEnemyHere
 	dex
 	bmi .SFoundEnemy
 .SNoEnemyHere:
 	iny
-	cpy #4
+	cpy #8
 	bcc .SFindEnemyLoop
-	ldy #0
-	beq .SFindEnemyLoop
+	cpx tempPointer5
+	beq .SBreakInfiniteLoop
+	ldy #4
+	bne .SFindEnemyLoop
+.SBreakInfiniteLoop:
+	lda #$04 ;PARRY
+	sta enemyAction
+	rts
 .SFoundEnemy:
-	tya ;A now contains the relative index of the enemy to target
+	tya ;A now contains the absolute index of the enemy to target
+	sec
+	sbc #4
 .STargetsNone:
 .SSaveAndExit:
 	jsr S5Asl

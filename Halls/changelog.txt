@@ -738,10 +738,20 @@
 11/19/23
 	-The menu confirm sound can always be overridden
 	-Fixed bug where the wrong person would be put to sleep
+12/18/23
+	-Enemies can no longer guard themselves
+		-If the last enemy alive tries to guard, they will instead parry
+	-Added DOUBLE_MAGIC spell scaling, and doubled all healing values
+		-There may be some room for optimization in LDetermineSpellPower
+		-Find out later if this is too strong for monsters
+12/19/23
+	-Added connection for "tink" sound, as well as connections for sounds related to parrying and riposting.
 
 KNOWN BUGS:
 	-Avatars don't clear status when healed exiting battle
 	-Enemies say HEALS FULLY when they probably shouldn't have been? Not 100% sure on this
+	-Setting enemy damage effect due to blight exceeds maximum recursion depth
+	-Sleep chance is not affected by Legendary resistance if attempted during CHAOS
 
 TODO:
 	Shortlist:
@@ -750,17 +760,13 @@ TODO:
 		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
-	-Sleep chance is not affected by Legendary resistance if attempted during CHAOS
-	-Healing spells probably need higher magic power scalings to account for scaling difference between magic and HP
-	-Enemies can GUARD themselves
-		-Could consider making target enemies AI pattern exclude the user, this has ramifications for healing and shield spells though...
+	-Optimize/refactor LUpdateAvatars, preferably removing LDecimalToBinary as well.
 
 	Longlist:
-	-Better input handling technique
 	-Being guarded reduces blight damage, fix?
+	-Possible to guard unconscious party members, fix?
 	-Sharp increases attack power of unconscious party members
 	-Maybe need to buff blight to 1/4 max HP per round
-	-Running should be slightly random anyway?
 
 	Additional sounds to consider:
 		-Footsteps

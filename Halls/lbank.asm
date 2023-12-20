@@ -496,7 +496,7 @@ LProcessCasting:
 	rts ;This code intentionally left blank
 .LDrainPhase2:
 	lda aoeValueAndCampfireControl ;The amount that was dealt
-	lsr
+	;lsr Don't halve the amount to heal after HP scaling changes
 	ldx currentBattler
 	stx startingCursorIndexAndTargetID
 	jmp .LManageHealingMessage
@@ -688,7 +688,7 @@ LProcessCasting:
 	bne .LGoToTgtDamage
 
 .LWish:
-	ldy #HALF_MAGIC
+	ldy #FULL_MAGIC
 	jsr LDetermineSpellPower
 	sta aoeValueAndCampfireControl
 	lda #$28 ;PARTY STATUS CLEAR
@@ -721,7 +721,7 @@ LProcessCasting:
 	rts
 
 .LHeal:
-	ldy #FULL_MAGIC
+	ldy #DOUBLE_MAGIC
 	jsr LDetermineSpellPower
 	ldx startingCursorIndexAndTargetID
 .LManageHealingMessage:
@@ -906,7 +906,7 @@ LProcessCasting:
 	jmp .LTryNextTgt
 
 .LTriage:
-	ldy #HALF_MAGIC
+	ldy #FULL_MAGIC
 	jsr LDetermineSpellPower
 	ldx startingCursorIndexAndTargetID
 .LManageAoEHealingMessage:
@@ -1091,6 +1091,8 @@ LProcessFighting:
 	sta inBattle
 	rts
 .LTargetWasParrying:
+	lda #$1A ;Tink
+	jsr LLoadSoundInS
 	lda #$23 ;X BLOCKS
 	sta currentMessage
 	ldx currentBattler
@@ -1105,12 +1107,17 @@ LProcessFighting:
 	sta inBattle
 	rts
 .LRetortDescription:
+	lda #$19 ;Swing
+	jsr LLoadSoundInS
 	lda #$22 ;X STABS Y (parry version)
 	sta currentMessage
 	lda #$94
 	sta inBattle
 	rts
 .LRetortDamage:
+	lda #$18 ;Hit
+	jsr LLoadSoundInS
+	
 	ldx startingCursorIndexAndTargetID ;The person who was parrying
 	jsr LGetBattlerAttack
 	sta temp2 ;The raw damage number
@@ -1413,6 +1420,8 @@ LDetermineSpellPower: SUBROUTINE ;Interprets Y as the damage formula to follow, 
 	beq .LThreeHalvesMagic
 	dey
 	beq .LAttackAndHalfMagic
+	dey
+	beq .LDoubleMagic
 	lda #0 ;Invalid power formula!
 	rts
 .LFullMagic:
@@ -1421,6 +1430,10 @@ LDetermineSpellPower: SUBROUTINE ;Interprets Y as the damage formula to follow, 
 .LHalfMagic:
 	jsr LGetBattlerMagic
 	lsr
+	rts
+.LDoubleMagic:
+	jsr LGetBattlerMagic
+	asl
 	rts
 .LThreeHalvesMagic:
 	jsr LGetBattlerMagic
@@ -1600,6 +1613,9 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 	and #$04
 	eor temp5
 	beq .LAlliedSpellsNotBlocked
+
+	ldx #$1A ;Tink
+	jsr LLoadSoundInS
 
 	lda battlerStatus,x
 	and #TIMER_MASK
@@ -2075,13 +2091,15 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 	jsr LDecimalToBinary
 	sta tempPointer1 ;Now contains the current HP for this party member in binary
 
-	lda char1,y
-	and #$0F
-	tax
-	lda LClassHPLookup,x
-	sta tempPointer2
-	lda #(LLowStatGrowth >> 8 & $FF)
-	sta tempPointer2+1
+
+	;This code takes a lot of space, can't we just use LGetBattlerMaxHP?
+	;lda char1,y
+	;and #$0F
+	;tax
+	;lda LClassHPLookup,x
+	;sta tempPointer2
+	;lda #(LLowStatGrowth >> 8 & $FF)
+	;sta tempPointer2+1
 
 	lda mazeAndPartyLevel
 	and #$0F
@@ -2133,10 +2151,7 @@ LOverrideAvatar: SUBROUTINE ;Sets party member X's mood to Y. 17 bytes
 	and #$0F ;Get just the class
 	sta temp6
 	tya
-	asl
-	asl
-	asl
-	asl
+	jsr L4Asl
 	ora temp6
 	sta char1,x
 	rts
@@ -2198,10 +2213,7 @@ LDecimalToBinary: SUBROUTINE ;Will interpret A as the number in decimal to conve
 	sta tempPointer2
 .LCombine:
 	txa
-	asl
-	asl
-	asl
-	asl
+	jsr L4Asl
 	ora tempPointer2
 	rts
 
