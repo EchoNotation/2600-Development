@@ -748,13 +748,18 @@
 	-Added connection for "tink" sound, as well as connections for sounds related to parrying and riposting.
 12/20/23
 	-Optimized LUpdateAvatars for rom size while only changing the functionality a little
-		-Runs too slowly though...
+		-Removed LDecimalToBinary
+	-Added LGetBattlerMaxHPDecimal in order to speed up LUpdateAvatars, and removed lots of BinaryToDecimal calls throughout the LBank.
+	-Fixed incorrect sound loading for parry/riposte sound effects
+	-Avatars should update correctly after exiting battle, campfire, and bosses.
+		-Just monitor for oddities...
+	-Simple but jank solution to blight damage recursion exception
+		-Monitor for any issues with using tempPointer6
+	-Relocated sleep logic into separate function, LTrySleep
+	-Sleep chance is now properly affected by legendary resistance when attempted during CHAOS.
 
 KNOWN BUGS:
-	-Avatars don't clear status when healed exiting battle
 	-Enemies say HEALS FULLY when they probably shouldn't have been? Not 100% sure on this
-	-Setting enemy damage effect due to blight exceeds maximum recursion depth
-	-Sleep chance is not affected by Legendary resistance if attempted during CHAOS
 
 TODO:
 	Shortlist:
@@ -763,7 +768,6 @@ TODO:
 		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
-	-Optimize/refactor LUpdateAvatars, preferably removing LDecimalToBinary as well.
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
@@ -772,7 +776,6 @@ TODO:
 	-Maybe need to buff blight to 1/4 max HP per round
 
 	Additional sounds to consider:
-		-Footsteps
 		-Monster roar near exit
 		-Enter battle sound
 		-Level up jingle

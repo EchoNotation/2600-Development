@@ -51,12 +51,12 @@ SSoftReset:
 
 #if BUILD_DEBUG
 	;Debug only code, do not include in final version!
-	;ldy #0
-	;sty cursorIndexAndMessageY
-	;lda #$09 ;Maze level 0, party level 9
-	;sta mazeAndPartyLevel
-	lda #24
-	sta cursorIndexAndMessageY
+	ldy #0
+	sty cursorIndexAndMessageY
+	lda #$09 ;Maze level 0, party level 9
+	sta mazeAndPartyLevel
+	;lda #24
+	;sta cursorIndexAndMessageY
 	;lda #0
 	;sta currentMenu
 
@@ -64,23 +64,25 @@ SSoftReset:
 	;sta campfireLocation
 	;lda #$01
 	;sta exitLocation
-	;lda #10
-	;sta hp1
 	;sta hp2
 	;sta hp3
 	;sta hp4
-	;lda #$80
-	;sta inBattle
+	lda #$80
+	sta inBattle
+	sta hp1
 	;lda #$81
-	;sta currentMenu
-	;lda #1
-	;sta menuSize
-	;lda #$10
-	;sta enemyID
+	sta currentMenu
+	lda #2
+	sta menuSize
+	sta enemyID
 	;lda #$11
 	;sta enemyID+2
-	;lda #1
-	;sta enemyHP
+	lda #$1
+	sta enemyHP
+	sta battlerStatus
+	sta battlerStatus+4
+	lda #$88
+	sta hasAction
 	;sta enemyHP+1
 	;sta enemyHP+2
 	;sta enemyHP+3
@@ -597,8 +599,10 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 .SPlaceObjectives
 	ldy #5 ;LLoadPlayerVars
 	jsr SRunFunctionInLBank ;This operation restores all party members to max HP and MP
-	;Need to position player, exit, and campfire
+	ldy #2 ;LUpdateAvatars
+	jsr SRunFunctionInLBank
 
+	;Need to position player, exit, and campfire
 	jsr SRandom
 	and #$07
 	tay

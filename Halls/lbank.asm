@@ -315,8 +315,7 @@ LProcessCharacterAdvancement:
 	ldx #3
 .LFullRestoreLoop:
 	stx charIndex
-	jsr LGetBattlerMaxHP
-	brk ;LBinaryToDecimal
+	jsr LGetBattlerMaxHPDecimal
 	ldx charIndex
 	sta battlerHP,x
 	jsr LGetBattlerMaxMP
@@ -632,32 +631,8 @@ LProcessCasting:
 	bne .LGoToTgtDamage
 
 .LSleep:
-	ldx startingCursorIndexAndTargetID
-	jsr LGetBattlerResistances
-	and #LEGENDARY_RESIST_MASK
-	bne .LTryingToPutBossToSleep
-	lda #$01 ;50% for normal enemies
-	bne .LTrySleep
-.LTryingToPutBossToSleep:
-	lda #$07 ;12.5% for bosses
-.LTrySleep:
-	sta temp2
-	jsr LRandom
-	and temp2
-	beq .LSleepFailed
-.LSleepSuccessful:
-	lda #ASLEEP_MASK
-	ldx startingCursorIndexAndTargetID
-	jsr LApplyStatus
-	lda #$1B ;X FELL ASLEEP
-.LStoreAndLeaveSleep:
-	sta currentMessage
-	bne .LNormalTgtedExit
-.LSleepFailed:
-	lda #$15 ;NO EFFECT
-	bne .LStoreAndLeaveSleep
-
-
+	jsr LTrySleep
+	jmp .LNormalTgtedExit
 
 .LDrain:
 	;this is a 2-stage maneuver
@@ -889,20 +864,17 @@ LProcessCasting:
 	lda temp2 ;Damage to deal
 	jmp .LAoEDamage
 .LChaosStatus:
-	ldx startingCursorIndexAndTargetID
 	jsr LRandom
 	bpl .LChaosSleep
 .LChaosBlight:
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
 	lda #BLIGHTED_MASK
-	bne .LApplyChaosStatus
-.LChaosSleep:
-	lda #$1B ;X FELL ASLEEP
-	sta currentMessage
-	lda #ASLEEP_MASK
-.LApplyChaosStatus:
+	ldx startingCursorIndexAndTargetID
 	jsr LApplyStatus
+	jmp .LTryNextTgt
+.LChaosSleep:
+	jsr LTrySleep
 	jmp .LTryNextTgt
 
 .LTriage:
@@ -1632,6 +1604,31 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 	lda #$FF
 	rts
 
+LTrySleep: SUBROUTINE ;Performs logic necessary to try to put the targeted battler to sleep.
+	ldx startingCursorIndexAndTargetID
+	jsr LGetBattlerResistances
+	and #LEGENDARY_RESIST_MASK
+	bne .LTryingToPutBossToSleep
+	lda #$01 ;50% for normal enemies
+	bne .LCheckSleepRandom
+.LTryingToPutBossToSleep:
+	lda #$07 ;12.5% for bosses
+.LCheckSleepRandom:
+	sta temp2
+	jsr LRandom
+	and temp2
+	bne .LSleepFailed
+	lda #ASLEEP_MASK
+	ldx startingCursorIndexAndTargetID
+	jsr LApplyStatus
+	lda #$1B ;X FELL ASLEEP
+	bne .LStoreAndReturn
+.LSleepFailed:
+	lda #$15 ;NO EFFECT
+.LStoreAndReturn:
+	sta currentMessage
+	rts
+
 LFindFirstLivingAlly: SUBROUTINE ;Returns the id of first party member with positive HP in X.
 	ldx #0
 .LLoop:
@@ -1778,6 +1775,9 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	stx temp3
 	sty temp4
 
+	lda viewedPartyInfo
+	sta tempPointer6
+
 	ldx #$18 ;Hit
 	jsr LLoadSoundInS
 
@@ -1856,6 +1856,10 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	asl temp2
 .LNormalEnemyLived:
 	sta battlerHP,x
+
+	lda tempPointer6
+	sta viewedPartyInfo
+
 	lda #0
 	rts
 .LDied:
@@ -1863,6 +1867,9 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	bpl .LNormalEnemyDied
 	asl temp2
 .LNormalEnemyDied
+	lda tempPointer6
+	sta viewedPartyInfo
+
 	lda #$FF
 	rts
 
@@ -1922,8 +1929,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	cld
 	bcs .LAdditionOverflow
 	sta temp3 ;current health + heal amount
-	jsr LGetBattlerMaxHP
-	brk ;LBinaryToDecimal
+	jsr LGetBattlerMaxHPDecimal
 	ldx temp5 ;targetID
 	cmp temp3
 	bcc .LMaxedOutHP
@@ -1932,8 +1938,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	lda temp2
 	rts
 .LAdditionOverflow:
-	jsr LGetBattlerMaxHP
-	brk ;LBinaryToDecimal
+	jsr LGetBattlerMaxHPDecimal
 	ldx temp5
 .LMaxedOutHP:
 	sta battlerHP,x
@@ -2087,8 +2092,7 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 	beq .LDead
 	sta tempPointer2 ;current HP in decimal
 
-	jsr LGetBattlerMaxHP ;Doesn't change X
-	brk ;LBinaryToDecimal
+	jsr LGetBattlerMaxHPDecimal ;Doesn't change X
 	;A now contains the max hp of this battler in decimal
 	sed
 	sec
@@ -2144,8 +2148,7 @@ LLoadPlayerVars: SUBROUTINE ;Loads each party members max HP and MP
 	ldx #3
 .LLoadPlayerVarsLoop:
 	stx charIndex
-	jsr LGetBattlerMaxHP
-	brk ;LBinaryToDecimal
+	jsr LGetBattlerMaxHPDecimal
 	ldx charIndex
 	sta hp1,x
 	jsr LGetBattlerMaxMP
@@ -2194,6 +2197,48 @@ LSlimeActionMasks: ;Must be exactly 4 bytes before .byte $0C
 	.byte $0C
 	.byte $06
 	.byte $03
+
+LSpellTargetingLookup:
+	.byte $0 ;BACK
+	.byte $1 ;FIRE
+	.byte $1 ;SLEEP
+	.byte $82 ;BLIZRD
+	.byte $1 ;DRAIN
+	.byte $5 ;THUNDR
+	.byte $3 ;SHIELD
+	.byte $86 ;METEOR
+	.byte $82 ;CHAOS
+	.byte $3 ;HEAL
+	.byte $1 ;SMITE
+	.byte $82 ;VOLLEY
+	.byte $84 ;SHARP
+	.byte $1 ;BLIGHT
+	.byte $84 ;TRIAGE
+	.byte $1 ;WITHER
+	.byte $82 ;BANISH
+	.byte $0 ;TRANCE
+	.byte $0 ;WISH
+
+LSpellManaLookup:
+	.byte 0 ;BACK
+	.byte 4 ;FIRE
+	.byte 6 ;SLEEP
+	.byte 6 ;BLIZRD
+	.byte 8 ;DRAIN
+	.byte 6 ;THUNDR
+	.byte 6 ;SHIELD
+	.byte 8 ;METEOR
+	.byte 6 ;CHAOS
+	.byte 5 ;HEAL
+	.byte 4 ;SMITE
+	.byte 5 ;VOLLEY
+	.byte 8 ;SHARP
+	.byte 8 ;BLIGHT
+	.byte 5 ;TRIAGE
+	.byte 4 ;WITHER
+	.byte 5 ;BANISH
+	.byte 0 ;TRANCE
+	.byte 15 ;WISH
 
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
 	RORG $FD00
@@ -2587,6 +2632,36 @@ LHighHPGrowth:
 	.byte 88
 	.byte 96
 	.byte 99
+LLowHPGrowthDecimal:
+	.byte $20
+	.byte $24
+	.byte $28
+	.byte $32
+	.byte $36
+	.byte $40
+	.byte $44
+	.byte $48
+	.byte $52
+LMidHPGrowthDecimal:
+	.byte $30
+	.byte $36
+	.byte $42
+	.byte $48
+	.byte $54
+	.byte $60
+	.byte $66
+	.byte $72
+	.byte $78
+LHighHPGrowthDecimal:
+	.byte $40
+	.byte $48
+	.byte $56
+	.byte $64
+	.byte $72
+	.byte $80
+	.byte $88
+	.byte $96
+	.byte $99
 
 LClassAttackLookup:
 	.byte (LMidStatGrowth & $FF) ;Knight
@@ -2623,6 +2698,13 @@ LClassMPLookup:
 	.byte (LHighHPGrowth & $FF)
 	.byte (LLowHPGrowth & $FF)
 	.byte (LLowHPGrowth & $FF)
+LClassHPDecimalLookup:
+	.byte (LHighHPGrowthDecimal & $FF)
+	.byte (LLowHPGrowthDecimal & $FF)
+	.byte (LMidHPGrowthDecimal & $FF)
+	.byte (LLowHPGrowthDecimal & $FF)
+	.byte (LMidHPGrowthDecimal & $FF)
+	.byte (LMidHPGrowthDecimal & $FF)
 
 LWizardSpellList:
 	.byte #$0 ;BACK
@@ -2675,71 +2757,33 @@ LEmptySpellList:
 	.byte #$FF
 	.byte #$FF
 
-LSpellTargetingLookup:
-	.byte $0 ;BACK
-	.byte $1 ;FIRE
-	.byte $1 ;SLEEP
-	.byte $82 ;BLIZRD
-	.byte $1 ;DRAIN
-	.byte $5 ;THUNDR
-	.byte $3 ;SHIELD
-	.byte $86 ;METEOR
-	.byte $82 ;CHAOS
-	.byte $3 ;HEAL
-	.byte $1 ;SMITE
-	.byte $82 ;VOLLEY
-	.byte $84 ;SHARP
-	.byte $1 ;BLIGHT
-	.byte $84 ;TRIAGE
-	.byte $1 ;WITHER
-	.byte $82 ;BANISH
-	.byte $0 ;TRANCE
-	.byte $0 ;WISH
-
-LSpellManaLookup:
-	.byte 0 ;BACK
-	.byte 4 ;FIRE
-	.byte 6 ;SLEEP
-	.byte 6 ;BLIZRD
-	.byte 8 ;DRAIN
-	.byte 6 ;THUNDR
-	.byte 6 ;SHIELD
-	.byte 8 ;METEOR
-	.byte 6 ;CHAOS
-	.byte 5 ;HEAL
-	.byte 4 ;SMITE
-	.byte 5 ;VOLLEY
-	.byte 8 ;SHARP
-	.byte 8 ;BLIGHT
-	.byte 5 ;TRIAGE
-	.byte 4 ;WITHER
-	.byte 5 ;BANISH
-	.byte 0 ;TRANCE
-	.byte 15 ;WISH
-
 LLowAllyStatPointers:
 	.byte (LClassAttackLookup & $FF)
 	.byte (LClassMagicLookup & $FF)
 	.byte (LClassSpeedLookup & $FF)
 	.byte (LClassHPLookup & $FF)
 	.byte (LClassMPLookup & $FF)
+	.byte (LClassHPDecimalLookup & $FF)
 LHighAllyStatPointers:
 	.byte (LClassAttackLookup >> 8 & $FF)
 	.byte (LClassMagicLookup >> 8 & $FF)
 	.byte (LClassSpeedLookup >> 8 & $FF)
 	.byte (LClassHPLookup >> 8 & $FF)
 	.byte (LClassMPLookup >> 8 & $FF)
+	.byte (LClassHPDecimalLookup >> 8 & $FF)
 LLowEnemyStatPointers:
 	.byte (LEnemyAttack & $FF)
 	.byte (LEnemyMagic & $FF)
 	.byte (LEnemySpeed & $FF)
 	.byte (LEnemyHP & $FF)
 	.byte 0 ;This should never be referenced
+	.byte 0 ;This should never be referenced
 LHighEnemyStatPointers:
 	.byte (LEnemyAttack >> 8 & $FF)
 	.byte (LEnemyMagic >> 8 & $FF)
 	.byte (LEnemySpeed >> 8 & $FF)
 	.byte (LEnemyHP >> 8 & $FF)
+	.byte 0 ;This should never be referenced
 	.byte 0 ;This should never be referenced
 
 LHasActionMasks:
@@ -2819,6 +2863,9 @@ LGetBattlerSpeed:
 	bne LSetStatPointers
 LGetBattlerMaxHP:
 	ldy #3
+	bne LSetStatPointers
+LGetBattlerMaxHPDecimal:
+	ldy #5
 	bne LSetStatPointers
 LGetBattlerMaxMP:
 	ldy #4
