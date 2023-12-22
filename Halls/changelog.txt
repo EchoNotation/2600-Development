@@ -757,9 +757,12 @@
 		-Monitor for any issues with using tempPointer6
 	-Relocated sleep logic into separate function, LTrySleep
 	-Sleep chance is now properly affected by legendary resistance when attempted during CHAOS.
+12/21/23
+	-Added VOLLEY sound
 
 KNOWN BUGS:
 	-Enemies say HEALS FULLY when they probably shouldn't have been? Not 100% sure on this
+	-SHIELD STABS Y and BEAR STABS Y are possible with the parry bail-out of trying to guard
 
 TODO:
 	Shortlist:
@@ -768,6 +771,8 @@ TODO:
 		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
+	-Revisit menu movement sound detection
+	-Change constants in Lich special to be immediates
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?

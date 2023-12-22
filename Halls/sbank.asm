@@ -51,12 +51,12 @@ SSoftReset:
 
 #if BUILD_DEBUG
 	;Debug only code, do not include in final version!
-	ldy #0
-	sty cursorIndexAndMessageY
+	;ldy #0
+	;sty cursorIndexAndMessageY
 	lda #$09 ;Maze level 0, party level 9
 	sta mazeAndPartyLevel
-	;lda #24
-	;sta cursorIndexAndMessageY
+	lda #24
+	sta cursorIndexAndMessageY
 	;lda #0
 	;sta currentMenu
 
@@ -67,22 +67,22 @@ SSoftReset:
 	;sta hp2
 	;sta hp3
 	;sta hp4
-	lda #$80
-	sta inBattle
-	sta hp1
+	;lda #$80
+	;sta inBattle
+	;sta hp1
 	;lda #$81
-	sta currentMenu
-	lda #2
-	sta menuSize
-	sta enemyID
+	;sta currentMenu
+	;lda #2
+	;sta menuSize
+	;sta enemyID
 	;lda #$11
 	;sta enemyID+2
-	lda #$1
-	sta enemyHP
-	sta battlerStatus
-	sta battlerStatus+4
-	lda #$88
-	sta hasAction
+	;lda #$1
+	;sta enemyHP
+	;sta battlerStatus
+	;sta battlerStatus+4
+	;lda #$88
+	;sta hasAction
 	;sta enemyHP+1
 	;sta enemyHP+2
 	;sta enemyHP+3
@@ -95,8 +95,8 @@ SSoftReset:
 	;jsr STryLoadSound
 #endif
 	
-	ldx #$1B
-	jsr STryLoadSound
+	;ldx #$0B
+	;jsr STryLoadSound
 
 SStartOfFrame:
 	lda #$82
@@ -2202,6 +2202,18 @@ SSmiteVoices:
 	.byte $6
 	.byte $6
 	.byte $6
+SVolleyVoices:
+	.byte $8
+	.byte $8
+	.byte $0
+	.byte $8
+	.byte $8
+	.byte $0
+	.byte $8
+	.byte $8
+	.byte $0
+	.byte $8
+	.byte $8
 SSharpVoices:
 	.byte $4
 	.byte $4
@@ -2407,6 +2419,18 @@ SSmitePitches:
 	.byte $1
 	.byte $2
 	.byte $3
+SVolleyPitches:
+	.byte $2
+	.byte $1
+	.byte $0
+	.byte $1
+	.byte $0
+	.byte $0
+	.byte $1
+	.byte $2
+	.byte $0
+	.byte $0
+	.byte $1
 SSharpPitches:
 	.byte $3
 	.byte $3
@@ -2581,7 +2605,7 @@ SSoundLengths:
 	.byte 11 ;CHAOS
 	.byte 4 ;HEAL
 	.byte 10 ;SMITE
-	.byte 0
+	.byte 11 ;VOLLEY
 	.byte 8 ;SHARP
 	.byte 12 ;BLIGHT spell
 	.byte 9 ;TRIAGE
@@ -2611,7 +2635,7 @@ SSoundFrequencies:
 	.byte 4 ;CHAOS
 	.byte 5 ;HEAL
 	.byte 5 ;SMITE
-	.byte 1 ;VOLLEY
+	.byte 3 ;VOLLEY
 	.byte 5 ;SHARP
 	.byte 2 ;BLIGHT spell
 	.byte 5 ;TRIAGE
@@ -2641,7 +2665,7 @@ SVoices:
 	.byte (SChaosVoices & $FF)
 	.byte (SHealSpellVoices & $FF)
 	.byte (SSmiteVoices & $FF)
-	.byte 0
+	.byte (SVolleyVoices & $FF)
 	.byte (SSharpVoices & $FF)
 	.byte (SBlightSpellVoices & $FF)
 	.byte (STriageVoices & $FF)
@@ -2671,7 +2695,7 @@ SPitches:
 	.byte (SChaosPitches & $FF)
 	.byte (SHealSpellPitches & $FF)
 	.byte (SSmitePitches & $FF)
-	.byte 0
+	.byte (SVolleyPitches & $FF)
 	.byte (SSharpPitches & $FF)
 	.byte (SBlightSpellPitches & $FF)
 	.byte (STriagePitches & $FF)

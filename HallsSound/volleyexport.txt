@@ -1,0 +1,83 @@
+	;Length
+	.byte 11
+
+	;Frequency
+	.byte 3
+
+	;AUDC0
+	.byte $8
+	.byte $8
+	.byte $0
+	.byte $8
+	.byte $8
+	.byte $0
+	.byte $8
+	.byte $8
+	.byte $0
+	.byte $8
+	.byte $8
+
+	;AUDF0
+	.byte $2
+	.byte $1
+	.byte $0
+	.byte $1
+	.byte $0
+	.byte $0
+	.byte $1
+	.byte $2
+	.byte $0
+	.byte $0
+	.byte $1
+
+	;AUDV0
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+
+	;AUDC1
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+
+	;AUDF1
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+
+	;AUDV1
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0

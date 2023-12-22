@@ -1260,7 +1260,7 @@ LProcessSpecial:
 	jsr LFindNextEmptySpot
 	cpx #$FF
 	beq .LCantSummon
-	lda #$34 ;TODO X RAISES Y
+	lda #$34 ;X RAISES Y
 	sta temp2
 	lda rand8
 	bpl .LSummonZombie
@@ -1279,7 +1279,7 @@ LProcessSpecial:
 	beq .LCantSummon
 	lda #$35 ;X LEAVES Y
 	sta temp2
-	lda #$6
+	lda #$6 ;GIFT ID
 	ldy #30 ;TODO GIFT hp
 .LSummon:
 	sta enemyID,x
@@ -1300,7 +1300,7 @@ LProcessSpecial:
 	sta battlerHP,x
 	lda #$36 ;X BLOWS UP
 	sta currentMessage
-	lda #$83 ;Cast BLIZRD (can't tell the difference between this and FIRE)
+	lda #$83 ;Cast BLIZRD (can't tell the difference between this and fire damage)
 	sta enemyAction
 	sta temp1 ;Inject the new enemyAction
 	jmp .LIsOffensive ;Jumps into the relevant part of AoE spell setup code

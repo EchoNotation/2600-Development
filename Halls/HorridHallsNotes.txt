@@ -224,43 +224,43 @@ Knight:
 2 ATK per level
 0 MAG per level
 1 SPD per level
-20 + 4 HP per level
+40 + 8 HP per level
 0 MP per level
 
 Rogue:
 3 ATK per level
 0 MAG per level
 3 SPD per level
-10 + 2 HP per level
+20 + 4 HP per level
 0 MP per level
 
 Cleric:
 2 ATK per level
 3 MAG per level
 1 SPD per level
-15 + 3 HP per level
-20 + 4 MP per level
+30 + 6 HP per level
+40 + 8 MP per level
 
 Wizard:
 1 ATK per level
 3 MAG per level
 2 SPD per level
-10 + 2 HP per level
-20 + 4 MP per level
+20 + 4 HP per level
+40 + 8 MP per level
 
 Ranger:
 3 ATK per level
 1 MAG per level
 3 SPD per level
-15 + 3 HP per level
-10 + 2 MP per level
+30 + 6 HP per level
+20 + 4 MP per level
 
 Paladin:
 2 ATK per level
 1 MAG per level
 2 SPD per level
-15 + 3 HP per level
-10 + 2 MP per level
+30 + 6 HP per level
+20 + 4 MP per level
 
 MESSAGE COMPONENTS (& strings):	
 00: Source battler's name
