@@ -759,10 +759,10 @@
 	-Sleep chance is now properly affected by legendary resistance when attempted during CHAOS.
 12/21/23
 	-Added VOLLEY sound
+	-Optimization in SUpdateMenuCursorPos, particularly around the sound effect logic
+	-Added dead and blight sounds
 
 KNOWN BUGS:
-	-Enemies say HEALS FULLY when they probably shouldn't have been? Not 100% sure on this
-	-SHIELD STABS Y and BEAR STABS Y are possible with the parry bail-out of trying to guard
 
 TODO:
 	Shortlist:
@@ -771,14 +771,14 @@ TODO:
 		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
-	-Revisit menu movement sound detection
 	-Change constants in Lich special to be immediates
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
-	-Possible to guard unconscious party members, fix?
 	-Sharp increases attack power of unconscious party members
-	-Maybe need to buff blight to 1/4 max HP per round
+	-SHIELD STABS Y and BEAR STABS Y are possible with the parry bail-out of trying to guard
+	-Consider moving enemy and player fight message listings to R bank, adding functionality to RSetBattleMessage for decoding, so LProcessFighting loads a generic attack message.
+		-This will also solve the parry problem above
 
 	Additional sounds to consider:
 		-Monster roar near exit

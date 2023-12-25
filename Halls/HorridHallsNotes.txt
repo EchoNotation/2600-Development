@@ -116,7 +116,7 @@ $07 - METEOR
 $08 - CHAOS
 $09 - HEAL spell
 $0A - SMITE
-$0B - reserved for VOLLEY, currently empty
+$0B - VOLLEY
 $0C - SHARP
 $0D - BLIGHT spell
 $0E - TRIAGE
@@ -133,6 +133,8 @@ $18 - Hit
 $19 - Swing
 $1A - Tink
 $1B - Heal
+$1C - Dead
+$1D - Blight
 
 --- SUBROUTINE IDs ---
 $00 - LDoBattle
@@ -175,13 +177,13 @@ SPELL LISTING
 3: BLIZRD : Deals ice damage to all enemies
 4: DRAIN : Deals non-elemental damage to a single target, then heals the caster by the damage dealt 
 5: THUNDR : Deals electric damage to the highest health enemy
-6: SHIELD : Gives one ally a shield
+6: SHIELD : Gives one ally a magic shield
 7: METEOR : Deals physical damage to one enemy, then fire damage to all other enemies
 8: CHAOS : Deals damage of a random element to each enemy, also has a chance to inflict status
 9: HEAL : Heals a single ally
 A: SMITE : Deals damage to target based on attack and magic power
 B: VOLLEY : Deals half attack physical damage to all enemies
-C: SHARP : Doubles attack power of ally
+C: SHARP : Doubles attack power of all allies' next attack
 D: BLIGHT : Attempts to apply poisoned status to enemy
 E: TRIAGE : Heals all allies
 F: WITHER : Deals poison damage to a single target

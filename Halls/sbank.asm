@@ -55,8 +55,8 @@ SSoftReset:
 	;sty cursorIndexAndMessageY
 	lda #$09 ;Maze level 0, party level 9
 	sta mazeAndPartyLevel
-	lda #24
-	sta cursorIndexAndMessageY
+	;lda #24
+	;sta cursorIndexAndMessageY
 	;lda #0
 	;sta currentMenu
 
@@ -95,8 +95,8 @@ SSoftReset:
 	;jsr STryLoadSound
 #endif
 	
-	;ldx #$0B
-	;jsr STryLoadSound
+	ldx #$1D
+	jsr STryLoadSound
 
 SStartOfFrame:
 	lda #$82
@@ -214,14 +214,7 @@ SBattleLogicOverscan:
 	eor previousInput
 	and #$F0
 	beq SNoMenuMovement
-	ldy cursorIndexAndMessageY ;This code kinda stinks
-	sty temp1
 	jsr SUpdateMenuCursorPos
-	ldy cursorIndexAndMessageY
-	cpy temp1
-	beq SNoMenuMovement
-	ldx #$14
-	jsr STryLoadSound
 SNoMenuMovement:
 	lda currentInput
 	eor previousInput
@@ -1924,15 +1917,17 @@ SUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick press
 	rts
 .SNotAtLastPosition
 	iny
-	sty cursorIndexAndMessageY
-	rts
+	bne .SStoreAndLoadSound ;Should always be taken
 .SUpPressed:
 	ldy cursorIndexAndMessageY
 	bne .SNotAtFirstPosition
 	rts
 .SNotAtFirstPosition
 	dey
+.SStoreAndLoadSound:
 	sty cursorIndexAndMessageY
+	ldx #$14
+	jsr STryLoadSound
 	rts
 
 ;Interprets X as the cursorPosition
@@ -2313,6 +2308,26 @@ SHealVoices:
 	.byte $0
 	.byte $E
 	.byte $E
+SDeadVoices:
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+SBlightVoices:
+	.byte $E
+	.byte $E
+	.byte $E
+	.byte $E
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $E
+	.byte $E
+	.byte $E
 
 	ORG $FD00
 	RORG $FD00
@@ -2534,6 +2549,26 @@ SHealPitches:
 	.byte $0
 	.byte $2
 	.byte $4
+SDeadPitches:
+	.byte $F
+	.byte $F
+	.byte $C
+	.byte $A
+	.byte $8
+	.byte $5
+	.byte $5
+	.byte $F
+SBlightPitches:
+	.byte $1
+	.byte $0
+	.byte $1
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $0
+	.byte $1
+	.byte $0
+	.byte $1
 
 	ORG $FDF0
 	RORG $FDF0
@@ -2622,6 +2657,8 @@ SSoundLengths:
 	.byte 4 ;Swing
 	.byte 4 ;Tink
 	.byte 6 ;Heal
+	.byte 8 ;Dead
+	.byte 10 ;Blight
 
 SSoundFrequencies:
 	.byte 0 ;No sound
@@ -2652,6 +2689,8 @@ SSoundFrequencies:
 	.byte 4 ;Swing
 	.byte 4 ;Tink
 	.byte 4 ;Heal
+	.byte 4 ;Dead
+	.byte 2 ;Blight
 
 SVoices:
 	.byte 0
@@ -2682,6 +2721,8 @@ SVoices:
 	.byte (SSwingVoices & $FF)
 	.byte (STinkVoices & $FF)
 	.byte (SHealVoices & $FF)
+	.byte (SDeadVoices & $FF)
+	.byte (SBlightVoices & $FF)
 
 SPitches:
 	.byte 0
@@ -2712,6 +2753,8 @@ SPitches:
 	.byte (SSwingPitches & $FF)
 	.byte (STinkPitches & $FF)
 	.byte (SHealPitches & $FF)
+	.byte (SDeadPitches & $FF)
+	.byte (SBlightPitches & $FF)
 
 	ORG $FEC0
 	RORG $FEC0

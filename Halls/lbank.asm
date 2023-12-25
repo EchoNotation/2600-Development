@@ -1696,6 +1696,8 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 	stx startingCursorIndexAndTargetID
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
+	ldx #$1D ;Blight
+	jsr LLoadSoundInS
 	lda #$83
 	bne .LSaveInBattle
 .LDiedToBlight:
@@ -1881,6 +1883,8 @@ LDeathCleanup: SUBROUTINE ;Performs death housekeeping for target X
 	lda #0
 	sta battlerHP,x
 	sta battlerStatus,x
+	ldx #$1C ;Dead
+	jsr LLoadSoundInS
 	rts
 
 LApplyStatus: SUBROUTINE ;Applies additional status A to target X
