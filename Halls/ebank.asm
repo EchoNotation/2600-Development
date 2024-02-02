@@ -845,7 +845,7 @@ ELoadString: SUBROUTINE ;Copies the string of ID X into temp1-temp6
 	sta tempPointer1+1
 	txa
 	sec
-	sbc #4
+	sbc #5
 	cmp #42
 	bcc .ENoSubtractionNecessary
 	sec
@@ -853,15 +853,13 @@ ELoadString: SUBROUTINE ;Copies the string of ID X into temp1-temp6
 	inc tempPointer1+1
 .ENoSubtractionNecessary:
 	sta tempPointer1
-	ldy #5
-.EAdditionLoop:
-	clc
+	asl
+	asl
 	adc tempPointer1
-	dey
-	bne .EAdditionLoop
+	adc tempPointer1
 	sta tempPointer1
 
-	;Y should be 0 here.
+	ldy #0
 	lda (tempPointer1),y
 	sta temp1
 	iny

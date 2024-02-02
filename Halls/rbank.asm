@@ -759,11 +759,11 @@ RDrawLogoLoop:
 	sta WSYNC
 	sta HMOVE
 
-	ldx #$3E ;FORM A
+	ldx #$3F ;FORM A
 	jsr RLoadString
 	jsr RSetTextPointers
 	jsr RDrawText
-	ldx #$40 ;TEAM
+	ldx #$41 ;TEAM
 	jsr RLoadString
 	jsr RSetTextPointers
 	jsr RDrawText
@@ -789,7 +789,7 @@ RDrawSetupScreenLoop:
 	sta WSYNC
 	sta WSYNC
 
-	ldx #$41 ;PLAY
+	ldx #$42 ;PLAY
 	jsr RLoadString
 	jsr RSetTextPointers
 	jsr RDrawText
@@ -851,230 +851,230 @@ RSpinWheels: SUBROUTINE
 	rts
 
 RMessageConstructors:
-RXStabsY:
+RXAttacksY:
 	.byte $0
 	.byte $4
 	.byte $1
-RXShootsY:
+;Unallocated
 	.byte $0
-	.byte $5
-	.byte $1
-RXSlamsY:
+	.byte $FF
+	.byte $FF
+;Unallocated
 	.byte $0
-	.byte $6
-	.byte $1
-RXBitesY:
+	.byte $FF
+	.byte $FF
+;Unallocated
 	.byte $0
-	.byte $7
-	.byte $1
-RXSlicesY:
+	.byte $FF
+	.byte $FF
+;Unallocated
 	.byte $0
-	.byte $8
-	.byte $1
+	.byte $FF
+	.byte $FF
 RXCastsY:
 	.byte $0
-	.byte $9
+	.byte $A
 	.byte $2
 RXHealsYHP:
 	.byte $1
-	.byte $A
+	.byte $B
 	.byte $3
 RXLosesYHP:
 	.byte $1
-	.byte $B
+	.byte $C
 	.byte $3
 RXMisses:
 	.byte $0
-	.byte $C
+	.byte $D
 	.byte $FF
 RXDown:
 	.byte $1
-	.byte $12
+	.byte $13
 	.byte $FF
 RPartyLevelsUp:
-	.byte $1A
-	.byte $D
+	.byte $1B
 	.byte $E
+	.byte $F
 RXLearnsY:
 	.byte $0
-	.byte $F
+	.byte $10
 	.byte $2
 RXMovesUp:
 	.byte $0
-	.byte $10
-	.byte $E
+	.byte $11
+	.byte $F
 RXBacksAway:
 	.byte $0
-	.byte $11
-	.byte $13
+	.byte $12
+	.byte $14
 RXWastesAway:
 	.byte $1
+	.byte $15
 	.byte $14
-	.byte $13
 RXWasCured:
 	.byte $1
-	.byte $15
 	.byte $16
+	.byte $17
 RXHasAShield:
 	.byte $1
-	.byte $18
 	.byte $19
-RPartyDown:
 	.byte $1A
-	.byte $12
+RPartyDown:
+	.byte $1B
+	.byte $13
 	.byte $FF
 RPartyFlees:
-	.byte $1A
 	.byte $1B
+	.byte $1C
 	.byte $FF
 RPartyWins:
-	.byte $1A
-	.byte $1C
+	.byte $1B
+	.byte $1D
 	.byte $FF
 RXTriesToRun:
 	.byte $0
-	.byte $1D
 	.byte $1E
+	.byte $1F
 RNoEffect:
-	.byte $39
-	.byte $20
+	.byte $3A
+	.byte $21
 	.byte $FF
 RXCannotEscape:
 	.byte $0
-	.byte $21
 	.byte $22
+	.byte $23
 RXExiled:
 	.byte $1
-	.byte $2A
+	.byte $2B
 	.byte $FF
 RXWakesUp:
 	.byte $0
-	.byte $17
-	.byte $E
+	.byte $18
+	.byte $F
 RXGuardsY:
 	.byte $0
-	.byte $23
+	.byte $24
 	.byte $1
 RXAttackUp:
 	.byte $1
-	.byte $24
-	.byte $E
+	.byte $25
+	.byte $F
 RXFellAsleep:
 	.byte $1
-	.byte $25
 	.byte $26
+	.byte $27
 RXIsAsleep:
 	.byte $0
+	.byte $28
 	.byte $27
-	.byte $26
 RXGuards:
 	.byte $0
-	.byte $23
+	.byte $24
 	.byte $FF
 RXShieldFades:
 	.byte $1
-	.byte $19
-	.byte $29
+	.byte $1A
+	.byte $2A
 RGameOver:
-	.byte $2B
-	.byte $2D
+	.byte $2C
+	.byte $2E
 	.byte $FF
 RGameClear:
-	.byte $2B
 	.byte $2C
+	.byte $2D
 	.byte $FF
 RXShotAVolley:
 	.byte $0
-	.byte $43
-	.byte $02
-RXStabsYParry:
+	.byte $44
+	.byte $03
+RXAttacksYParry:
 	.byte $1
 	.byte $4
 	.byte $0
 RXBlocks:
 	.byte $1
-	.byte $32
-	.byte $FF
-RPartyHPUp:
-	.byte $1A
 	.byte $33
 	.byte $FF
-RPartyMPUp:
-	.byte $1A
+RPartyHPUp:
+	.byte $1B
 	.byte $34
+	.byte $FF
+RPartyMPUp:
+	.byte $1B
+	.byte $35
 	.byte $FF
 RXHealsFully:
 	.byte $1
-	.byte $A
-	.byte $35
-RPartyHealsFully:
-	.byte $1A
-	.byte $A
-	.byte $35
-RPartyStatusClear:
-	.byte $1A
-	.byte $37
-	.byte $2C
-RPartyMixedUp:
-	.byte $1A
+	.byte $B
 	.byte $36
-	.byte $0E
+RPartyHealsFully:
+	.byte $1B
+	.byte $B
+	.byte $36
+RPartyStatusClear:
+	.byte $1B
+	.byte $38
+	.byte $2D
+RPartyMixedUp:
+	.byte $1B
+	.byte $37
+	.byte $0F
 RXMPUp:
 	.byte $1
-	.byte $34
+	.byte $35
 	.byte $FF
 RXSmitesY:
 	.byte $0
-	.byte $42
+	.byte $43
 	.byte $1
 RIntoTheCastle:
-	.byte $2F
-	.byte $2E
-	.byte $28
-RIntoTheCrypt:
-	.byte $2F
-	.byte $2E
-	.byte $31
-RIntoTheAbyss:
-	.byte $2F
-	.byte $2E
 	.byte $30
-RXClawsY:
+	.byte $2F
+	.byte $29
+RIntoTheCrypt:
+	.byte $30
+	.byte $2F
+	.byte $32
+RIntoTheAbyss:
+	.byte $30
+	.byte $2F
+	.byte $31
+;Unallocated
 	.byte $0
-	.byte $1F
-	.byte $1
-RXWhipsY:
+	.byte $FF
+	.byte $FF
+;Unallocated
 	.byte $0
-	.byte $3F
-	.byte $1
-RXMiresY:
+	.byte $FF
+	.byte $FF
+;Unallocated
 	.byte $0
-	.byte $44
-	.byte $1
+	.byte $FF
+	.byte $FF
 RSlimeSplitsApart:
-	.byte $47
-	.byte $45
-	.byte $46
-ROozeSplitsApart:
 	.byte $48
-	.byte $45
 	.byte $46
-RXRaisesY:
-	.byte $0
+	.byte $47
+ROozeSplitsApart:
 	.byte $49
-	.byte $1
-RXLeavesY:
+	.byte $46
+	.byte $47
+RXRaisesY:
 	.byte $0
 	.byte $4A
 	.byte $1
-RXBlowsUp:
+RXLeavesY:
 	.byte $0
 	.byte $4B
-	.byte $E
+	.byte $1
+RXBlowsUp:
+	.byte $0
+	.byte $4C
+	.byte $F
 RXCannotSummon:
 	.byte $0
-	.byte $21
-	.byte $4C
+	.byte $22
+	.byte $4D
 
 RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 values correctly. Interprets A as the line of the message to set.
 	ldy #TEXT_HIGHLIGHTED_COLOR
@@ -1087,7 +1087,7 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	tax
 	lda RMessageConstructors,x ;Find what needs to be shown on this exact line
 	bmi .RGoToAllEmpty
-	cmp #4
+	cmp #5
 	bcs .RGeneralMessageStructure
 	sta WSYNC
 	tax
@@ -1096,13 +1096,18 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	beq .RTargetBattlerName
 	dex
 	beq .RSpellName
-	jmp .RHPCount
+	dex
+	beq .RGoToHPCount
+	jmp .RAttackFlavor
 
+.RGoToHPCount:
+	jmp .RHPCount
 .RGoToAllEmpty:
 	jmp .RAllEmpty
 
 .RGeneralMessageStructure:
 	tax
+	sta WSYNC
 	jsr RLoadString
 	rts
 .RSourceBattlerName:
@@ -1222,6 +1227,32 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	dex
 	bpl .RSetEmptyLoop
 	rts
+.RAttackFlavor:
+	ldx currentBattler
+	cpx #$4
+	bcs .REnemyAttackFlavor
+	lda char1,x
+	and #$0F
+	tax
+	lda RClassFightStrings,x
+	jmp .RReadyToLoadAttackFlavor
+.REnemyAttackFlavor:
+	ldx currentBattler
+	lda battleActions,x
+	tax
+	lda REnemyFightStrings,x
+.RReadyToLoadAttackFlavor:
+	tax
+	jsr RLoadString
+	rts
+
+RClassFightStrings:
+	.byte $9 ;Knight -- SLICES
+	.byte $5 ;Rogue -- STABS
+	.byte $7 ;Cleric -- BASHES
+	.byte $6 ;Wizard -- SHOOTS
+	.byte $6 ;Ranger -- SHOOTS
+	.byte $5 ;Paladin -- STABS
 
 RDrawCharacterInfo: SUBROUTINE ;Draws one party members mood and name, hp and mp, or class name depending on viewedPartyInfo variable
 	ldx charIndex ;Determine which character's data is about to be drawn
@@ -2886,24 +2917,46 @@ RLetterZ:
 	.byte %01100010
 	.byte %01111110
 
-RCalculateDigitIndices: SUBROUTINE ;Will interpret whatever is in A when called as a decimal value, then return the character lookup indices in X and Y.
-	tay
-	and #$0F
-	clc
-	adc #27
-	tax ;Character index corresponding to low digit of the specified decimal value is now in the x register.
-	tya
-	lsr
-	lsr
-	lsr
-	lsr
-	and #$0F
-	clc
-	adc #27
-	tay ;Character index corresponding to high digit of the specified decimal value is now in the y register.
-	rts
+REnemyFightStrings:
+	.byte $08 ;BITES - Wolf
+	.byte $00 ;----- - Druid
+	.byte $00 ;----- - Shroom
+	.byte $05 ;STABS - Squire
+	.byte $06 ;SHOOTS - Archer
+	.byte $00 ;----- - Priest
+	.byte $00 ;----- - Gift
+	.byte $09 ;SLICES - Sword
+	.byte $07 ;BASHES - Shield
+	.byte $08 ;BITES - Zombie
+	.byte $06 ;SHOOTS - Sklton
+	.byte $00 ;----- - Mage
+	.byte $45 ;SLIMES - Goop
+	.byte $00 ;----- - Warlok
+	.byte $40 ;WHIPS - Imp
+	.byte $00 ;----- - Wisp
+	.byte $00 ;----- - RedOrb
+	.byte $00 ;----- - BluOrb
+	.byte $00 ;----- - GrnOrb
+	.byte $00 ;----- - GldOrb
 
-	;21 more bytes can fit here
+	.byte $20 ;CLAWS - Bear
+	.byte $05 ;STABS - Unicrn
+	.byte $08 ;BITES - Volcio
+	.byte $08 ;BITES - Glacia
+	.byte $20 ;CLAWS - Grgoyl
+	.byte $08 ;BITES - Mimic
+	.byte $05 ;STABS - Jester
+	.byte $00 ;----- - Armor
+	.byte $08 ;BITES - Spider
+	.byte $45 ;SLIMES - Slime
+	.byte $00 ;----- - Lich
+	.byte $06 ;SHOOTS - Shfflr
+	.byte $20 ;CLAWS - Shmblr
+	.byte $00 ;----- - Trophy
+
+	.byte $40 ;WHIPS - Thickt
+	.byte $40 ;WHIPS - Horror
+	.byte $45 ;SLIMES - Ooze
 
 	ORG $CE00 ;Used to hold maze rendering data
 	RORG $FE00
@@ -3154,7 +3207,22 @@ RNoFarDoor: ;Used for PF2
 	.byte #%00000000
 	.byte #%00000000
 
-	;22 more bytes here
+RCalculateDigitIndices: SUBROUTINE ;Will interpret whatever is in A when called as a decimal value, then return the character lookup indices in X and Y.
+	tay
+	and #$0F
+	clc
+	adc #27
+	tax ;Character index corresponding to low digit of the specified decimal value is now in the x register.
+	tya
+	lsr
+	lsr
+	lsr
+	lsr
+	and #$0F
+	clc
+	adc #27
+	tay ;Character index corresponding to high digit of the specified decimal value is now in the y register.
+	rts
 
 	ORG $CF00 ;Used to hold additional maze rendering data
 	RORG $FF00

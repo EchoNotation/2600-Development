@@ -1031,23 +1031,7 @@ LProcessFighting:
 	rts
 .LAttackHit:
 	stx startingCursorIndexAndTargetID
-	ldx currentBattler
-	cpx #4
-	bcs .LGetEnemyFightMessage
-	lda char1,x
-	and #$0F
-	tay
-	lda LClassFightMessages,y
-	jmp .LStoreFightMessage	
-.LGetEnemyFightMessage:
-	dex
-	dex
-	dex
-	dex
-	lda enemyID,x
-	tax
-	lda LEnemyFightMessages,x
-.LStoreFightMessage:
+	lda #$00 ;X {ATTACK} Y
 	sta currentMessage
 
 	;Check if this battler is parrying
@@ -2258,14 +2242,6 @@ LXPToNextLevel:
 	.byte #120
 	.byte #180 ; 8 -> 9
 
-LClassFightMessages:
-	.byte $4 ;Knight
-	.byte $0 ;Rogue
-	.byte $2 ;Cleric
-	.byte $1 ;Wizard
-	.byte $1 ;Ranger
-	.byte $0 ;Paladin
-
 LSpellListLookup:
 	.byte (LEmptySpellList & $FF)
 	.byte (LEmptySpellList & $FF)
@@ -2523,48 +2499,6 @@ LEnemyResistances:
 
 	ORG $DE00 ;Used to hold miscellaneous data/lookup tables
 	RORG $FE00
-
-LEnemyFightMessages:
-	.byte $03 ;BITES - Wolf
-	.byte $00 ;----- - Druid
-	.byte $00 ;----- - Shroom
-	.byte $00 ;STABS - Squire
-	.byte $01 ;SHOOTS - Archer
-	.byte $00 ;----- - Priest
-	.byte $00 ;----- - Gift
-	.byte $04 ;SLICES - Sword
-	.byte $02 ;BASHES - Shield
-	.byte $03 ;BITES - Zombie
-	.byte $01 ;SHOOTS - Sklton
-	.byte $00 ;----- - Mage
-	.byte $31 ;MIRES - Goop
-	.byte $00 ;----- - Warlok
-	.byte $30 ;WHIPS - Imp
-	.byte $00 ;----- - Wisp
-	.byte $00 ;----- - RedOrb
-	.byte $00 ;----- - BluOrb
-	.byte $00 ;----- - GrnOrb
-	.byte $00 ;----- - GldOrb
-
-	.byte $2F ;CLAWS - Bear
-	.byte $00 ;STABS - Unicrn
-	.byte $03 ;BITES - Volcio
-	.byte $03 ;BITES - Glacia
-	.byte $2F ;CLAWS - Grgoyl
-	.byte $03 ;BITES - Mimic
-	.byte $00 ;STABS - Jester
-	.byte $00 ;----- - Armor
-	.byte $03 ;BITES - Spider
-	.byte $31 ;MIRES - Slime
-	.byte $00 ;----- - Lich
-	.byte $01 ;SHOOTS - Shfflr
-	.byte $2F ;CLAWS - Shmblr
-	.byte $00 ;----- - Trophy
-
-	.byte $30 ;WHIPS - Thickt
-	.byte $30 ;WHIPS - Horror
-	.byte $31 ;MIRES - Ooze
-	.byte $00 ;----- - Campfire
 
 LAllZeroes:
 	.byte 0

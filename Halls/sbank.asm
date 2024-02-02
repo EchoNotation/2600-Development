@@ -2689,7 +2689,7 @@ SSoundFrequencies:
 	.byte 4 ;Swing
 	.byte 4 ;Tink
 	.byte 4 ;Heal
-	.byte 4 ;Dead
+	.byte 3 ;Dead
 	.byte 2 ;Blight
 
 SVoices:
