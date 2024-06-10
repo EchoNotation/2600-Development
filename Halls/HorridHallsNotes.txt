@@ -348,10 +348,10 @@ Only 11 more strings can be allocated!
 
 MESSAGES:
 00: X STABS Y
-01: X SHOOTS Y
-02: X BASHES Y
-03: X BITES Y
-04: X SLICES Y
+01: Unallocated
+02: Unallocated
+03: Unallocated
+04: Unallocated
 05: X CASTS Y
 06: X HEALS Y HP
 07: X LOSES Y HP
@@ -381,7 +381,7 @@ MESSAGES:
 1F: GAME OVER
 20: GAME CLEAR
 21: X SHOT A VOLLEY
-22: X (target) STABS Y (currentBattler) --- Any enemy given the parry action needs to accept the STABS message
+22: X (target) (attackFlavor) Y (currentBattler)
 23: X BLOCKS
 24: PARTY HP UP
 25: PARTY MP UP

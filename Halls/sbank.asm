@@ -327,7 +327,7 @@ STryStartGame:
 	cpy #24 ;The ready button
 	bne SWaitForOverscanTimer
 	;If here, that means that the button was pressed when on the ready option
-	lda #$09 ;Maze level 1, party level 1
+	lda #$01 ;Maze level 1, party level 1
 	sta mazeAndPartyLevel
 	lda #15
 	sta experienceToNextLevel

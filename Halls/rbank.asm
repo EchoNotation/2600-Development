@@ -578,7 +578,7 @@ RUseSpecialColor:
 	lda menuLines,x
 	and #$1F
 	clc
-	adc #56 ;This constant needs to be updated whenever there is message indexing tomfoolery.
+	adc #57 ;This constant needs to be updated whenever there is message indexing tomfoolery.
 	tax
 	jsr RLoadString
 	jsr RSetTextPointers
@@ -1227,8 +1227,16 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	dex
 	bpl .RSetEmptyLoop
 	rts
+	
 .RAttackFlavor:
+	lda inBattle
+	cmp #$94
+	beq .RRetort
 	ldx currentBattler
+	jmp .RDetermineAllyOrEnemyFlavor
+.RRetort:
+	ldx startingCursorIndexAndTargetID
+.RDetermineAllyOrEnemyFlavor:
 	cpx #$4
 	bcs .REnemyAttackFlavor
 	lda char1,x
@@ -1237,8 +1245,7 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	lda RClassFightStrings,x
 	jmp .RReadyToLoadAttackFlavor
 .REnemyAttackFlavor:
-	ldx currentBattler
-	lda battleActions,x
+	lda battleActions,x ;Get the ID of this enemy
 	tax
 	lda REnemyFightStrings,x
 .RReadyToLoadAttackFlavor:

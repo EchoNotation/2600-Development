@@ -761,6 +761,11 @@
 	-Added VOLLEY sound
 	-Optimization in SUpdateMenuCursorPos, particularly around the sound effect logic
 	-Added dead and blight sounds
+12/??/23
+	-Relocated fight strings to R bank, so there is only one basic attack message needed for all players and enemies.
+6/9/24
+	-Fixed bug where riposte messages used the attack flavor of the current battler, even though the target is initiating the attack
+	-Fixed bug where campfire strings read as KNOWN CAMP instead of CAMP LEAVE
 
 KNOWN BUGS:
 
@@ -776,9 +781,7 @@ TODO:
 	Longlist:
 	-Being guarded reduces blight damage, fix?
 	-Sharp increases attack power of unconscious party members
-	-SHIELD STABS Y and BEAR STABS Y are possible with the parry bail-out of trying to guard
-	-Consider moving enemy and player fight message listings to R bank, adding functionality to RSetBattleMessage for decoding, so LProcessFighting loads a generic attack message.
-		-This will also solve the parry problem above
+	-Consider methods for compacting sound frequency & length data
 
 	Additional sounds to consider:
 		-Monster roar near exit

@@ -125,9 +125,12 @@ GldOrbAI:
 	.byte %10000101 ;Cast THUNDR
 	.byte %10000101 ;
 BearAI:
-	.byte %00100000 ;Attack party
-	.byte %00100000 ;
-	.byte %00100000 ;
+	;.byte %00100000 ;Attack party
+	;.byte %00100000 ;
+	;.byte %00100000 ;
+	.byte %01000011 ;Guard enemies
+	.byte %01000011 ;Guard enemies
+	.byte %01000011 ;Guard enemies
 	.byte %01000011 ;Guard enemies
 UnicrnAI:
 	.byte %00100000 ;Attack party

@@ -5,7 +5,11 @@
             "label": "Build Halls",
             "command": "python BuildHalls.py",
             "type": "shell",
-            "group": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
         }
     ]
 }
