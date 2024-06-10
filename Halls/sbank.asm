@@ -1490,7 +1490,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	bcs .SNeedToTargetFight
 	;Only one enemy, so auto-target this fight
 	ldx currentBattler ;Changed by LCheckEnemies
-	tya
+	tya ;The last index of an alive enemy
 	jsr S5Asl
 	ora battleActions,x
 	sta battleActions,x
