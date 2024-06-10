@@ -202,7 +202,43 @@ SOverscan:
 	sta currentInput
 
 	jsr SUpdateSound
-	jsr SChangePartyInfo
+
+SChangePartyInfo: ;Change currently viewed party info based on whether or not we are in battle or maze view
+	lda flags
+	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_MAZE | TRANSITIONING_TO_CAMPFIRE)
+	bne SFinishedWithPartyInfo
+	lda currentInput
+	eor previousInput
+	beq SFinishedWithPartyInfo
+	ldx inBattle
+	beq SChangePartyInfoMaze
+SChangePartyInfoBattle:
+	lda #RIGHT_MASK
+	bit currentInput
+	beq SIncrementPartyInfo
+	lda #LEFT_MASK
+	bit currentInput
+	beq SDecrementPartyInfo
+	bne SFinishedWithPartyInfo
+SChangePartyInfoMaze:
+	lda #$08
+	bit currentInput
+	bne SFinishedWithPartyInfo
+SIncrementPartyInfo:
+	ldx viewedPartyInfo
+	inx
+	cpx #3
+	bcc SStoreAndFinish
+	ldx #0
+	beq SStoreAndFinish
+SDecrementPartyInfo:
+	ldx viewedPartyInfo
+	dex
+	bpl SStoreAndFinish
+	ldx #2
+SStoreAndFinish:
+	stx viewedPartyInfo
+SFinishedWithPartyInfo:
 
 	lda inBattle
 	beq SMazeLogicOverscan ;Skip the following logic if we are in maze mode...
@@ -345,6 +381,7 @@ SForceHappyMood:
 	ora flags
 	sta flags
 	lda #0
+	sta viewedPartyInfo ;Needed because this can actually be set by the SChangePartyInfo on the main screen
 	sta currentMenu
 	lda #TRANSITIONING_TO_MAZE
 	jsr SSetupTransitionEffect
@@ -360,47 +397,6 @@ SWaitForOverscanTimer:
 	bne SWaitForOverscanTimer
 
 	jmp SStartOfFrame
-
-SChangePartyInfo: SUBROUTINE ;Changes whether RDrawCharacterInfo draws avatar and name, hp and mp, or class name
-	lda currentMenu
-	cmp #$FF
-	beq .SReturn
-	lda flags
-	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_MAZE | TRANSITIONING_TO_CAMPFIRE)
-	bne .SReturn
-	lda currentInput
-	eor previousInput
-	beq .SReturn
-	ldx inBattle
-	beq .SInMaze
-.SInBattle:
-	lda #RIGHT_MASK
-	bit currentInput
-	beq .SIncrement
-	lda #LEFT_MASK
-	bit currentInput
-	beq .SDecrement
-	rts
-.SInMaze:
-	lda #$08
-	bit currentInput
-	bne .SReturn
-.SIncrement:
-	ldx viewedPartyInfo
-	inx
-	cpx #3
-	bcc .SStoreAndReturn
-	ldx #0
-	beq .SStoreAndReturn
-.SDecrement:
-	ldx viewedPartyInfo
-	dex
-	bpl .SStoreAndReturn
-	ldx #2
-.SStoreAndReturn:
-	stx viewedPartyInfo
-.SReturn:
-	rts
 
 SMoveSetupCursor: SUBROUTINE ;Controls the movement of the cursor on the startup screen.
 	lda battleActions
