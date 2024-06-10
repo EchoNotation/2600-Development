@@ -986,7 +986,7 @@ RGameClear:
 RXShotAVolley:
 	.byte $0
 	.byte $44
-	.byte $03
+	.byte $02
 RXAttacksYParry:
 	.byte $1
 	.byte $4

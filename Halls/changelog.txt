@@ -766,8 +766,11 @@
 6/9/24
 	-Fixed bug where riposte messages used the attack flavor of the current battler, even though the target is initiating the attack
 	-Fixed bug where campfire strings read as KNOWN CAMP instead of CAMP LEAVE
+	-Fixed bug where playing the "tink" sound would prevent a shield from ever breaking
+	-Fixed bug where X SHOT A VOLLEY message would use the Y HP message component
 
 KNOWN BUGS:
+	-Lich dying to blight caused party viewed info corruption
 
 TODO:
 	Shortlist:
@@ -782,6 +785,9 @@ TODO:
 	-Being guarded reduces blight damage, fix?
 	-Sharp increases attack power of unconscious party members
 	-Consider methods for compacting sound frequency & length data
+
+	Dreamlist:
+	-Variable pitch for certain sound effects (e.g. hit, heal, down)
 
 	Additional sounds to consider:
 		-Monster roar near exit

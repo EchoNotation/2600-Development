@@ -1553,8 +1553,8 @@ LCheckSpellHit: SUBROUTINE ;Determines if the spell corresponding to ID X should
 	rts
 
 LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated by a shield. Returns 0 if no shield, 1 if shield blocks the spell, FF if the shield is destroyed
-	ldx startingCursorIndexAndTargetID
-	lda battlerStatus,x
+	ldy startingCursorIndexAndTargetID ;Y is not affected by LLoadSoundInS
+	lda battlerStatus,y
 	and #SHIELDED_MASK
 	bne .LHasShield
 .LAlliedSpellsNotBlocked:
@@ -1562,7 +1562,7 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 	rts
 .LHasShield:
 	;Make sure that allied spells are not blocked
-	txa
+	tya
 	and #$04
 	sta temp5
 	lda currentBattler
@@ -1573,18 +1573,18 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 	ldx #$1A ;Tink
 	jsr LLoadSoundInS
 
-	lda battlerStatus,x
+	lda battlerStatus,y
 	and #TIMER_MASK
 	beq .LShieldBreaks
-	lda battlerStatus,x
+	lda battlerStatus,y
 	and #(~TIMER_MASK) ;The shield only has 1 more hit left
-	sta battlerStatus,x
+	sta battlerStatus,y
 	lda #1
 	rts
 .LShieldBreaks:
-	lda battlerStatus,x
+	lda battlerStatus,y
 	and #(~SHIELDED_MASK) ;Destroy the shield
-	sta battlerStatus,x
+	sta battlerStatus,y
 	lda #$FF
 	rts
 
