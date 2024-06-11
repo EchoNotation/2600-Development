@@ -1,0 +1,553 @@
+
+;    ANC
+;~~~~~~~~~~~~~~~
+;AND byte with accumulator. If result is negative then carry is set.
+;Status flags: N,Z,C
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Immediate   |ANC #arg   |$0B| 2 |
+       ANC    #$EA                 ;2
+
+;duplicates...
+;Immediate   |ANC #arg   |$2B| 2 |
+       .byte $2B,$EA               ;2
+
+
+
+;    ARR
+;~~~~~~~~~~~~~~~
+;AND byte with accumulator, then rotate one bit right in accumulator and check bit 5 and 6:
+;If both bits are 1   x11x xxxx   : set C, clear V.
+;If both bits are 0   x00x xxxx   : clear C and V.
+;If only bit 5 is 1   x01x xxxx   : clear C, set V.
+;If only bit 6 is 1   x10x xxxx   : set C and V.
+
+;Status flags: N,V,Z,C
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Immediate   |ARR #arg   |$6B| 2 |
+       ARR    #$EA                 ;2
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; In Decimal mode (D flag set), the ARR instruction first performs the
+; AND and ROR, just like in Binary mode. The N flag will be copied from
+; the initial C flag, and the Z flag will be set according to the ROR
+; result, as expected. The V flag will be set if the bit 6 of the
+; accumulator changed its state between the AND and the ROR, cleared
+; otherwise.
+;
+; Now comes the funny part. If the low nybble of the AND result,
+; incremented by its lowmost bit, is greater than 5, the low nybble in
+; the ROR result will be incremented by 6. The low nybble may overflow
+; as a consequence of this BCD fixup, but the high nybble won't be
+; adjusted. The high nybble will be BCD fixed in a similar way. If the
+; high nybble of the AND result, incremented by its lowmost bit, is
+; greater than 5, the high nybble in the ROR result will be incremented
+; by 6, and the Carry flag will be set. Otherwise the C flag will be
+; cleared.
+;
+; To help you understand this description, here is a C routine that
+; illustrates the ARR operation in Decimal mode:
+;
+;        unsigned
+;          A,  /* Accumulator */
+;          AL, /* low nybble of accumulator */
+;          AH, /* high nybble of accumulator */
+;
+;          C,  /* Carry flag */
+;          Z,  /* Zero flag */
+;          V,  /* oVerflow flag */
+;          N,  /* Negative flag */
+;
+;          t,  /* temporary value */
+;          s;  /* value to be ARRed with Accumulator */
+;
+;        t = A & s;                       /* Perform the AND. */
+;
+;        AH = t >> 4;                     /* Separate the high */
+;        AL = t & 15;                     /* and low nybbles. */
+;
+;        N = C;                           /* Set the N and */
+;        Z = !(A = (t >> 1) | (C << 7));  /* Z flags traditionally */
+;        V = (t ^ A) & 64;                /* and V flag in a weird way. */
+;
+;        if (AL + (AL & 1) > 5)           /* BCD "fixup" for low nybble. */
+;          A = (A & 0xF0) | ((A + 6) & 0xF)
+;
+;        if (C = AH + (AH & 1) > 5)       /* Set the Carry flag. */
+;          A = (A + 0x60) & 0xFF;         /* BCD "fixup" for high nybble. */
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;    DCP
+;~~~~~~~~~~~~~~~
+;Subtract 1 from memory (without borrow), and compare to accumulator.
+;Status flags: C
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Zero Page   |DCP arg    |$C7| 2 |
+       DCP    $EA                  ;5
+;Zero Page,X |DCP arg,X  |$D7| 2 |
+       DCP    $EA,X                ;6
+;Absolute    |DCP arg    |$CF| 3 |
+       DCP    $EAEA                ;6
+;Absolute,X  |DCP arg,X  |$DF| 3 |
+       DCP    $EAEA,X              ;7
+;Absolute,Y  |DCP arg,Y  |$DB| 3 |
+       DCP    $EAEA,Y              ;7
+;(Indirect,X)|DCP (arg,X)|$C3| 2 |
+       DCP    ($EA,X)              ;8
+;(Indirect),Y|DCP (arg),Y|$D3| 2 |
+       DCP    ($EA),Y              ;8
+
+
+
+;DOP (NOP)
+;~~~~~~~~~~~~~~~
+;No operation (double NOP). The argument has no significance.
+;Status flags: none
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Zero Page   |DOP arg    |$04| 2 |
+       NOP    $EA                  ;3
+;Zero Page,X |DOP arg,X  |$14| 2 |
+       NOP    $EA,X                ;4
+;Immediate   |DOP #arg   |$80| 2 |
+       NOP    #$EA                 ;2
+
+;duplicates...
+;Immediate   |DOP #arg   |$82| 2 |
+       .byte $82,$EA               ;2
+;Immediate   |DOP #arg   |$89| 2 |
+       .byte $89,$EA               ;2
+;Immediate   |DOP #arg   |$C2| 2 |
+       .byte $C2,$EA               ;2
+;Immediate   |DOP #arg   |$E2| 2 |
+       .byte $E2,$EA               ;2
+;Zero Page   |DOP arg    |$44| 2 |
+       .byte $44,$EA               ;3
+;Zero Page   |DOP arg    |$64| 2 |
+       .byte $64,$EA               ;3
+;Zero Page,X |DOP arg,X  |$34| 2 |
+       .byte $34,$EA               ;4
+;Zero Page,X |DOP arg,X  |$54| 2 |
+       .byte $54,$EA               ;4
+;Zero Page,X |DOP arg,X  |$74| 2 |
+       .byte $74,$EA               ;4
+;Zero Page,X |DOP arg,X  |$D4| 2 |
+       .byte $D4,$EA               ;4
+;Zero Page,X |DOP arg,X  |$F4| 2 |
+       .byte $F4,$EA               ;4
+
+
+
+;    ISB
+;~~~~~~~~~~~~~~~
+;Increase memory by one, then subtract memory from accumulator(with borrow).
+;Status flags: N,V,Z,C
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Zero Page   |ISB arg    |$E7| 2 |
+       ISB    $EA                  ;5
+;Zero Page,X |ISB arg,X  |$F7| 2 |
+       ISB    $EA,X                ;6
+;Absolute    |ISB arg    |$EF| 3 |
+       ISB    $EAEA                ;6
+;Absolute,X  |ISB arg,X  |$FF| 3 |
+       ISB    $EAEA,X              ;7
+;Absolute,Y  |ISB arg,Y  |$FB| 3 |
+       ISB    $EAEA,Y              ;7
+;(Indirect,X)|ISB (arg,X)|$E3| 2 |
+       ISB    ($EA,X)              ;8
+;(Indirect),Y|ISB (arg),Y|$F3| 2 |
+       ISB    ($EA),Y              ;8
+
+
+
+;    LAX
+;~~~~~~~~~~~~~~~
+;Load accumulator and X register with memory.
+;Status flags: N,Z
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Zero Page   |LAX arg    |$A7| 2 |
+       LAX    $EA                  ;3
+;Zero Page,Y |LAX arg,Y  |$B7| 2 |
+       LAX    $EA,Y                ;4
+;Absolute    |LAX arg    |$AF| 3 |
+       LAX    $EAEA                ;4
+;Absolute,Y  |LAX arg,Y  |$BF| 3 |
+       LAX    $EAEA,Y              ;4*
+;(Indirect,X)|LAX (arg,X)|$A3| 2 |
+       LAX    ($EA,X)              ;6
+;(Indirect),Y|LAX (arg),Y|$B3| 2 |
+       LAX    ($EA),Y              ;5*
+
+
+
+;NOP (NOP) [NOP]
+;~~~~~~~~~~~~~~~
+;No operation
+;Status flags: none
+
+;NOTE: Duplicates of the NOP (implied) opcode
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Implied     |NOP        |$1A| 1 |
+       .byte $1A                   ;2
+;Implied     |NOP        |$3A| 1 |
+       .byte $3A                   ;2
+;Implied     |NOP        |$5A| 1 |
+       .byte $5A                   ;2
+;Implied     |NOP        |$7A| 1 |
+       .byte $7A                   ;2
+;Implied     |NOP        |$DA| 1 |
+       .byte $DA                   ;2
+;Implied     |NOP        |$FA| 1 |
+       .byte $FA                   ;2
+
+
+
+;    RLA
+;~~~~~~~~~~~~~~~
+;Rotate one bit left in memory, then AND accumulator with memory.
+;Status flags: N,Z,C
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Zero Page   |RLA arg    |$27| 2 |
+       RLA    $EA                  ;5
+;Zero Page,X |RLA arg,X  |$37| 2 |
+       RLA    $EA,X                ;6
+;Absolute    |RLA arg    |$2F| 3 |
+       RLA    $EAEA                ;6
+;Absolute,X  |RLA arg,X  |$3F| 3 |
+       RLA    $EAEA,X              ;7
+;Absolute,Y  |RLA arg,Y  |$3B| 3 |
+       RLA    $EAEA,Y              ;7
+;(Indirect,X)|RLA (arg,X)|$23| 2 |
+       RLA    ($EA,X)              ;8
+;(Indirect),Y|RLA (arg),Y|$33| 2 |
+       RLA    ($EA),Y              ;8
+
+
+
+;    RRA
+;~~~~~~~~~~~~~~~
+;Rotate one bit right in memory, then add memory to accumulator (with carry).
+;Status flags: N,V,Z,C
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Zero Page   |RRA arg    |$67| 2 |
+       RRA    $EA                  ;5
+;Zero Page,X |RRA arg,X  |$77| 2 |
+       RRA    $EA,X                ;6
+;Absolute    |RRA arg    |$6F| 3 |
+       RRA    $EAEA                ;6
+;Absolute,X  |RRA arg,X  |$7F| 3 |
+       RRA    $EAEA,X              ;7
+;Absolute,Y  |RRA arg,Y  |$7B| 3 |
+       RRA    $EAEA,Y              ;7
+;(Indirect,X)|RRA (arg,X)|$63| 2 |
+       RRA    ($EA,X)              ;8
+;(Indirect),Y|RRA (arg),Y|$73| 2 |
+       RRA    ($EA),Y              ;8
+
+
+
+;    SAX
+;~~~~~~~~~~~~~~~
+;AND X register with accumulator and store result in memory.
+;Status flags: N,Z
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Zero Page   |SAX arg    |$87| 2 |
+       SAX    $EA                  ;3
+;Zero Page,Y |SAX arg,Y  |$97| 2 |
+       SAX    $EA,Y                ;4
+;(Indirect,X)|SAX (arg,X)|$83| 2 |
+       SAX    ($EA,X)              ;6
+;Absolute    |SAX arg    |$8F| 3 |
+       SAX    $EAEA                ;4
+
+
+
+;    SBC
+;~~~~~~~~~~~~~~~
+;The same as the legal opcode $E9 (SBC #byte)
+;Status flags: N,V,Z,C
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Immediate   |SBC #byte  |$EB| 2 |
+       .byte $EB,$EA                ;2
+
+
+
+;    SBX
+;~~~~~~~~~~~~~~~
+;AND X register with accumulator and store result in X register,
+;then subtract byte from X register (without borrow).
+;Status flags: N,Z,C
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Immediate   |SBX #arg   |$CB| 2 |
+       SBX    #$EA                 ;2
+
+
+
+;    SLO
+;~~~~~~~~~~~~~~~
+;Shift left one bit in memory, then OR accumulator with memory.
+;Status flags: N,Z,C
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Zero Page   |SLO arg    |$07| 2 |
+       SLO    $EA                  ;5
+;Zero Page,X |SLO arg,X  |$17| 2 |
+       SLO    $EA,X                ;6
+;Absolute    |SLO arg    |$0F| 3 |
+       SLO    $EAEA                ;6
+;Absolute,X  |SLO arg,X  |$1F| 3 |
+       SLO    $EAEA,X              ;7
+;Absolute,Y  |SLO arg,Y  |$1B| 3 |
+       SLO    $EAEA,Y              ;7
+;(Indirect,X)|SLO (arg,X)|$03| 2 |
+       SLO    ($EA,X)              ;8
+;(Indirect),Y|SLO (arg),Y|$13| 2 |
+       SLO    ($EA),Y              ;8
+
+
+
+;    SRE
+;~~~~~~~~~~~~~~~
+;Shift right one bit in memory, then EOR accumulator with memory.
+;Status flags: N,Z,C
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Zero Page   |SRE arg    |$47| 2 |
+       SRE    $EA                  ;5
+;Zero Page,X |SRE arg,X  |$57| 2 |
+       SRE    $EA,X                ;6
+;Absolute    |SRE arg    |$4F| 3 |
+       SRE    $EAEA                ;6
+;Absolute,X  |SRE arg,X  |$5F| 3 |
+       SRE    $EAEA,X              ;7
+;Absolute,Y  |SRE arg,Y  |$5B| 3 |
+       SRE    $EAEA,Y              ;7
+;(Indirect,X)|SRE (arg,X)|$43| 2 |
+       SRE    ($EA,X)              ;8
+;(Indirect),Y|SRE (arg),Y|$53| 2 |
+       SRE    ($EA),Y              ;8
+
+
+
+;TOP (NOP)
+;~~~~~~~~~~~~~~~
+;No operation (tripple NOP). The argument has no significance.
+;Status flags: none
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Absolute    |TOP arg    |$0C| 3 |
+       NOP    $EAEA                ;4*
+;Absolute,X  |TOP arg,X  |$1C| 3 |
+       NOP    $EAEA,X              ;4*
+
+;duplicates...
+;Absolute,X  |TOP arg,X  |$3C| 3 |
+       .byte $3C,$EA               ;4*
+;Absolute,X  |TOP arg,X  |$5C| 3 |
+       .byte $5C,$EA               ;4*
+;Absolute,X  |TOP arg,X  |$7C| 3 |
+       .byte $7C,$EA               ;4*
+;Absolute,X  |TOP arg,X  |$DC| 3 |
+       .byte $DC,$EA               ;4*
+;Absolute,X  |TOP arg,X  |$FC| 3 |
+       .byte $FC,$EA               ;4*
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;      UNRELIABLE OPCODES
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;    ANE
+;~~~~~~~~~~~~~~~
+;Exact operation unknown. Read the referenced documents for
+;more information and observations.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; http://www.viceteam.org/plain/64doc.txt
+;                ANE $8B
+;
+; A = (A | #$EE) & X & #byte
+;           same as
+; A = ((A & #$11 & X) | ( #$EE & X)) & #byte
+;
+; In real 6510/8502 the internal parameter #$11
+; may occasionally be #$10, #$01 or even #$00.
+; This occurs when the video chip starts DMA
+; between the opcode fetch and the parameter fetch
+; of the instruction.  The value probably depends
+; on the data that was left on the bus by the VIC-II.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; http://www.ffd2.com/fridge/docs/6502-NMOS.extra.opcodes
+;                ANE $8B
+;
+; ANE transfers the contents of the X register to the A register
+; and then ANDs the A register with an immediate value.
+;
+; One supported mode:
+; ANE #ab         ;8B ab       ;No. Cycles= 2
+;
+; Example:
+; ANE #$44        ;8B 44
+;
+; Equivalent instructions:
+; TXA
+; AND #$44
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Immediate   |ANE #arg   |$8B| 2 |        *****  UNSTABLE   *****
+       ANE    #$EA                 ;2
+
+   
+           
+;    ASR
+;~~~~~~~~~~~~~~~
+;AND byte with accumulator, then shift right one bit in accumulator.
+;Status flags: N,Z,C
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Immediate   |ASR #arg   |$4B| 2 |        *****  UNSTABLE ON SOME ATARI JR'S  *****
+       ASR    #$EA                 ;2  
+       
+       
+
+;    JAM
+;~~~~~~~~~~~~~~~
+;Stop program counter (processor lock up).
+;Status flags: none
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Implied     |JAM        |$02| 1 | -
+       .byte $02                   ;0
+;Implied     |JAM        |$12| 1 | -
+       .byte $12                   ;0
+;Implied     |JAM        |$22| 1 | -
+       .byte $22                   ;0
+;Implied     |JAM        |$32| 1 | -
+       .byte $32                   ;0
+;Implied     |JAM        |$42| 1 | -
+       .byte $42                   ;0
+;Implied     |JAM        |$52| 1 | -
+       .byte $52                   ;0
+;Implied     |JAM        |$62| 1 | -
+       .byte $62                   ;0
+;Implied     |JAM        |$72| 1 | -
+       .byte $72                   ;0
+;Implied     |JAM        |$92| 1 | -
+       .byte $92                   ;0
+;Implied     |JAM        |$B2| 1 | -
+       .byte $B2                   ;0
+;Implied     |JAM        |$D2| 1 | -
+       .byte $D2                   ;0
+;Implied     |JAM        |$F2| 1 | -
+       .byte $F2                   ;0
+
+
+;    LAS
+;~~~~~~~~~~~~~~~
+;AND memory with stack pointer, transfer result to accumulator,
+;X register and stack pointer.
+;Status flags: N,Z
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Absolute,Y  |LAS arg,Y  |$BB| 3 |          *****  UNSTABLE   *****
+       LAS    $EAEA,Y              ;4*
+
+
+;    LXA
+;~~~~~~~~~~~~~~~
+;AND byte with accumulator, then transfer accumulator to X register.
+;Status flags: N,Z
+
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Immediate   |LXA #arg   |$AB| 2 |        *****  UNSTABLE   *****
+       LXA    #$EA                 ;2
+
+
+;    SHA
+;~~~~~~~~~~~~~~~
+;AND X register with accumulator then AND result with 7 and store in memory.
+
+;Status flags: -
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Absolute,Y  |SHA arg,Y  |$9F| 3 |        *****  UNSTABLE   *****
+       SHA    $EAEA,Y              ;5
+;(Indirect),Y|SHA arg    |$93| 2 |        *****  UNSTABLE   *****
+       SHA    ($EA),Y              ;6
+
+
+;    SHS
+;~~~~~~~~~~~~~~~
+;AND X register with accumulator and store result in stack
+;pointer, then AND stack pointer with the high byte of the
+;target address of the argument + 1. Store result in memory.
+;S = X AND A, M = S AND HIGH(arg) + 1
+
+;Status flags: -
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Absolute,Y  |SHS arg,Y  |$9B| 3 |        *****  UNSTABLE   *****
+       SHS    $EAEA,Y              ;5
+
+
+;    SHX
+;~~~~~~~~~~~~~~~
+;AND X register with the high byte of the target address of the
+;argument + 1. Store the result in memory. M = X AND HIGH(arg) + 1
+
+;Status flags: -
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Absolute,Y  |SHX arg,Y  |$9E| 3 |        *****  UNSTABLE   *****
+       SHX    $EAEA,Y              ;5
+
+
+;    SHY
+;~~~~~~~~~~~~~~~
+;AND Y register with the high byte of the target address of the
+;argument + 1. Store the result in memory. M = Y AND HIGH(arg) + 1
+
+;Status flags: -
+;Addressing  |Mnemonics  |Opc|Sz | n
+;------------|-----------|---|---|---
+;Absolute,X  |SHY arg,X  |$9C| 3 |        *****  UNSTABLE   *****
+       SHY    $EAEA,X              ;5
