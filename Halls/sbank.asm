@@ -48,6 +48,8 @@ SSoftReset:
 	stx cursorIndexAndMessageY
 	stx inBattle
 	stx currentSound
+	lda #24
+	sta menuSize
 
 #if BUILD_DEBUG
 	;Debug only code, do not include in final version!
@@ -250,7 +252,7 @@ SBattleLogicOverscan:
 	eor previousInput
 	and #$F0
 	beq SNoMenuMovement
-	jsr SUpdateMenuCursorPos
+	jsr SUpdateMenuCursorUpDown
 SNoMenuMovement:
 	lda currentInput
 	eor previousInput
@@ -353,7 +355,7 @@ SInputTimerOver:
 	ldx #6
 	stx effectCountdown
 SAfterInputControl:
-	jsr SMoveSetupCursor
+	jsr SUpdateMenuCursorLeftRight
 	jsr SUpdateBallPosition
 	jsr SCheckCursorChange
 	jmp SWaitForOverscanTimer
@@ -363,6 +365,8 @@ STryStartGame:
 	cpy #24 ;The ready button
 	bne SWaitForOverscanTimer
 	;If here, that means that the button was pressed when on the ready option
+	ldx #$15 ;Menu confirm
+	jsr STryLoadSound
 	lda #$01 ;Maze level 1, party level 1
 	sta mazeAndPartyLevel
 	lda #15
@@ -397,27 +401,6 @@ SWaitForOverscanTimer:
 	bne SWaitForOverscanTimer
 
 	jmp SStartOfFrame
-
-SMoveSetupCursor: SUBROUTINE ;Controls the movement of the cursor on the startup screen.
-	lda battleActions
-	bpl .SRightPressed
-	asl
-	bpl .SLeftPressed
-	rts
-.SRightPressed:
-	ldy cursorIndexAndMessageY
-	cpy #24
-	beq .SReturn
-	iny
-	sty cursorIndexAndMessageY
-	rts
-.SLeftPressed:
-	ldy cursorIndexAndMessageY
-	beq .SReturn
-	dey
-	sty cursorIndexAndMessageY
-.SReturn
-	rts
 
 SCheckCursorChange: SUBROUTINE ;Facilitates changing party member's names and classes
 	ldy cursorIndexAndMessageY
@@ -1898,32 +1881,41 @@ SSetMenuActiveLine: SUBROUTINE ;Determines which of the three menu lines is curr
 	sty highlightedLineAndSteps
 	rts
 
-SUpdateMenuCursorPos: SUBROUTINE ;Updates the cursor according to joystick presses
-	ldy cursorIndexAndMessageY
-	lda #DOWN_MASK
-	bit currentInput
-	beq .SDownPressed
+SUpdateMenuCursor: SUBROUTINE
+SUpdateMenuCursorUpDown:
+	ldy currentInput
 	lda #UP_MASK
-	bit currentInput
-	beq .SUpPressed
-	rts
-.SDownPressed:
-	cpy menuSize
-	bcc .SNotAtLastPosition
-	rts
-.SNotAtLastPosition
-	iny
-	bne .SStoreAndLoadSound ;Should always be taken
-.SUpPressed:
+	ldx #DOWN_MASK
+	bne .SUpdateMenuCursor
+SUpdateMenuCursorLeftRight:
+	ldy battleActions
+	lda #LEFT_MASK
+	ldx #RIGHT_MASK
+.SUpdateMenuCursor:
+	sty tempPointer4 ;The input byte to use
 	ldy cursorIndexAndMessageY
-	bne .SNotAtFirstPosition
+	bit tempPointer4 ;Decrement mask check
+	beq .SDecrement
+	txa 
+	bit tempPointer4 ;Increment mask check
+	beq .SIncrement
 	rts
-.SNotAtFirstPosition
+.SDecrement:
 	dey
-.SStoreAndLoadSound:
+	bpl .SStoreAndReturn
+	rts
+.SIncrement:
+	cpy menuSize
+	bcs .SReturn
+	iny
+.SStoreAndReturn:
 	sty cursorIndexAndMessageY
-	ldx #$14
+	lda currentInput
+	cmp previousInput
+	beq .SReturn
+	ldx #$14 ;Menu move
 	jsr STryLoadSound
+.SReturn:
 	rts
 
 ;Interprets X as the cursorPosition
@@ -2677,9 +2669,9 @@ SSoundFrequencies:
 	.byte 6 ;TRANCE
 	.byte 6 ;WISH
 	.byte 0
-	.byte 4 ;Menu move
+	.byte 1 ;Menu move
 	.byte 4 ;Menu confirm
-	.byte 8 ;Menu nope
+	.byte 6 ;Menu nope
 	.byte 2 ;Footstep
 	.byte 3 ;Hit
 	.byte 4 ;Swing

@@ -768,6 +768,11 @@
 	-Fixed bug where campfire strings read as KNOWN CAMP instead of CAMP LEAVE
 	-Fixed bug where playing the "tink" sound would prevent a shield from ever breaking
 	-Fixed bug where X SHOT A VOLLEY message would use the Y HP message component
+6/10/24
+	-Saved ~32 bytes by consolidating setup and battle menu cursor movement into a single routine SUpdateMenuCursor
+6/11/24
+	-Added menu confirm sound on starting the game
+	-Menu move sound only plays if currentInput is different from previousInput
 
 KNOWN BUGS:
 	-Lich dying to blight caused party viewed info corruption
