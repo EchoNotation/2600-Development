@@ -155,9 +155,9 @@ mp3 ds 1
 mp4 ds 1
 playerX ds 1 ;0000XXXX
 playerY ds 1 ;0000YYYY
-playerFacing ds 1 ; 000000XX 00 is east, 01 is south, 10 is west, 11 is north
-exitLocation ds 1
-campfireLocation ds 1
+playerFacing ds 1 ;000000XX 00 is east, 01 is south, 10 is west, 11 is north
+exitLocation ds 1 ;XXXXYYYY
+campfireLocation ds 1 ;XXXXYYYY
 previousInput ds 1
 currentInput ds 1
 temp1 ds 1

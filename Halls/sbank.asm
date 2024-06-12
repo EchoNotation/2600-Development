@@ -339,22 +339,20 @@ SSetupLogicOverscan:
 	cmp previousInput
 	beq SSameInputAsLastFrame
 	sta battleActions ;If different, use the current one for 1 frame
-	lda #25
-	sta effectCountdown
+	ldx #25 ;How many frames to wait before repeating input
 	bne SAfterInputControl
 SSameInputAsLastFrame:
 	ldx effectCountdown
 	beq SInputTimerOver
 	dex
-	stx effectCountdown
 	lda #$F8
 	sta battleActions ;Nothing is pressed 
 	bne SAfterInputControl
 SInputTimerOver:
 	sta battleActions
-	ldx #6
-	stx effectCountdown
+	ldx #6 ;Frequency in frames for the input to be repeated while held
 SAfterInputControl:
+	stx effectCountdown
 	jsr SUpdateMenuCursorLeftRight
 	jsr SUpdateBallPosition
 	jsr SCheckCursorChange
@@ -417,13 +415,13 @@ SCheckCursorChange: SUBROUTINE ;Facilitates changing party member's names and cl
 	rts
 .SDownPressed:
 	lda #1
-	sta temp6
+	sta temp6 ;The delta to apply to the class or character
 	ldx enemyID+2 ;The index of the data that is being modified
 	beq .SApplyClassDelta
 	bne .SApplyNameDelta
 .SUpPressed:
-	lda #$FF
-	sta temp6
+	lda #$FF ;-1
+	sta temp6 ;The delta to apply to the class or character
 	ldx enemyID+2 ;The index of the data that is being modified
 	beq .SApplyClassDelta
 .SApplyNameDelta:
@@ -1527,10 +1525,10 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	;Back button was selected
 	lda #$80
 	sta currentMenu
-	lda #1 ;Put the cursor on CAST
-	sta cursorIndexAndMessageY
-	lda #2
-	sta menuSize
+	ldx #1 ;Put the cursor on CAST
+	stx cursorIndexAndMessageY
+	inx
+	stx menuSize
 	rts
 .SCheckSpellLogic:
 	ldy highlightedLineAndSteps

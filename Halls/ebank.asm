@@ -385,7 +385,7 @@ EPrepMediumEnemy:
 EPrepLargeEnemy:
 	;X currently contains the enemyID
 	;graphics are stored in temp4, tempPointer3, tempPointer2, tempPointer1 order low to high addresses
-	;color are stored ub temp6, temp5 order low to high addresses
+	;color are stored in temp6, temp5 order low to high addresses
 	sta WSYNC
 	sec
 	sbc #34 ;Currently, large enemies are at the end of the enemyID list.
@@ -3585,22 +3585,6 @@ EGroundsEnemies:
 	.byte $02 ;Shroom
 	.byte $00 ;Wolf
 	.byte $01 ;Shroom
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
-	; .byte $00 ;Wolf
 
 ECastleEnemies:
 	.byte $18 ;Grgoyl
