@@ -1642,11 +1642,8 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 	rts
 .LIsAsleep:
 	;This person is currently asleep
-	lsr
-	lsr
-	lsr
 	sec
-	sbc #1
+	sbc #$08
 	sta temp2
 	beq .LWakeUpBattler
 	;Still asleep
@@ -1660,11 +1657,6 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 	lda #$18 ;X WAKES UP
 .LStoreNewSleepValue:
 	sta currentMessage
-	lda temp2
-	asl
-	asl
-	asl
-	sta temp2
 	lda battlerStatus,x
 	and #$E7
 	ora temp2
@@ -1689,7 +1681,11 @@ LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes contro
 	sta currentMessage
 	ldx currentBattler
 	stx startingCursorIndexAndTargetID
+	lda viewedPartyInfo
+	sta enemyAction ;enemy action should be a safe place to move this to prevent corruption by loading the sound
 	jsr LDeathCleanup
+	lda enemyAction
+	sta viewedPartyInfo
 	lda #$81
 	bne .LSaveInBattle
 .LSetBlightDamage:
@@ -1739,7 +1735,7 @@ LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, 
 
 LApplyRandomModifier: SUBROUTINE ;Adds a random number between 0-1 if the party is level 1, 2, or 3, otherwise adds a random number between 0-7
 	lda mazeAndPartyLevel
-	and #$0f
+	and #$0F
 	cmp #6
 	bcc .LLevelLessThan6
 	lda #$03

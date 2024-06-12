@@ -773,9 +773,12 @@
 6/11/24
 	-Added menu confirm sound on starting the game
 	-Menu move sound only plays if currentInput is different from previousInput
+	-8 byte fix for enemies dying to blight causing partyViewedInfo corruption...
+	-Fixed comment typos and small optimizations
+	-10 byte sleep logic optimization
 
 KNOWN BUGS:
-	-Lich dying to blight caused party viewed info corruption
+
 
 TODO:
 	Shortlist:
@@ -790,6 +793,7 @@ TODO:
 	-Being guarded reduces blight damage, fix?
 	-Sharp increases attack power of unconscious party members
 	-Consider methods for compacting sound frequency & length data
+	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
 
 	Dreamlist:
 	-Variable pitch for certain sound effects (e.g. hit, heal, down)
