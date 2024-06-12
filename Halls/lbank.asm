@@ -82,7 +82,7 @@ LProcessCharacterAdvancement:
 	cmp #$FE
 	beq .LGameCompleted
 	cmp #$FF
-	beq .LExitBattleViaVictory
+	beq .LGoToExitBattle
 	rts
 
 .LGoToCheckPartyXP:
@@ -93,6 +93,8 @@ LProcessCharacterAdvancement:
 	jmp .LCheckTypeOfConclusion
 .LGoToCheckForNewSpells:
 	jmp .LCheckForNewSpells
+.LGoToExitBattle:
+	jmp .LExitBattle
 
 .LGoToNextFloor:
 	lda flags
@@ -116,8 +118,7 @@ LProcessCharacterAdvancement:
 
 	sta currentMessage
 	lda #$FF
-	sta inBattle
-	rts
+	bne .LSaveInBattleAdvancement
 
 .LPartyDown:
 	lda #$FC
@@ -137,18 +138,6 @@ LProcessCharacterAdvancement:
 	sta enemyHP+1
 	lda #$20 ;GAME CLEAR
 	bne .LStoreEndMessage
-.LExitBattleViaVictory:
-	lda #0
-	sta inBattle
-	sta currentEffect
-	sta currentBattler ;Needed for maze mode menuing
-
-	ldx #7
-.LClearBattlerStatus:
-	sta battlerStatus,x
-	dex
-	bpl .LClearBattlerStatus
-	rts
 
 .LCheckPartyXP:
 	lda #$13 ;PARTY WINS
@@ -197,6 +186,7 @@ LProcessCharacterAdvancement:
 	sta mazeAndPartyLevel
 
 	lda #$F2
+.LSaveInBattleAdvancement:
 	sta inBattle
 	rts
 
@@ -255,8 +245,7 @@ LProcessCharacterAdvancement:
 	beq .LCheckTypeOfConclusion ;Nobody learned anything!
 .LSomeoneLearnedSpell
 	lda #$F4
-	sta inBattle
-	rts
+	bne .LCampfireStoreAndExit
 
 .LCheckForNewSpells:
 	lda mazeAndPartyLevel
@@ -294,8 +283,7 @@ LProcessCharacterAdvancement:
 	cmp exitLocation
 	beq .LWasBoss
 	lda #$FF
-	sta inBattle
-	rts
+	bne .LCampfireStoreAndExit
 .LWasBoss:
 	lda mazeAndPartyLevel
 	jsr L4Lsr
@@ -303,13 +291,11 @@ LProcessCharacterAdvancement:
 	cmp #MAX_MAZE_LEVEL
 	bcs .LMarkGameComplete
 	lda #$FD
-	sta inBattle
-	rts
+	bne .LCampfireStoreAndExit
 
 .LMarkGameComplete:
 	lda #$FE
-	sta inBattle
-	rts
+	bne .LCampfireStoreAndExit
 
 .LCampfirePhase1:
 	ldx #3
@@ -440,6 +426,7 @@ LProcessCasting:
 
 .LSingleTgtSpellKill:
 	lda #$81
+.LSharedKillLogicSaveInBattle:
 	sta inBattle
 .LSharedKillLogic:
 	lda #$09 ;X DOWN
@@ -461,8 +448,7 @@ LProcessCasting:
 
 .LDrainKilled:
 	lda #$A2
-	sta inBattle
-	bne .LSharedKillLogic
+	bne .LSharedKillLogicSaveInBattle
 
 .LWishMPRestoration:
 	lda #$25 ;PARTY MP UP
@@ -678,8 +664,7 @@ LProcessCasting:
 	dex
 	bpl .LClearNegativeStatusLoop
 	lda #$A2
-	sta inBattle
-	rts
+	bne .LSaveInBattleCasting
 
 .LShield:
 	ldx startingCursorIndexAndTargetID
@@ -692,6 +677,7 @@ LProcessCasting:
 	sta currentMessage
 .LNormalTgtedExit:
 	lda #$81
+.LSaveInBattleCasting:
 	sta inBattle
 	rts
 
@@ -713,7 +699,7 @@ LProcessCasting:
 	lda #$0F ;X WAS CURED
 .LSaveHealMessage:
 	sta currentMessage
-	jmp .LNormalTgtedExit
+	bne .LNormalTgtedExit
 
 .LSmite:
 	ldy #ATTACK_AND_HALF_MAGIC
@@ -747,8 +733,7 @@ LProcessCasting:
 	lda #$1B ;X FELL ASLEEP
 	sta currentMessage
 	lda #$A2
-	sta inBattle
-	rts
+	bne .LSaveInBattleCasting
 
 .LTgtDamage:
 	ldx startingCursorIndexAndTargetID
@@ -952,8 +937,7 @@ LProcessCasting:
 	rts
 .LSpellComplete:
 	lda #$81
-	sta inBattle
-	rts
+	jmp .LSaveInBattleCasting
 
 LHighSpellLogicLocations:
 	.byte $FF ;Back
@@ -1024,11 +1008,10 @@ LProcessFighting:
 	and #$0F
 	bne .LAttackHit
 .LAttackMissed:
-	lda #$81
-	sta inBattle
 	lda #$08 ;X MISSES
 	sta currentMessage
-	rts
+	lda #$81
+	bne .LSaveInBattle
 .LAttackHit:
 	stx startingCursorIndexAndTargetID
 	lda #$00 ;X {ATTACK} Y
@@ -1040,12 +1023,10 @@ LProcessFighting:
 	and battlerStatus,x
 	beq .LNotParrying
 	lda #$92
-	sta inBattle
-	rts
+	bne .LSaveInBattle
 .LNotParrying:
 	lda #$90
-	sta inBattle
-	rts
+	bne .LSaveInBattle
 .LTargetWasParrying:
 	ldx #$1A ;Tink
 	jsr LLoadSoundInS
@@ -1056,20 +1037,17 @@ LProcessFighting:
 	and #RANGED_MASK
 	beq .LIsMelee
 	lda #$81 ;Can't riposte against ranged attackers
-	sta inBattle
-	rts
+	bne .LSaveInBattle
 .LIsMelee:
 	lda #$93
-	sta inBattle
-	rts
+	bne .LSaveInBattle
 .LRetortDescription:
 	ldx #$19 ;Swing
 	jsr LLoadSoundInS
 	lda #$22 ;X STABS Y (parry version)
 	sta currentMessage
 	lda #$94
-	sta inBattle
-	rts
+	bne .LSaveInBattle
 .LRetortDamage:
 	ldx #$18 ;Hit
 	jsr LLoadSoundInS
@@ -1086,13 +1064,14 @@ LProcessFighting:
 
 	jmp .LApplyFightDamage
 .LDamageWasAKill:
-	lda #$81
-	sta inBattle
 	lda #$09 ;X DOWN
 	sta currentMessage
 	ldx startingCursorIndexAndTargetID
 	jsr LDeathCleanup
 	;Target ID should already be set from previous message
+	lda #$81
+.LSaveInBattle:
+	sta inBattle
 	rts
 .LCalculateFightDamage:
 	jsr LGetBattlerAttack
@@ -1129,7 +1108,7 @@ LProcessRunning:
 	cmp #$E1
 	beq .LRanAway
 	cmp #$E2
-	beq .LExitBattleViaRun
+	beq .LExitBattle
 .LInitiateRun:
 	lda #$14 ;X TRIES TO RUN
 	sta currentMessage
@@ -1163,36 +1142,28 @@ LProcessRunning:
 	bmi .LCannotRunAway ;Can only run away if this battler's speed is equal or greater to the speed of the fastest living enemy
 .LRunAway:
 	lda #$E1
-	sta inBattle
-	rts
+	bne .LSaveInBattle
 .LCannotRunAway:
 	lda #$E0
-	sta inBattle
-	rts
+	bne .LSaveInBattle
 .LFailedToRun:
-	lda #$81
-	sta inBattle
 	lda #$16 ;X CANNOT ESCAPE
 	sta currentMessage
-	rts
+	lda #$81
+	bne .LSaveInBattle
 .LRanAway:
-	lda #$E2
-	sta inBattle
 	lda #$12 ;PARTY FLEES
 	sta currentMessage
-	rts
-.LExitBattleViaRun:
-	lda #0
-	sta inBattle
-	sta currentEffect
-	sta currentBattler ;Needed for maze mode menuing
-
+	lda #$E2
+	bne .LGoToSaveInBattle
+.LExitBattle:
 	ldx #7
-.LClearStatusRun:
+.LClearStatusOnBattleExit:
 	sta battlerStatus,x
 	dex
-	bpl .LClearStatusRun
-	rts
+	bpl .LClearStatusOnBattleExit
+	lda #0
+	beq .LGoToSaveInBattle
 
 LProcessGuarding:
 	lda #$81
@@ -1207,19 +1178,20 @@ LProcessGuarding:
 	rts
 
 LProcessParrying:
-	lda #$81
-	sta inBattle
 	lda #$1D ;X GUARDS
 	sta currentMessage
 	lda #PARRYING_MASK
 	ldx currentBattler
 	jsr LApplyStatus
-	rts
+	lda #$81
+	bne .LGoToSaveInBattle
 
 .LGoToArmorSpecial:
 	jmp .LArmorSpecial
 .LGoToHorrorSpecial:
 	jmp .LHorrorSpecial
+.LGoToSaveInBattle:
+	jmp .LSaveInBattle
 
 LProcessSpecial:
 	ldx currentBattler
