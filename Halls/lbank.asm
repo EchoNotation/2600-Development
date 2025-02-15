@@ -1157,13 +1157,13 @@ LProcessRunning:
 	lda #$E2
 	bne .LGoToSaveInBattle
 .LExitBattle:
+	lda #0
 	ldx #7
 .LClearStatusOnBattleExit:
 	sta battlerStatus,x
 	dex
 	bpl .LClearStatusOnBattleExit
-	lda #0
-	beq .LGoToSaveInBattle
+	bmi .LGoToSaveInBattle
 
 LProcessGuarding:
 	lda #$81
@@ -1350,8 +1350,6 @@ LDetermineSpellPower: SUBROUTINE ;Interprets Y as the damage formula to follow, 
 	beq .LAttackAndHalfMagic
 	dey
 	beq .LDoubleMagic
-	lda #0 ;Invalid power formula!
-	rts
 .LFullMagic:
 	jsr LGetBattlerMagic
 	rts

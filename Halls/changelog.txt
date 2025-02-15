@@ -776,9 +776,12 @@
 	-8 byte fix for enemies dying to blight causing partyViewedInfo corruption...
 	-Fixed comment typos and small optimizations
 	-10 byte sleep logic optimization
+	-Lots of small LDoBattle optimizations
+	-Removed some redudant and vestigial code relating to exiting battles
 
 KNOWN BUGS:
-
+	-Avatars don't clear status after exiting a battle
+	-Heals fully message?
 
 TODO:
 	Shortlist:
