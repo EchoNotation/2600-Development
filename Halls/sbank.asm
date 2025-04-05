@@ -169,6 +169,8 @@ SDontNeedANewBattler:
 	bmi SWaitForVblankTimer
 
 SJustExitedBattle:
+	ldy #2 ;Subroutine ID for LUpdateAvatars
+	jsr SRunFunctionInLBank
 	lda #STEP_GRACE_PERIOD
 	sta highlightedLineAndSteps
 	lda #TRANSITIONING_TO_MAZE
@@ -365,7 +367,8 @@ STryStartGame:
 	;If here, that means that the button was pressed when on the ready option
 	ldx #$15 ;Menu confirm
 	jsr STryLoadSound
-	lda #$01 ;Maze level 1, party level 1
+	;lda #$01 ;Maze level 1, party level 1
+	lda #$19
 	sta mazeAndPartyLevel
 	lda #15
 	sta experienceToNextLevel
@@ -447,7 +450,7 @@ SCheckCursorChange: SUBROUTINE ;Facilitates changing party member's names and cl
 	bne .SStoreName
 
 .SApplyClassDelta:
-	lda char1,y
+	lda char1,y ;opt
 	and #$0F
 	clc
 	adc temp6
@@ -456,10 +459,10 @@ SCheckCursorChange: SUBROUTINE ;Facilitates changing party member's names and cl
 	bcs .SClassOverflow
 .SStoreClass:
 	sta temp1
-	lda char1,y
+	lda char1,y ;opt
 	and #$F0
 	ora temp1
-	sta char1,y
+	sta char1,y ;opt
 	rts
 .SClassOverflow:
 	lda #0
@@ -845,22 +848,22 @@ SEdgeRemoverLookup:
 	.byte $7F
 
 SRemoveHEdge: SUBROUTINE
-	lda hEdges,y
+	lda hEdges,y ;opt
 	and SEdgeRemoverLookup,x
-	sta hEdges,y
+	sta hEdges,y ;opt
 	rts
 
 SRemoveVEdge: SUBROUTINE
-	lda vEdges,y
+	lda vEdges,y ;opt
 	and SEdgeRemoverLookup,x
-	sta vEdges,y
+	sta vEdges,y ;opt
 	rts
 
 SClearMazeData: SUBROUTINE ;Sets all the vertical and horizontal edges of the maze to 1 (walls).
-	ldy #14
+	ldx #14
 	lda #%11111111
 .SClearMazeLoop:
-	sta #vEdges,y
+	sta #vEdges,x
 	dey
 	bpl .SClearMazeLoop
 	rts
@@ -1467,11 +1470,11 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	sta battleActions,x
 	;Check how many enemies are alive, proceeding to $81 if more than 1 is alive
 	jsr SCheckEnemies
-	cpx #2
+	cpy #2
 	bcs .SNeedToTargetFight
 	;Only one enemy, so auto-target this fight
-	ldx currentBattler ;Changed by LCheckEnemies
-	tya ;The last index of an alive enemy
+	txa ;The last index of an alive enemy
+	ldx currentBattler ;Changed by SCheckEnemies
 	jsr S5Asl
 	ora battleActions,x
 	sta battleActions,x
@@ -1479,8 +1482,8 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SNeedToTargetFight
 	lda #$81
 	sta currentMenu
-	dex
-	stx menuSize
+	dey
+	sty menuSize
 	lda #0
 	sta cursorIndexAndMessageY
 	rts
@@ -1518,8 +1521,8 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SSelectSpellMenu:
 	lda highlightedLineAndSteps
 	and #$7F
-	tay
-	lda menuLines,y
+	tax
+	lda menuLines,x
 	and #$1F ;Get just the spell ID
 	bne .SCheckSpellLogic
 	;Back button was selected
@@ -1562,11 +1565,11 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	rts
 .STargetEnemy:
 	jsr SCheckEnemies
-	cpx #2
+	cpy #2
 	bcs .SNeedToTargetSpell
 	;Only one enemy, so auto-target this spell
+	txa
 	ldx currentBattler ;X is changed by SCheckEnemies
-	tya
 	jsr S5Asl
 	ora battleActions,x
 	sta battleActions,x
@@ -1574,8 +1577,8 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SNeedToTargetSpell:
 	lda #$81
 	sta currentMenu
-	dex
-	stx menuSize
+	dey
+	sty menuSize
 	lda #0
 	sta cursorIndexAndMessageY
 	rts
@@ -1679,7 +1682,7 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSt
 	ldy #0
 .SOptionLinesLoop:
 	lda (tempPointer1),y
-	sta menuLines,y
+	sta menuLines,y ;opt
 	iny
 	cpy #3
 	bcc .SOptionLinesLoop
@@ -1745,7 +1748,7 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSt
 	iny
 	iny
 .SEnemyLineLoop:
-	lda battlerHP,y
+	lda battlerHP,y ;opt
 	beq .SNoEnemyHere
 	sty menuLines,x
 	inx
@@ -1824,8 +1827,8 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSt
 	bne .SSetSpellLoop
 
 .SCheckMana:
-	ldy highlightedLineAndSteps
-	lda menuLines,y
+	ldx highlightedLineAndSteps
+	lda menuLines,x
 	tay
 	lda SSpellManaLookup,y
 	sta temp1
@@ -1932,19 +1935,19 @@ SCursorIndexToBattlerIndex: SUBROUTINE ;Converts the position of a menu cursor i
 .SDone:
 	rts ;Y is the correct offset into the enemyID array
 
-SCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in X, and the last index of an alive enemy in Y
+SCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in Y, and the last index of an alive enemy in X
 	ldx #0
 	ldy #0
 .SCheckEnemyLoop:
-	lda enemyHP,y
+	lda enemyHP,x
 	beq .SEnemyDead
-	sty tempPointer6
-	inx
-.SEnemyDead
+	stx tempPointer6
 	iny
-	cpy #4
+.SEnemyDead
+	inx
+	cpx #4
 	bcc .SCheckEnemyLoop
-	ldy tempPointer6
+	ldx tempPointer6
 	rts
 
 SClassTargetingBias:
@@ -2022,7 +2025,7 @@ SAfterLoadingEnemyAI:
 	cpy currentBattler
 	beq .SNoEnemyHere
 .SNormalCheck:
-	lda battlerHP,y
+	lda battlerHP,y ;opt
 	beq .SNoEnemyHere
 	dex
 	bmi .SFoundEnemy
@@ -2567,7 +2570,12 @@ STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
 	bcc .SDontLoad ;Don't load a sound if ID is lower than one that is already playing
 .SForceLoad:
 	stx currentSound
-	lda SSoundLengths,x
+	lda SSoundMetadata,x
+	lsr
+	lsr
+	lsr
+	lsr
+	and #$0F
 	sta soundOffset
 	lda #1
 	sta soundFrequency
@@ -2584,7 +2592,8 @@ SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
 	dec soundOffset
 	bmi .SSoundFinished
 	ldy soundOffset
-	lda SSoundFrequencies,x
+	lda SSoundMetadata,x
+	and #$0F
 	sta soundFrequency
 	
 	lda SVoices,x
@@ -2614,69 +2623,37 @@ SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
 .SReturn:
 	rts
 
-SSoundLengths:
-	.byte 0 ;No sound
-	.byte 8 ;FIRE
-	.byte 6 ;SLEEP
-	.byte 13 ;BLIZRD
-	.byte 6 ;DRAIN
-	.byte 10 ;THUNDR
-	.byte 8 ;SHIELD
-	.byte 16 ;METEOR
-	.byte 11 ;CHAOS
-	.byte 4 ;HEAL
-	.byte 10 ;SMITE
-	.byte 11 ;VOLLEY
-	.byte 8 ;SHARP
-	.byte 12 ;BLIGHT spell
-	.byte 9 ;TRIAGE
-	.byte 9 ;WITHER
-	.byte 10 ;BANISH
-	.byte 8 ;TRANCE
-	.byte 8 ;WISH
-	.byte 0
-	.byte 2 ;Menu move
-	.byte 2 ;Menu confirm
-	.byte 1 ;Menu nope
-	.byte 2 ;Footstep
-	.byte 4 ;Hit
-	.byte 4 ;Swing
-	.byte 4 ;Tink
-	.byte 6 ;Heal
-	.byte 8 ;Dead
-	.byte 10 ;Blight
-
-SSoundFrequencies:
-	.byte 0 ;No sound
-	.byte 10 ;FIRE
-	.byte 8 ;SLEEP
-	.byte 5 ;BLIZRD
-	.byte 4 ;DRAIN
-	.byte 5 ;THUNDR
-	.byte 4 ;SHIELD
-	.byte 5 ;METEOR
-	.byte 4 ;CHAOS
-	.byte 5 ;HEAL
-	.byte 5 ;SMITE
-	.byte 3 ;VOLLEY
-	.byte 5 ;SHARP
-	.byte 2 ;BLIGHT spell
-	.byte 5 ;TRIAGE
-	.byte 4 ;WITHER
-	.byte 6 ;BANISH
-	.byte 6 ;TRANCE
-	.byte 6 ;WISH
-	.byte 0
-	.byte 1 ;Menu move
-	.byte 4 ;Menu confirm
-	.byte 6 ;Menu nope
-	.byte 2 ;Footstep
-	.byte 3 ;Hit
-	.byte 4 ;Swing
-	.byte 4 ;Tink
-	.byte 4 ;Heal
-	.byte 3 ;Dead
-	.byte 2 ;Blight
+SSoundMetadata:
+	.byte $00 ;No sound
+	.byte $8A ;FIRE
+	.byte $68 ;SLEEP
+	.byte $D5 ;BLIZRD
+	.byte $64 ;DRAIN
+	.byte $A5 ;THUNDR
+	.byte $84 ;SHIELD
+	.byte $F5 ;METEOR
+	.byte $B4 ;CHAOS
+	.byte $45 ;HEAL
+	.byte $A5 ;SMITE
+	.byte $B3 ;VOLLEY
+	.byte $85 ;SHARP
+	.byte $C2 ;BLIGHT spell
+	.byte $95 ;TRIAGE
+	.byte $94 ;WITHER
+	.byte $A6 ;BANISH
+	.byte $86 ;TRANCE
+	.byte $86 ;WISH
+	.byte $00
+	.byte $21 ;Menu move
+	.byte $24 ;Menu confirm
+	.byte $16 ;Menu nope
+	.byte $22 ;Footstep
+	.byte $43 ;Hit
+	.byte $44 ;Swing
+	.byte $44 ;Tink
+	.byte $64 ;Heal
+	.byte $83 ;Dead
+	.byte $A2 ;Blight
 
 SVoices:
 	.byte 0
@@ -2982,7 +2959,7 @@ SSpellManaLookup:
 	.byte 5 ;BANISH
 	.byte 0 ;TRANCE
 	.byte 15 ;WISH
-	.byte 0 ;SHIFT
+	nop
 	nop
 	nop
 	nop

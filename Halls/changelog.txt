@@ -778,9 +778,17 @@
 	-10 byte sleep logic optimization
 	-Lots of small LDoBattle optimizations
 	-Removed some redudant and vestigial code relating to exiting battles
+2/16/25
+	-Battler status clears correctly when exiting battle
+	-Saved ~18 bytes by combining sound frequency and length into a single byte
+4/2/25
+	-Swapped some LDA absolute,y to LDA zeropage,x, saving around 10 bytes
+4/4/25
+	-Some optimization in LDoBattle
+	-Avatars now update correctly after exiting a battle
+	-LFindAoETargetOffensive was entirely contained with LFindAoETargetDefensive, saving 10 bytes.
 
 KNOWN BUGS:
-	-Avatars don't clear status after exiting a battle
 	-Heals fully message?
 
 TODO:
@@ -795,7 +803,6 @@ TODO:
 	Longlist:
 	-Being guarded reduces blight damage, fix?
 	-Sharp increases attack power of unconscious party members
-	-Consider methods for compacting sound frequency & length data
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
 
 	Dreamlist:
@@ -809,6 +816,7 @@ TODO:
 		-Game victory jingle
 		-Game over jingle
 		-Going down stairs sound?
+		-Guarded sound
 
 	DOESN'T REQUIRE LOGIC:
 		-More text/messaging work

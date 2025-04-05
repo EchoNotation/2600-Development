@@ -572,7 +572,7 @@ LProcessCasting:
 .LTargetAcquired:
 	stx startingCursorIndexAndTargetID
 
-	ldx temp6 ;spell ID
+	ldy temp6 ;spell ID
 	;Need to check if this spell should miss or not
 	jsr LCheckSpellHit
 	bpl .LSpellConnects
@@ -778,7 +778,7 @@ LProcessCasting:
 	ldx aoeTargetID
 	stx startingCursorIndexAndTargetID
 
-	ldx temp6 ;spell ID
+	ldy temp6 ;spell ID
 	;Need to check if this spell should miss or not
 	jsr LCheckSpellHit
 	bpl .LAoESpellConnects
@@ -1166,25 +1166,19 @@ LProcessRunning:
 	bmi .LGoToSaveInBattle
 
 LProcessGuarding:
-	lda #$81
-	sta inBattle
-	lda #$19 ;X GUARDS Y
-	sta currentMessage
-
 	jsr LGetTargetFromActionDefensive
 	stx startingCursorIndexAndTargetID
 	lda #GUARDED_MASK
 	jsr LApplyStatus
-	rts
+	lda #$19 ;X GUARDS Y
+	jmp .LNormalTgtedExitSaveMessage
 
 LProcessParrying:
-	lda #$1D ;X GUARDS
-	sta currentMessage
 	lda #PARRYING_MASK
 	ldx currentBattler
 	jsr LApplyStatus
-	lda #$81
-	bne .LGoToSaveInBattle
+	lda #$1D ;X GUARDS
+	jmp .LNormalTgtedExitSaveMessage
 
 .LGoToArmorSpecial:
 	jmp .LArmorSpecial
@@ -1262,9 +1256,9 @@ LProcessSpecial:
 	jmp .LIsOffensive ;Jumps into the relevant part of AoE spell setup code
 
 .LOozeSpecial:
-	lda enemyHP
+	lda enemyHP ;Always in spot 0, since large enemy
 	cmp #(OOZE_HP / 2)
-	bcs .LAtOrAboveHalf
+	bcs .LBailOutToBasicAttack
 	;Ooze needs to split
 	lda #$33 ;OOZE SPLITS APART
 	sta currentMessage
@@ -1281,7 +1275,7 @@ LProcessSpecial:
 .LSlimeSpecial:
 	lda battlerHP,x
 	cmp #(SLIME_HP / 2)
-	bcs .LAtOrAboveHalf
+	bcs .LBailOutToBasicAttack
 	;Slime needs to split
 	lda #$32 ;SLIME SPLITS APART
 	sta currentMessage
@@ -1298,19 +1292,17 @@ LProcessSpecial:
 	ora hasAction
 	sta hasAction
 	rts
-.LAtOrAboveHalf:
+.LBailOutToBasicAttack: ;Used by the OOZE, SLIME, and ARMOR
 	lda enemyAction
 	and #$60
 	sta temp1
 	sta enemyAction
 	jmp .LSetFightWindup
 
-
-
 .LArmorSpecial:
 	lda enemyHP
 	ora enemyHP+3
-	bne .LDontResummon
+	bne .LBailOutToBasicAttack
 .LResummon:
 	;The sword and shield have both died...
 	lda #30
@@ -1318,9 +1310,6 @@ LProcessSpecial:
 	sta enemyHP+3
 	lda #$FF ;message
 	sta currentMessage
-	rts
-.LDontResummon:
-	;Need to figure our what the ARMOR should do here...
 	rts
 
 .LHorrorSpecial:
@@ -1503,17 +1492,17 @@ LEnterBattleSetup:
 	cpx #4
 	rts
 
-LCheckSpellHit: SUBROUTINE ;Determines if the spell corresponding to ID X should miss (because the target battler is unconscious or dead). Returns FF if the spell misses
-	ldy startingCursorIndexAndTargetID
-	lda battlerHP,y
+LCheckSpellHit: SUBROUTINE ;Determines if the spell corresponding to ID Y should miss (because the target battler is unconscious or dead). Returns FF if the spell misses
+	ldx startingCursorIndexAndTargetID
+	lda battlerHP,x
 	bne .LSpellHits ;Any spell on a conscious target hits
-	cpy #4
+	cpx #4
 	bcs .LSpellMisses ;Enemies cease to exist after reaching 0 HP
-	cpx #$09 ;HEAL
+	cpy #$09 ;HEAL
 	beq .LSpellHits
-	cpx #$0E ;TRIAGE
+	cpy #$0E ;TRIAGE
 	beq .LSpellHits
-	cpx #$12 ;WISH
+	cpy #$12 ;WISH
 	beq .LSpellHits
 .LSpellMisses:
 	lda #$FF
@@ -1523,8 +1512,8 @@ LCheckSpellHit: SUBROUTINE ;Determines if the spell corresponding to ID X should
 	rts
 
 LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated by a shield. Returns 0 if no shield, 1 if shield blocks the spell, FF if the shield is destroyed
-	ldy startingCursorIndexAndTargetID ;Y is not affected by LLoadSoundInS
-	lda battlerStatus,y
+	ldx startingCursorIndexAndTargetID
+	lda battlerStatus,x
 	and #SHIELDED_MASK
 	bne .LHasShield
 .LAlliedSpellsNotBlocked:
@@ -1532,7 +1521,7 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 	rts
 .LHasShield:
 	;Make sure that allied spells are not blocked
-	tya
+	txa
 	and #$04
 	sta temp5
 	lda currentBattler
@@ -1542,19 +1531,20 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 
 	ldx #$1A ;Tink
 	jsr LLoadSoundInS
+	ldx startingCursorIndexAndTargetID ;Gets reset by LLoadSoundInS
 
-	lda battlerStatus,y
+	lda battlerStatus,x
 	and #TIMER_MASK
 	beq .LShieldBreaks
-	lda battlerStatus,y
+	lda battlerStatus,x
 	and #(~TIMER_MASK) ;The shield only has 1 more hit left
-	sta battlerStatus,y
+	sta battlerStatus,x
 	lda #1
 	rts
 .LShieldBreaks:
-	lda battlerStatus,y
+	lda battlerStatus,x
 	and #(~SHIELDED_MASK) ;Destroy the shield
-	sta battlerStatus,y
+	sta battlerStatus,x
 	lda #$FF
 	rts
 
@@ -1899,6 +1889,8 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	lda #0
 	rts
 .LHealEnemy:
+	;Could check here for legendary resistance
+
 	lda battlerHP,x
 	clc
 	adc temp2 ;amount to heal
@@ -1945,16 +1937,6 @@ LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Re
 	sta mp1,x
 	rts
 
-LFindAoETgtOffensive: SUBROUTINE ;Updates the aoeTargetID to the next relevant battler for offensive casts (make sure to check that aoeTargetsRemaining > 0 before use!)
-	ldx aoeTargetID
-.LSearchForTarget:
-	inx
-	lda battlerHP,x
-	beq .LSearchForTarget
-.LFoundTarget:
-	stx aoeTargetID
-	rts
-
 LFindAoETgtDefensive: SUBROUTINE ;Updates the aoeTargetID to the next relevant battler for defensive casts (make sure to check that aoeTargetsRemaining > 0 before use!)
 	ldx currentBattler
 	cpx #4
@@ -1962,6 +1944,7 @@ LFindAoETgtDefensive: SUBROUTINE ;Updates the aoeTargetID to the next relevant b
 	;If this is an ally, just increment it, since friendly AoE always affects allies
 	inc aoeTargetID
 	rts
+LFindAoETgtOffensive: ;Updates the aoeTargetID to the next relevant battler for offensive casts (make sure to check that aoeTargetsRemaining > 0 before use!)
 .LIsEnemy:
 	ldx aoeTargetID
 .LSearchForTarget:

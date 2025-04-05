@@ -3652,20 +3652,25 @@ EBossEncounters:
 	.byte $17 ;Glacia
 	.byte $FF
 	;CASTLE BOSS 1
-	.byte $1A ;Jester
-	.byte $FF
-	.byte $FF
-	.byte $FF
+	;.byte $1A ;Jester
+	;.byte $FF
+	;.byte $FF
+	;.byte $FF
 	
-	.byte $1A ;Jester
-	.byte $FF
-	.byte $FF
-	.byte $FF
+	;.byte $1A ;Jester
+	;.byte $FF
+	;.byte $FF
+	;.byte $FF
 	;CASTLE BOSS 2
-	; .byte $07 ;Sword
-	; .byte $1B ;Armor
-	; .byte $FF
-	; .byte $08 ;Shield
+	.byte $07 ;Sword
+	.byte $1B ;Armor
+	.byte $FF
+	.byte $08 ;Shield
+
+	.byte $07
+	.byte $1B
+	.byte $FF
+	.byte $08
 
 	;CRYPT BOSS 1
 	.byte $24 ;Ooze

@@ -517,22 +517,22 @@ RShowAllyName:
 	sta WSYNC
 	lda menuLines,x
 	tay
-	lda name1,y
+	lda name1,y ;opt
 	sta temp1
-	lda name2,y
+	lda name2,y ;opt
 	sta temp2
-	lda name3,y
+	lda name3,y ;opt
 	sta temp3
-	lda name4,y
+	lda name4,y ;opt
 	sta temp4
-	lda name5,y
+	lda name5,y ;opt
 	sta temp5
 	lda #EMPTY
 	sta temp6
 
 	cpx highlightedLineAndSteps
 	bne .RDontHighlightAllyName
-	lda char1,y
+	lda char1,y ;opt
 	and #$0f
 	tay
 	lda RClassColors,y
@@ -551,7 +551,7 @@ RShowEnemyName:
 	sec
 	sbc #4
 	tay
-	lda enemyID,y
+	lda enemyID,y ;opt
 	tay
 	lda REnemyNameLookup,y
 	sta tempPointer1
@@ -1560,7 +1560,7 @@ RIndexToEnemyPosition: SUBROUTINE ;Converts the position of a menu cursor into t
 	ldy #0
 	inx
 .RIndexConversionLoop
-	lda enemyHP,y
+	lda enemyHP,y ;opt
 	cmp #0
 	beq .RNoHit
 	dex
@@ -2953,7 +2953,7 @@ REnemyFightStrings:
 	.byte $20 ;CLAWS - Grgoyl
 	.byte $08 ;BITES - Mimic
 	.byte $05 ;STABS - Jester
-	.byte $00 ;----- - Armor
+	.byte $07 ;BASHES - Armor
 	.byte $08 ;BITES - Spider
 	.byte $45 ;SLIMES - Slime
 	.byte $00 ;----- - Lich
