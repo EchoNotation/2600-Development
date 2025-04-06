@@ -787,6 +787,9 @@
 	-Some optimization in LDoBattle
 	-Avatars now update correctly after exiting a battle
 	-LFindAoETargetOffensive was entirely contained with LFindAoETargetDefensive, saving 10 bytes.
+4/5/25
+	-Saved ~30 bytes in campfire rendering logic
+	-Saved ~20 bytes by refactoring SMenuCursorToBattlerIndex
 
 KNOWN BUGS:
 	-Heals fully message?
@@ -807,6 +810,7 @@ TODO:
 
 	Dreamlist:
 	-Variable pitch for certain sound effects (e.g. hit, heal, down)
+	-Default names for each class
 
 	Additional sounds to consider:
 		-Monster roar near exit

@@ -1115,6 +1115,8 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	sta temp4
 	rts
 
+
+
 SUpdateCampfireRendering: SUBROUTINE ;Updates the campfire control variable according to the player and campfire information
 	lda flags
 	and #CAMPFIRE_USED
@@ -1126,59 +1128,41 @@ SUpdateCampfireRendering: SUBROUTINE ;Updates the campfire control variable acco
 	lda campfireLocation
 	and #$0F
 	sta temp2 ;Campfire Y
+
+	ldy playerFacing
 	ldx playerX
-	ldy playerY
-	lda playerFacing
-	beq .SFacingEast
-	sec
-	sbc #1
-	beq .SFacingSouth
-	sbc #1
-	beq .SFacingWest
-.SFacingNorth:
-	stx temp3
-	dey
-	sty temp4
-	dey
-	stx temp5
-	sty temp6
-	jmp .SCheckRooms
-.SFacingSouth:
-	stx temp3
-	iny
-	sty temp4
-	iny
-	stx temp5
-	sty temp6
-	jmp .SCheckRooms
-.SFacingEast:
-	inx
-	stx temp3
-	sty temp4
-	inx
-	stx temp5
-	sty temp6
-	jmp .SCheckRooms
-.SFacingWest:
-	dex
-	stx temp3
-	sty temp4
-	dex
-	stx temp5
-	sty temp6
-.SCheckRooms:
-	lda temp1
-	eor temp3
+	txa
+	clc
+	adc SX1Delta,y
 	sta temp3
-	lda temp2
-	eor temp4
+	txa
+	clc
+	adc SX2Delta,y
+	sta temp5
+
+	ldx playerY
+	txa
+	clc
+	adc SY1Delta,y
+	sta temp4
+	txa
+	clc
+	adc SY2Delta,y
+	sta temp6
+
+.SCheckRooms:
+	lda temp1 ;playerX
+	eor temp3 ;X1
+	sta temp3
+	lda temp2 ;playerY
+	eor temp4 ;Y1
 	ora temp3
 	beq .SCampfireIsNear
-	lda temp1
-	eor temp5
-	sta temp5
-	lda temp2
-	eor temp6
+	lda temp1 ;playerX
+	eor temp5 ;X2
+	sta temp5 
+	lda temp2 ;playerY
+	eor temp6 ;Y2
 	ora temp5
 	beq .SCampfireIsFar
 .SCampfireNotVisible:
@@ -1595,13 +1579,8 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SNoSpellTargeting:
 	jmp .SCheckNextBattler
 .SSelectEnemyMenu:
-	lda #enemyHP
-	sta tempPointer1
-	lda #0
-	sta tempPointer1+1
-	ldx cursorIndexAndMessageY
-	jsr SCursorIndexToBattlerIndex
-	tya
+	jsr SCursorIndexToEnemyIndex
+	txa
 	jsr S5Asl
 	ldx currentBattler
 	ora battleActions,x
@@ -1756,14 +1735,8 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSt
 	iny
 	cpx temp1
 	bcc .SEnemyLineLoop
-
-	lda #enemyHP
-	sta tempPointer1
-	lda #0
-	sta tempPointer1+1
-	ldx cursorIndexAndMessageY
-	jsr SCursorIndexToBattlerIndex
-	sty enemyAction
+	jsr SCursorIndexToEnemyIndex
+	stx enemyAction
 .SDone:
 	rts
 
@@ -1919,21 +1892,17 @@ SUpdateMenuCursorLeftRight:
 .SReturn:
 	rts
 
-;Interprets X as the cursorPosition
-SCursorIndexToBattlerIndex: SUBROUTINE ;Converts the position of a menu cursor into the correct location in the array of the target (based on tempPointer1)
-	ldy #0
-	inx
-.SIndexConversionLoop
-	lda (tempPointer1),y
-	cmp #0
-	beq .SNoHit
-	dex
-	beq .SDone
+SCursorIndexToEnemyIndex: SUBROUTINE ;Converts the position of the menu cursor into the correct location in the enemy array
+	ldx #-1
+	ldy cursorIndexAndMessageY
 .SNoHit:
-	iny
-	bpl .SIndexConversionLoop ;Saves byte over jmp
-.SDone:
-	rts ;Y is the correct offset into the enemyID array
+	inx
+.SIndexConversionLoop:
+	lda enemyHP,x
+	beq .SNoHit
+	dey
+	bpl .SNoHit
+	rts ;X is the correct offset into the enemyID array
 
 SCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in Y, and the last index of an alive enemy in X
 	ldx #0
@@ -2753,7 +2722,21 @@ SSpellTargetingLookup:
 	.byte $0 ;TRANCE
 	.byte $84 ;WISH
 
-	;There is 33 bytes in here...
+SY1Delta:
+	.byte 0
+SX1Delta:
+	.byte 1
+	.byte 0
+	.byte -1
+SY2Delta:
+	.byte 0
+SX2Delta:
+	.byte 2
+	.byte 0
+	.byte -2
+	.byte 0
+
+	;There are 24 bytes in here...
 
 	ORG $FF00
 	RORG $FF00
