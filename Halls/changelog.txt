@@ -790,14 +790,39 @@
 4/5/25
 	-Saved ~30 bytes in campfire rendering logic
 	-Saved ~20 bytes by refactoring SMenuCursorToBattlerIndex
+4/6/25
+	-Some more enemy art
+	-Healing affects now always restore at least 1 HP.
+	-Changed WOLF to BANDIT
+	-Added separate ranged attack noise
+	-Plays "tink" sound on attack up message
+	-Made LICH much more formidable
+		-Summoned monsters now get an attack on their first turn
+		-LICH now casts WITHER if summon fails
+	-Added X CAME BACK message for use during ARMOR special
+	-Finished ARMOR special?
+4/10/25
+	-Enemies using certain specials after being subject to a status effect no longer lock up the battle system
 
 KNOWN BUGS:
-	-Heals fully message?
+	-Check if legendary resistance affects the total shown in messages
+	-Heals fully message still showing, especially after DRAIN with 1 damage
+	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
+	-Occasional audio glitches?
+
+PLAYTEST NOTES:
+	-Make sure that ally blight into basic attack miss doesn't lock battle
+	-Power gap between levels 1 and 2 is really high
+	-Jester should use special by default possibly
+	-Gifts have too much health, really punish being underlevelled
+	-Is it possible to make parrying increase the Rogue's targeting bias?
+	-Maze generation seems really open
+	-BANISH can cheese orb boss
+	-Start LICH with one or both enemies spawned already
 
 TODO:
 	Shortlist:
 	-Implement all enemy special abilities
-		-ARMOR (revive sword and shield, otherwise cast SHARP?)
 		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
@@ -805,15 +830,17 @@ TODO:
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
-	-Sharp increases attack power of unconscious party members
+	-Sharp increases attack power of unconscious party members, might be logically excusable
+		-Maybe this should actually only be for a single party member?
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
 
 	Dreamlist:
-	-Variable pitch for certain sound effects (e.g. hit, heal, down)
+	-Variable pitch for certain sound effects (e.g. swing, shoot, hit, heal, down)
 	-Default names for each class
+	-Legendary actions for some bosses
 
 	Additional sounds to consider:
-		-Monster roar near exit
+		-Near exit indicator
 		-Enter battle sound
 		-Level up jingle
 		-Battle victory jingle

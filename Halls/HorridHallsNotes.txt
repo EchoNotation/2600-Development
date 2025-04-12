@@ -25,6 +25,8 @@ $A4 Wish spell MP restoration
 $B0 Need to check if AoE spell hit, and process its effect if it did
 $B1 AoE spell kill
 
+$C0 Armor revive part 2
+
 $D0 Campfire was used, need to restore HP and MP
 $D1 Campfire was used, need to exit battle
 
@@ -135,6 +137,7 @@ $1A - Tink
 $1B - Heal
 $1C - Dead
 $1D - Blight
+$1E - Shoot
 
 --- SUBROUTINE IDs ---
 $00 - LDoBattle
@@ -283,7 +286,7 @@ MESSAGE COMPONENTS (& strings):
 0F: UP
 10: LEARNS
 11: MOVES
-12: BACKS
+12: BACK
 13: DOWN
 14: AWAY
 15: WASTES
@@ -343,12 +346,13 @@ MESSAGE COMPONENTS (& strings):
 4B: LEAVES
 4C: BLOWS
 4D: SUMMON
+4E: CAME
 
-Only 11 more strings can be allocated!
+Only 10 more strings can be allocated!
 
 MESSAGES:
 00: X STABS Y
-01: Unallocated
+01: X (target) CAME BACK
 02: Unallocated
 03: Unallocated
 04: Unallocated

@@ -24,7 +24,7 @@ ECheckDamageTarget: SUBROUTINE ;Determines whether or not this enemy needs to do
 	rts
 
 EEnemyAI: ;This table must be in order by enemy ID
-WolfAI:
+BanditAI:
 	.byte %00100000 ;Attack party
 	.byte %00100000
 	.byte %00100000
@@ -125,12 +125,9 @@ GldOrbAI:
 	.byte %10000101 ;Cast THUNDR
 	.byte %10000101 ;
 BearAI:
-	;.byte %00100000 ;Attack party
-	;.byte %00100000 ;
-	;.byte %00100000 ;
-	.byte %01000011 ;Guard enemies
-	.byte %01000011 ;Guard enemies
-	.byte %01000011 ;Guard enemies
+	.byte %00100000 ;Attack party
+	.byte %00100000 ;
+	.byte %00100000 ;
 	.byte %01000011 ;Guard enemies
 UnicrnAI:
 	.byte %00100000 ;Attack party
@@ -1012,12 +1009,12 @@ EMovesText:
 	.byte #E
 	.byte #S
 	.byte #EMPTY
-EBacksText:
+EBackText:
 	.byte #B
 	.byte #A
 	.byte #C
 	.byte #K
-	.byte #S
+	.byte #EMPTY
 	.byte #EMPTY
 EDownText:
 	.byte #D
@@ -1436,6 +1433,13 @@ ESummonText:
 	.byte #M
 	.byte #O
 	.byte #N
+ECameText:
+	.byte #C
+	.byte #A
+	.byte #M
+	.byte #E
+	.byte #EMPTY
+	.byte #EMPTY
 
 	ORG $E700 ;Contains the first 2 large enemies graphics data
 	RORG $F700
@@ -2775,72 +2779,72 @@ ArmorColors:
 	ORG $EC00 ;Contains medium enemy data
 	RORG $FC00
 
-MediumTestEnemyGraphics7:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
+SpiderGraphics:
 	.byte %00000000
-	.byte %00000000
+	.byte %01000000
+	.byte %10000000
+	.byte %10010000
+	.byte %10100000
+	.byte %11000100
+	.byte %10111000
+	.byte %11100000
 	.byte %01111110
-	.byte %01000000
-	.byte %01000000
-	.byte %01111000
-	.byte %01000000
-	.byte %01000000
+	.byte %11100000
 	.byte %01111110
-	.byte %01111000
-	.byte %00000100
-	.byte %00000100
-	.byte %00111000
-	.byte %01000000
-	.byte %01000000
+	.byte %01110110
+	.byte %01011011
+	.byte %01101111
+	.byte %01111110
 	.byte %00111100
 	.byte %00000000
 	.byte %00000000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-MediumTestEnemyColors7:
-	.byte $6c
-	.byte $6a
-	.byte $68
-	.byte $66
-	.byte $64
-	.byte $62
-	.byte $60
-	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
-	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
+	.byte %00000000
+	.byte %00001010
+	.byte %00000101
+	.byte %01101111
+	.byte %00011101
+	.byte %00000110
+	.byte %00111011
+	.byte %00000111
+	.byte %00001001
+	.byte %00010010
+	.byte %00000100
+	.byte %00000100
+	.byte %00000000
+	.byte %00000000
+SpiderColors:
+	.byte $4
+	.byte $4
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $32
+	.byte $2
+	.byte $32
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $c
+	.byte $c
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $4
+	.byte $2
+	.byte $2
+	.byte $4
+	.byte $2
+	.byte $2
 
 SlimeGraphics:
 	.byte %11111110
@@ -2909,209 +2913,209 @@ SlimeColors:
 	.byte $0
 	.byte $0
 
-MediumTestEnemyGraphics9:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-	.byte %00000000
-	.byte %00000000
-	.byte %01111110
-	.byte %01000000
-	.byte %01000000
-	.byte %01111000
-	.byte %01000000
-	.byte %01000000
-	.byte %01111110
-	.byte %01111000
+LichGraphics:
+	.byte %00001000
+	.byte %00001000
+	.byte %00001000
+	.byte %00001000
+	.byte %00001000
+	.byte %00001000
+	.byte %00001000
+	.byte %00001000
+	.byte %11111000
+	.byte %00001000
 	.byte %00000100
-	.byte %00000100
-	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
+	.byte %00011010
+	.byte %00011010
+	.byte %00001100
 	.byte %00000000
 	.byte %00000000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
+	.byte %01111111
+	.byte %01111111
 	.byte %01111110
-MediumTestEnemyColors9:
-	.byte $6c
-	.byte $6a
-	.byte $68
-	.byte $66
-	.byte $64
-	.byte $62
-	.byte $60
-	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
+	.byte %00111110
+	.byte %00111110
+	.byte %00111110
+	.byte %10111110
+	.byte %10111110
+	.byte %11111111
+	.byte %01111111
+	.byte %00011100
+	.byte %00111110
+	.byte %00101010
+	.byte %00011100
+	.byte %00111110
+	.byte %00101010
+LichColors:
+	.byte $f2
+	.byte $f2
+	.byte $f0
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f2
+	.byte $f0
 	.byte $44
-	.byte $42
-	.byte $40
+	.byte $f0
+	.byte $64
+	.byte $56
+	.byte $56
+	.byte $64
 	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
+	.byte $0
+	.byte $40
+	.byte $42
+	.byte $42
+	.byte $42
+	.byte $44
+	.byte $44
+	.byte $44
+	.byte $44
+	.byte $44
+	.byte $1a
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $4
+	.byte $1a
+	.byte $1a
 
-MediumTestEnemyGraphics10:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-	.byte %00000000
-	.byte %00000000
-	.byte %01111110
-	.byte %01000000
-	.byte %01000000
-	.byte %01111000
-	.byte %01000000
-	.byte %01000000
-	.byte %01111110
-	.byte %01111000
+ShufflerGraphics:
+	.byte %01111111
+	.byte %01111001
+	.byte %10001111
+	.byte %01111101
+	.byte %10010011
+	.byte %00001110
+	.byte %11011000
+	.byte %00110000
+	.byte %10001000
 	.byte %00000100
-	.byte %00000100
-	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
+	.byte %00000010
+	.byte %00010000
+	.byte %00001000
+	.byte %10000000
 	.byte %00000000
 	.byte %00000000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-MediumTestEnemyColors10:
-	.byte $6c
-	.byte $6a
-	.byte $68
-	.byte $66
+	.byte %01111111
+	.byte %11000100
+	.byte %11011001
+	.byte %01001101
+	.byte %00100011
+	.byte %10110010
+	.byte %11111100
+	.byte %00011111
+	.byte %00100011
+	.byte %01000001
+	.byte %01000010
+	.byte %01000010
+	.byte %01000010
+	.byte %00100001
+	.byte %00010000
+	.byte %00000000
+ShufflerColors:
+	.byte $62
+	.byte $64
 	.byte $64
 	.byte $62
-	.byte $60
-	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
-	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
+	.byte $64
+	.byte $62
+	.byte $68
+	.byte $64
+	.byte $64
+	.byte $da
+	.byte $dc
+	.byte $d8
+	.byte $da
+	.byte $e
+	.byte $e
+	.byte $64
+	.byte $68
+	.byte $64
+	.byte $62
+	.byte $64
+	.byte $64
+	.byte $68
+	.byte $64
+	.byte $62
+	.byte $64
+	.byte $64
+	.byte $64
+	.byte $62
+	.byte $64
+	.byte $68
+	.byte $e
+	.byte $64
 
 	ORG $ED00 ;Contains medium enemy data
 	RORG $FD00
 
-MediumTestEnemyGraphics11:
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
+ShamblerGraphics:
+	.byte %10000000
 	.byte %00000000
+	.byte %10000000
+	.byte %10000000
+	.byte %10000000
+	.byte %10000000
+	.byte %00100000
+	.byte %00100000
+	.byte %11000000
+	.byte %00001000
+	.byte %10010000
+	.byte %01100000
 	.byte %00000000
-	.byte %01111110
+	.byte %10000000
+	.byte %10000000
+	.byte %10000000
+	.byte %10110110
+	.byte %01100011
+	.byte %01111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %11111111
+	.byte %01111111
+	.byte %01010101
 	.byte %01000000
-	.byte %01000000
-	.byte %01111000
-	.byte %01000000
-	.byte %01000000
-	.byte %01111110
-	.byte %01111000
-	.byte %00000100
-	.byte %00000100
-	.byte %00111000
-	.byte %01000000
-	.byte %01000000
-	.byte %00111100
-	.byte %00000000
-	.byte %00000000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %00011000
-	.byte %01111110
-MediumTestEnemyColors11:
-	.byte $6c
-	.byte $6a
-	.byte $68
+	.byte %01101010
+	.byte %00011111
+ShamblerColors:
+	.byte $c
+	.byte $46
+	.byte $62
+	.byte $62
+	.byte $62
+	.byte $64
+	.byte $46
+	.byte $c
+	.byte $c
+	.byte $46
+	.byte $c
+	.byte $a
+	.byte $a
+	.byte $66
+	.byte $66
+	.byte $66
+	.byte $c
+	.byte $c
+	.byte $62
+	.byte $62
+	.byte $64
+	.byte $62
+	.byte $64
+	.byte $64
 	.byte $66
 	.byte $64
 	.byte $62
-	.byte $60
-	.byte $0
-	.byte $ce
-	.byte $cc
-	.byte $ca
-	.byte $c8
-	.byte $c6
-	.byte $c4
-	.byte $c2
-	.byte $c0
-	.byte $4e
-	.byte $4c
-	.byte $48
-	.byte $46
-	.byte $44
-	.byte $42
-	.byte $40
-	.byte $0
-	.byte $9e
-	.byte $9c
-	.byte $8a
-	.byte $8a
-	.byte $88
-	.byte $86
-	.byte $82
-	.byte $80
+	.byte $64
+	.byte $64
+	.byte $64
+	.byte $64
+	.byte $66
 
 TrophyGraphics:
 	.byte %11110000
@@ -3169,24 +3173,24 @@ TrophyColors:
 	ORG $ED80 ;Contains small enemy data
 	RORG $FD80
 
-SmallTestGraphics1:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors1:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+BanditGraphics:
+	.byte %10010110
+	.byte %10010100
+	.byte %10011000
+	.byte %01011010
+	.byte %00111100
+	.byte %00011000
+	.byte %00010100
+	.byte %00111100
+BanditColors:
+	.byte $f6
+	.byte $f6
+	.byte $f2
+	.byte $c4
+	.byte $c2
+	.byte $e4
+	.byte $e4
+	.byte $e4
 
 DruidGraphics:
 	.byte %00101001
@@ -3264,24 +3268,24 @@ ArcherColors:
 	.byte $fc
 	.byte $fc
 
-SmallTestGraphics6:
-	.byte %11111111
-	.byte %11000001
-	.byte %10100001
-	.byte %10010001
-	.byte %10001001
-	.byte %10000101
-	.byte %10000011
-	.byte %11111111
-SmallTestColors6:
-	.byte $60
-	.byte $62
-	.byte $64
-	.byte $66
-	.byte $68
-	.byte $6a
-	.byte $6c
-	.byte $6e
+PriestGraphics:
+	.byte %01111100
+	.byte %00111000
+	.byte %10111000
+	.byte %01111100
+	.byte %00111010
+	.byte %00010010
+	.byte %00111000
+	.byte %00111000
+PriestColors:
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $2
+	.byte $e
+	.byte $fa
+	.byte $fa
 
 GiftGraphics:
 	.byte %01111110
@@ -3570,20 +3574,20 @@ EEncounterSizes:
 	;Encounter tables must be a multiple of 2 in size. 16 happens to be the most convenient size.
 EGroundsEnemies:
 	.byte $14 ;Bear
-	.byte $00 ;Wolf
+	.byte $00 ;Bandit
 	.byte $15 ;Unicrn
 	.byte $01 ;Druid
 	.byte $14 ;Bear
-	.byte $00 ;Wolf
+	.byte $00 ;Bandit
 	.byte $15 ;Unicrn
 	.byte $01 ;Druid
-	.byte $00 ;Wolf
+	.byte $00 ;Bandit
 	.byte $01 ;Druid
 	.byte $02 ;Shroom
-	.byte $00 ;Wolf
+	.byte $00 ;Bandit
 	.byte $01 ;Druid
 	.byte $02 ;Shroom
-	.byte $00 ;Wolf
+	.byte $00 ;Bandit
 	.byte $01 ;Shroom
 
 ECastleEnemies:
@@ -3651,26 +3655,17 @@ EBossEncounters:
 	.byte $FF
 	.byte $17 ;Glacia
 	.byte $FF
+
 	;CASTLE BOSS 1
-	;.byte $1A ;Jester
-	;.byte $FF
-	;.byte $FF
-	;.byte $FF
-	
-	;.byte $1A ;Jester
-	;.byte $FF
-	;.byte $FF
-	;.byte $FF
+	.byte $1A ;Jester
+	.byte $FF
+	.byte $FF
+	.byte $FF
 	;CASTLE BOSS 2
 	.byte $07 ;Sword
 	.byte $1B ;Armor
 	.byte $FF
 	.byte $08 ;Shield
-
-	.byte $07
-	.byte $1B
-	.byte $FF
-	.byte $08
 
 	;CRYPT BOSS 1
 	.byte $24 ;Ooze

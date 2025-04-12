@@ -855,10 +855,10 @@ RXAttacksY:
 	.byte $0
 	.byte $4
 	.byte $1
-;Unallocated
-	.byte $0
-	.byte $FF
-	.byte $FF
+RXCameBack:
+	.byte $1
+	.byte $4E
+	.byte $12
 ;Unallocated
 	.byte $0
 	.byte $FF
@@ -1574,13 +1574,13 @@ RIndexToEnemyPosition: SUBROUTINE ;Converts the position of a menu cursor into t
 	ORG $C928 ;Used to hold enemy names, nothing else can go in this section
 	RORG $F928
 
-RWolfText:
-	.byte #W
-	.byte #O
-	.byte #L
-	.byte #F
-	.byte #EMPTY
-	.byte #EMPTY
+RBanditText:
+	.byte #B
+	.byte #A
+	.byte #N
+	.byte #D
+	.byte #I
+	.byte #T
 RDruidText:
 	.byte #D
 	.byte #R
@@ -2027,7 +2027,7 @@ RBattleOptionsLookupTable:
 
 ;Make sure to add back room for the Trophy and Campfire ids if trying to remove this table!!
 REnemyNameLookup: ;This table could be turned into a calculation RZombieText + (6 * enemyID)
-	.byte (RWolfText & $FF)
+	.byte (RBanditText & $FF)
 	.byte (RDruidText & $FF)
 	.byte (RShroomText & $FF)
 	.byte (RSquireText & $FF)
@@ -2067,7 +2067,7 @@ REnemyNameLookup: ;This table could be turned into a calculation RZombieText + (
 	.byte 0 ;Campfire
 
 REnemyColorLookup:
-	.byte $0A ;Wolf
+	.byte $D6 ;Bandit
 	.byte $B6 ;Druid
 	.byte $46 ;Shroom
 	.byte $44 ;Squire
@@ -2925,7 +2925,7 @@ RLetterZ:
 	.byte %01111110
 
 REnemyFightStrings:
-	.byte $08 ;BITES - Wolf
+	.byte $09 ;SLICES - Bandit
 	.byte $00 ;----- - Druid
 	.byte $00 ;----- - Shroom
 	.byte $05 ;STABS - Squire

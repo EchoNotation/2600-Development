@@ -65,7 +65,6 @@ LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages 
 	bmi .LGoToProcessAction
 
 LProcessCharacterAdvancement:
-	cmp #$F0
 	beq .LGoToCheckPartyXP
 	cmp #$F1
 	beq .LPartyDown
@@ -903,8 +902,10 @@ LProcessCasting:
 	ldx startingCursorIndexAndTargetID
 	lda #SHARPENED_MASK
 	jsr LApplyStatus
-	lda #$1A ;X ATTACK UP
+	lda #$1A ;X ATTACK UP, and Tink funnily enough
+	tax
 	sta currentMessage
+	jsr LLoadSoundInS
 	bne .LTryNextTgt
 
 .LVolley:
@@ -999,8 +1000,17 @@ LProcessFighting:
 	cmp #$94
 	beq .LRetortDamage
 .LSetFightWindup:
+	;Check rangedness
+	jsr LGetBattlerResistances ;X should already contain currentBattler
+	and #RANGED_MASK
+	beq .LMeleeSound
+	ldx #$1E ;Shoot
+	bne .LFightSound
+.LMeleeSound:
 	ldx #$19 ;Swing
+.LFightSound:
 	jsr LLoadSoundInS
+
 	jsr LGetTargetFromActionOffensive ;Returns the absolute target ID from the currentBattler's action in X 
 	lda battlerHP,x
 	beq .LAttackMissed 
@@ -1180,6 +1190,8 @@ LProcessParrying:
 	lda #$1D ;X GUARDS
 	jmp .LNormalTgtedExitSaveMessage
 
+.LGoToSlimeSpecial:
+	jmp .LSlimeSpecial
 .LGoToArmorSpecial:
 	jmp .LArmorSpecial
 .LGoToHorrorSpecial:
@@ -1188,6 +1200,8 @@ LProcessParrying:
 	jmp .LSaveInBattle
 
 LProcessSpecial:
+	lda #$81
+	sta inBattle ;Just in case nothing ends up setting inBattle after status code, guarantee escape
 	ldx currentBattler
 	lda battleActions,x ;battleActions is 4 bytes before enemyID
 	cmp #$1E
@@ -1199,7 +1213,7 @@ LProcessSpecial:
 	cmp #$24
 	beq .LOozeSpecial 
 	cmp #$1D
-	beq .LSlimeSpecial
+	beq .LGoToSlimeSpecial
 	cmp #$1B
 	beq .LGoToArmorSpecial
 	cmp #$24
@@ -1208,8 +1222,12 @@ LProcessSpecial:
 
 .LLichSpecial:
 	jsr LFindNextEmptySpot
-	cpx #$FF
-	beq .LCantSummon
+	bmi .LLichCannotSummon ;returns $FF if no spot available
+
+	lda LHasActionMasksEnemy,x ;Give the Zombie or Skeleton a turn when summoned
+	ora hasAction
+	sta hasAction
+
 	lda #$34 ;X RAISES Y
 	sta temp2
 	lda rand8
@@ -1223,14 +1241,20 @@ LProcessSpecial:
 	ldy LZombieHP
 	bne .LSummon
 
+.LLichCannotSummon:
+	lda #%10001111 ;Cast WITHER
+	ora enemyAction ;Use the target found by enemy AI
+	sta enemyAction
+	sta temp1
+	jmp LProcessCasting
+
 .LJesterSpecial:
 	jsr LFindNextEmptySpot
-	cpx #$FF
-	beq .LCantSummon
+	bmi .LJesterCantSummon ;Returns $FF if no spot available
 	lda #$35 ;X LEAVES Y
 	sta temp2
 	lda #$6 ;GIFT ID
-	ldy #30 ;TODO GIFT hp
+	ldy #20 ;TODO GIFT hp
 .LSummon:
 	sta enemyID,x
 	tya
@@ -1240,7 +1264,7 @@ LProcessSpecial:
 	lda temp2 ;The correct message
 	jmp .LNormalTgtedExitSaveMessage
 
-.LCantSummon:
+.LJesterCantSummon:
 	lda #$37 ;X CANNOT SUMMON
 	jmp .LNormalTgtedExitSaveMessage
 
@@ -1300,17 +1324,31 @@ LProcessSpecial:
 	jmp .LSetFightWindup
 
 .LArmorSpecial:
+	lda inBattle
+	cmp #$C0
+	beq .LArmorRevivePhase2
 	lda enemyHP
 	ora enemyHP+3
 	bne .LBailOutToBasicAttack
 .LResummon:
 	;The sword and shield have both died...
+	lda #$C0
+	sta inBattle
 	lda #30
 	sta enemyHP
 	sta enemyHP+3
-	lda #$FF ;message
+	lda #4
+	sta startingCursorIndexAndTargetID
+.LArmorExitAndReturn:
+	lda #$01 ;X CAME BACK
 	sta currentMessage
 	rts
+.LArmorRevivePhase2:
+	lda #$81
+	sta inBattle
+	lda #7
+	sta startingCursorIndexAndTargetID
+	bne .LArmorExitAndReturn
 
 .LHorrorSpecial:
 	rts
@@ -1366,33 +1404,23 @@ LDetermineSpellPower: SUBROUTINE ;Interprets Y as the damage formula to follow, 
 
 LGetTargetFromAction: SUBROUTINE
 LGetTargetFromActionOffensive: ;Returns the absolute battlerID of the offensive target from the currentBattler's action in X
-	ldy #$FF
-	bne .LGetRelativeTargetID
+	lda #$04 ;offensive
+	bne .LSaveTemp5
 LGetTargetFromActionDefensive: ;Returns the absolute battlerID of the defensive target from the currentBattler's action in X
-	ldy #$0
-.LGetRelativeTargetID:
+	lda #$00 ;defensive
+.LSaveTemp5:
+	sta temp5
 	lda temp1 ;Should only be called from LDoBattle, so that this contains the currentBattler's action
 	and #$60
 	jsr L5Lsr
 	tax ;X now contains the relative targetID stored with the current action
-	iny
-	beq .LIsOffensive
-.LIsDefensive:
-	ldy currentBattler
-	cpy #4
-	bcs .LTargetEnemies
-	rts
-.LIsOffensive:
-	ldy currentBattler
-	cpy #4
-	bcc .LTargetEnemies
+	lda currentBattler
+	and #$04
+	eor temp5
+	bne .LTargetEnemies
 	rts
 .LTargetEnemies:
-	inx
-	inx
-	inx
-	inx
-	rts
+	jmp L4INX ;this routine ends with an rts
 
 LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the next battler to take their action
 	;Need to check if either side has lost
@@ -1863,6 +1891,9 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	bcs .LHealEnemy
 	;healing an ally
 	lda temp2 ;binary health to heal
+	bne .LAtLeast1Health
+	lda #1
+.LAtLeast1Health:
 	brk ;LBinaryToDecimal
 	sta temp2 ;decimal health to heal
 	ldx temp5
@@ -1909,13 +1940,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	lda #0
 	rts
 
-LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Returns FF if this battler does not have mp.
-	cpx #4
-	bcc .LIsAlly
-.LNoMana:
-	lda #$FF ;Enemies don't track or recover mana
-	rts
-.LIsAlly:
+LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Returns FF if this battler does not have mp.s
 	stx temp5 ;target index
 	brk ;LBinaryToDecimal
 	sta temp3 ;decimal amount to regain
@@ -1925,6 +1950,12 @@ LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Re
 	sed
 	adc temp3
 	cld
+	bcc .LNoOverflow
+	jsr LGetBattlerMaxMP
+	brk
+	sta mp1,x
+	rts
+.LNoOverflow:
 	sta temp2 ;Total mana after regaining, but before clamping (decimal)
 	jsr LGetBattlerMaxMP ;max mana for this battler (binary)
 	brk ;LBinaryToDecimal ;A contains max mana for this battler (decimal)
@@ -1935,6 +1966,9 @@ LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Re
 	lda temp2 ;Didn't hit max mana, so just store the amount after addition
 .LOverRestored:
 	sta mp1,x
+	rts
+.LNoMana:
+	lda #$FF ;Skip
 	rts
 
 LFindAoETgtDefensive: SUBROUTINE ;Updates the aoeTargetID to the next relevant battler for defensive casts (make sure to check that aoeTargetsRemaining > 0 before use!)
@@ -2200,7 +2234,7 @@ LSpellListLookup:
 	.byte (LPaladinSpellList & $FF)
 
 LEnemyExperience:
-	.byte 1 ;Wolf
+	.byte 1 ;Bandit
 	.byte 1 ;Druid
 	.byte 1 ;Shroom
 	.byte 2 ;Squire
@@ -2240,7 +2274,7 @@ LEnemyExperience:
 	.byte 0 ;Campfire
 
 LEnemyAttack:
-	.byte 1 ;Wolf
+	.byte 1 ;Bandit
 	.byte 0 ;Druid
 	.byte 0 ;Shroom
 	.byte 1 ;Squire
@@ -2280,7 +2314,7 @@ LEnemyAttack:
 	.byte 0 ;Campfire
 
 LEnemySpeed:
-	.byte 32 ;Wolf -- Outspeeds mid at level 1
+	.byte 32 ;Bandit -- Outspeeds mid at level 1
 	.byte 38 ;Druid -- Outspeeds mid at level 2
 	.byte 1 ;Shroom -- Always slowest
 	.byte 35 ;Squire -- Outspeeds slow at level 4
@@ -2320,7 +2354,7 @@ LEnemySpeed:
 	.byte 1 ;Campfire -- N/A
 
 LEnemyMagic:
-	.byte 0 ;Wolf
+	.byte 0 ;Bandit
 	.byte 1 ;Druid
 	.byte 0 ;Shroom
 	.byte 0 ;Squire
@@ -2360,14 +2394,14 @@ LEnemyMagic:
 	.byte 0 ;Campfire
 
 LEnemyHP:
-	.byte 7 ;Wolf
+	.byte 7 ;Bandit
 	.byte 5 ;Druid
 	.byte 8 ;Shroom
 	.byte 18 ;Squire
 	.byte 12 ;Archer
 	.byte 10 ;Priest
 LGiftHP:
-	.byte 20 ;Gift
+	.byte 8 ;Gift
 	.byte 20 ;Sword
 	.byte 20 ;Shield
 LZombieHP:
@@ -2404,22 +2438,24 @@ LSlimeHP:
 	.byte 150 ;Ooze
 	.byte 1 ;Campfire
  
-;Format is LPFIHEPR
+;Format is  LPFIHEPR
 ;L : Legendary (bosses), P : Physical, F : Fire, I : Ice, H : Holy, E : Electric, P : Poison, R : isRanged (prevents riposte)
 LEnemyResistances:
-	.byte #%00000000 ;Wolf
+	;       LPFIHEPR
+	.byte #%00000000 ;Bandit
 	.byte #%00000000 ;Druid
 	.byte #%00000000 ;Shroom
 	.byte #%00000000 ;Squire
-	.byte #%00000000 ;Archer
+	.byte #%00000001 ;Archer
 	.byte #%00000000 ;Priest
 	.byte #%00000000 ;Gift
 	.byte #%00000000 ;Sword
 	.byte #%00000000 ;Shield
 	.byte #%00000000 ;Zombie
-	.byte #%00000000 ;Sklton
+	.byte #%00000001 ;Sklton
 	.byte #%00000000 ;Mage
 	.byte #%00000000 ;Goop
+	;       LPFIHEPR
 	.byte #%00000000 ;Warlok
 	.byte #%00000000 ;Imp
 	.byte #%00000000 ;Wisp
@@ -2429,21 +2465,23 @@ LEnemyResistances:
 	.byte #%00000000 ;GldOrb
 	.byte #%00000000 ;Bear
 	.byte #%00000000 ;Unicrn
-	.byte #%00000000 ;Volcio
-	.byte #%00000000 ;Glacia
+	.byte #%10000000 ;Volcio
+	.byte #%10000000 ;Glacia
+	;       LPFIHEPR
 	.byte #%00000000 ;Grgoyl
 	.byte #%00000000 ;Mimic
-	.byte #%00000000 ;Jester
-	.byte #%00000000 ;Armor
+	.byte #%10000000 ;Jester
+	.byte #%10000000 ;Armor
 	.byte #%00000000 ;Spider
 	.byte #%00000000 ;Slime
-	.byte #%00000000 ;Lich
-	.byte #%00000000 ;Shfflr
+	.byte #%10000000 ;Lich
+	;       LPFIHEPR
+	.byte #%00000001 ;Shfflr
 	.byte #%00000000 ;Shmblr
 	.byte #%00000000 ;Trophy
-	.byte #%00000000 ;Thickt
-	.byte #%00000000 ;Horror
-	.byte #%00000000 ;Ooze
+	.byte #%10000000 ;Thickt
+	.byte #%10000000 ;Horror
+	.byte #%10000000 ;Ooze
 	.byte #%00000000 ;Campfire
 
 	ORG $DE00 ;Used to hold miscellaneous data/lookup tables
@@ -2678,6 +2716,7 @@ LHasActionMasks:
 	.byte #$40
 	.byte #$20
 	.byte #$10
+LHasActionMasksEnemy:
 	.byte #$08
 	.byte #$04
 	.byte #$02
@@ -2783,18 +2822,9 @@ LSetStatPointers:
 	lda (tempPointer3),y
 	rts
 .LCheckEnemyStat:
-	dex
-	dex
-	dex
-	dex
-	lda enemyID,x
+	lda battleActions,x ;4 bytes before enemyID
 	tay
 	lda (temp4),y
-L4INX:
-	inx
-	inx
-	inx
-	inx
 	rts
 
 	ORG $DF80
@@ -2880,6 +2910,7 @@ LGetBattlerResistances: SUBROUTINE ;Will interpret X as the targetID to return t
 	lda enemyID,x
 	tay
 	lda LEnemyResistances,y
+L4INX:
 	inx
 	inx
 	inx

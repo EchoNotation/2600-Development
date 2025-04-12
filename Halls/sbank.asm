@@ -97,8 +97,8 @@ SSoftReset:
 	;jsr STryLoadSound
 #endif
 	
-	ldx #$1D
-	jsr STryLoadSound
+	;ldx #$1D
+	;jsr STryLoadSound
 
 SStartOfFrame:
 	lda #$82
@@ -367,8 +367,8 @@ STryStartGame:
 	;If here, that means that the button was pressed when on the ready option
 	ldx #$15 ;Menu confirm
 	jsr STryLoadSound
-	;lda #$01 ;Maze level 1, party level 1
-	lda #$19
+	lda #$01 ;Maze level 1, party level 1
+	;lda #$19
 	sta mazeAndPartyLevel
 	lda #15
 	sta experienceToNextLevel
@@ -2168,10 +2168,6 @@ SVolleyVoices:
 	.byte $8
 	.byte $8
 SSharpVoices:
-	.byte $4
-	.byte $4
-	.byte $4
-	.byte $0
 	.byte $6
 	.byte $6
 	.byte $6
@@ -2222,9 +2218,9 @@ SBanishSpellVoices:
 	.byte $8
 STranceVoices:
 	.byte $E
+	.byte $6
 	.byte $E
-	.byte $E
-	.byte $E
+	.byte $6
 	.byte $0
 	.byte $E
 	.byte $E
@@ -2286,6 +2282,12 @@ SBlightVoices:
 	.byte $E
 	.byte $E
 	.byte $E
+SShootVoices:
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $8
+	.byte $8
 
 	ORG $FD00
 	RORG $FD00
@@ -2406,10 +2408,6 @@ SVolleyPitches:
 	.byte $1
 SSharpPitches:
 	.byte $3
-	.byte $3
-	.byte $5
-	.byte $0
-	.byte $3
 	.byte $1
 	.byte $3
 	.byte $1
@@ -2461,7 +2459,7 @@ STrancePitches:
 	.byte $A
 	.byte $9
 	.byte $4
-	.byte $2
+	.byte $5
 	.byte $0
 	.byte $2
 	.byte $2
@@ -2527,6 +2525,12 @@ SBlightPitches:
 	.byte $1
 	.byte $0
 	.byte $1
+SShootPitches:
+	.byte $7
+	.byte $6
+	.byte $5
+	.byte $1
+	.byte $2
 
 	ORG $FDF0
 	RORG $FDF0
@@ -2605,7 +2609,7 @@ SSoundMetadata:
 	.byte $45 ;HEAL
 	.byte $A5 ;SMITE
 	.byte $B3 ;VOLLEY
-	.byte $85 ;SHARP
+	.byte $45 ;SHARP
 	.byte $C2 ;BLIGHT spell
 	.byte $95 ;TRIAGE
 	.byte $94 ;WITHER
@@ -2623,6 +2627,7 @@ SSoundMetadata:
 	.byte $64 ;Heal
 	.byte $83 ;Dead
 	.byte $A2 ;Blight
+	.byte $53 ;Shoot
 
 SVoices:
 	.byte 0
@@ -2655,6 +2660,7 @@ SVoices:
 	.byte (SHealVoices & $FF)
 	.byte (SDeadVoices & $FF)
 	.byte (SBlightVoices & $FF)
+	.byte (SShootVoices & $FF)
 
 SPitches:
 	.byte 0
@@ -2687,6 +2693,7 @@ SPitches:
 	.byte (SHealPitches & $FF)
 	.byte (SDeadPitches & $FF)
 	.byte (SBlightPitches & $FF)
+	.byte (SShootPitches & $FF)
 
 	ORG $FEC0
 	RORG $FEC0
