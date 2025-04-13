@@ -150,10 +150,14 @@ GrgoylAI:
 	.byte %00100000 ;
 	.byte %00100000 ;
 MimicAI:
-	.byte %00100000 ;Attack party
-	.byte %00100000 ;
-	.byte %00100000 ;
+	;.byte %00100000 ;Attack party
+	;.byte %00100000 ;
+	;.byte %00100000 ;
 	.byte %10100100 ;Cast DRAIN party
+	.byte %10100100 ;Cast DRAIN party
+	.byte %10100100 ;Cast DRAIN party
+	.byte %10100100 ;Cast DRAIN party
+
 JesterAI:
 	.byte %00100000 ;Attack party
 	.byte %00100000 ;
@@ -3716,66 +3720,66 @@ EEffectFrequency:
 	.byte 4 ;Spell effect
 
 ESpellDelays:
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
-	.byte 8
+	.byte 1 ;FIRE
+	.byte 1 ;SLEEP
+	.byte 1 ;BLIZRD
+	.byte 1 ;DRAIN
+	.byte 20 ;THUNDR
+	.byte 1 ;SHIELD
+	.byte 28 ;METEOR
+	.byte 1 ;CHAOS
+	.byte 1 ;HEAL
+	.byte 28 ;SMITE
+	.byte 1 ;VOLLEY
+	.byte 1 ;SHARP
+	.byte 16 ;BLIGHT
+	.byte 1 ;TRIAGE
+	.byte 1 ;WITHER
+	.byte 1 ;BANISH
+	.byte 12 ;TRANCE
+	.byte 8 ;WISH
 	.byte 8
 
 ESpellEffectLengths:
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
-	.byte 16
+	.byte 20 ;FIRE
+	.byte 12 ;SLEEP
+	.byte 16 ;BLIZRD
+	.byte 6 ;DRAIN
+	.byte 8 ;THUNDR
+	.byte 8 ;SHIELD
+	.byte 12 ;METEOR
+	.byte 12 ;CHAOS
+	.byte 6 ;HEAL
+	.byte 6 ;SMITE
+	.byte 10 ;VOLLEY
+	.byte 6 ;SHARP
+	.byte 6 ;BLIGHT
+	.byte 12 ;TRIAGE
+	.byte 8 ;WITHER
+	.byte 16 ;BANISH
+	.byte 10 ;TRANCE
+	.byte 12 ;WISH
 	.byte 16
 	
 ESpellEffectBaseColors:
-	.byte $F8
-	.byte $B8
-	.byte $98
-	.byte $38
-	.byte $18
-	.byte $78
-	.byte $F8
-	.byte $58
-	.byte $C8
-	.byte $18
-	.byte $08
-	.byte $A8
-	.byte $C8
-	.byte $98
-	.byte $B8
-	.byte $48
-	.byte $58
-	.byte $28
+	.byte $F8 ;FIRE
+	.byte $B8 ;SLEEP
+	.byte $98 ;BLIZRD
+	.byte $38 ;DRAIN
+	.byte $18 ;THUNDR
+	.byte $78 ;SHIELD
+	.byte $F8 ;METEOR
+	.byte $58 ;CHAOS
+	.byte $C8 ;HEAL
+	.byte $18 ;SMITE
+	.byte $08 ;VOLLEY
+	.byte $A8 ;SHARP
+	.byte $C8 ;BLIGHT
+	.byte $98 ;TRIAGE
+	.byte $B8 ;WITHER
+	.byte $48 ;BANISH
+	.byte $58 ;TRANCE
+	.byte $28 ;WISH
 	.byte $48
 
 	ORG $EF90

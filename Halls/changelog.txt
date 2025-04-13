@@ -803,11 +803,17 @@
 	-Finished ARMOR special?
 4/10/25
 	-Enemies using certain specials after being subject to a status effect no longer lock up the battle system
+4/12/25
+	-Spell effect tuning
+	-Wish now has correctly decimal MP cost
+	-Boss orbs now have legendary resistance
+	-Buffed sleep chances, now 75% on normal enemies, and 25% on bosses
+	-Damage against bosses can now be shown to be an odd number
+	-Enemies always heal at least one health now
 
 KNOWN BUGS:
-	-Check if legendary resistance affects the total shown in messages
-	-Heals fully message still showing, especially after DRAIN with 1 damage
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
+	-Healing exactly to max health doesn't say X HEALS FULLY
 	-Occasional audio glitches?
 
 PLAYTEST NOTES:
@@ -817,7 +823,6 @@ PLAYTEST NOTES:
 	-Gifts have too much health, really punish being underlevelled
 	-Is it possible to make parrying increase the Rogue's targeting bias?
 	-Maze generation seems really open
-	-BANISH can cheese orb boss
 	-Start LICH with one or both enemies spawned already
 
 TODO:
@@ -830,8 +835,7 @@ TODO:
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
-	-Sharp increases attack power of unconscious party members, might be logically excusable
-		-Maybe this should actually only be for a single party member?
+	-Sharp does not increase attack power of unconscious party members, indifference about fixing
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
 
 	Dreamlist:
@@ -863,5 +867,4 @@ TODO:
 		-Tune spell mana costs
 		-Tune maze exit tables
 		-Tune encounter rate
-		-Tune all visual effects
 		-Create all sound effects

@@ -1581,25 +1581,24 @@ LTrySleep: SUBROUTINE ;Performs logic necessary to try to put the targeted battl
 	jsr LGetBattlerResistances
 	and #LEGENDARY_RESIST_MASK
 	bne .LTryingToPutBossToSleep
-	lda #$01 ;50% for normal enemies
-	bne .LCheckSleepRandom
-.LTryingToPutBossToSleep:
-	lda #$07 ;12.5% for bosses
-.LCheckSleepRandom:
-	sta temp2
 	jsr LRandom
-	and temp2
-	bne .LSleepFailed
-	lda #ASLEEP_MASK
-	ldx startingCursorIndexAndTargetID
-	jsr LApplyStatus
-	lda #$1B ;X FELL ASLEEP
-	bne .LStoreAndReturn
+	and #$03 ;75% for normal enemies
+	bne .LSleepSucceed 
 .LSleepFailed:
 	lda #$15 ;NO EFFECT
 .LStoreAndReturn:
 	sta currentMessage
 	rts
+.LTryingToPutBossToSleep:
+	jsr LRandom
+	and #$03 ;25% for bosses
+	bne .LSleepFailed
+.LSleepSucceed:
+	lda #ASLEEP_MASK
+	ldx startingCursorIndexAndTargetID
+	jsr LApplyStatus
+	lda #$1B ;X FELL ASLEEP
+	bne .LStoreAndReturn
 
 LFindFirstLivingAlly: SUBROUTINE ;Returns the id of first party member with positive HP in X.
 	ldx #0
@@ -1731,9 +1730,7 @@ LApplyRandomModifier: SUBROUTINE ;Adds a random number between 0-1 if the party 
 .LLevelLessThan6:
 	lda #$01
 .LCalculate:
-	sta tempPointer1
-	lda rand8 ;Preferably would've been jsr LRandom, but this exceeds recursion depth when ally takes blight damage...
-	and tempPointer1
+	and rand8 ;Preferably would've been jsr LRandom, but this exceeds recursion depth when ally takes blight damage...
 	clc
 	adc temp2
 	sta temp2
@@ -1824,6 +1821,9 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	ldy temp5
 	bpl .LNormalEnemyLived
 	asl temp2
+	lsr rand8
+	bcc .LNormalEnemyLived
+	inc temp2
 .LNormalEnemyLived:
 	sta battlerHP,x
 
@@ -1887,13 +1887,13 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	lda #$FF ;Healing was denied by blight
 	rts
 .LNoBlight:
-	cpx #4
-	bcs .LHealEnemy
-	;healing an ally
 	lda temp2 ;binary health to heal
 	bne .LAtLeast1Health
 	lda #1
 .LAtLeast1Health:
+	cpx #4
+	bcs .LHealEnemy
+	;healing an ally
 	brk ;LBinaryToDecimal
 	sta temp2 ;decimal health to heal
 	ldx temp5
@@ -1921,24 +1921,26 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	rts
 .LHealEnemy:
 	;Could check here for legendary resistance
-
+	sta temp2
 	lda battlerHP,x
 	clc
 	adc temp2 ;amount to heal
 	sta temp3 ;current health + heal amount (in binary)
 	jsr LGetBattlerMaxHP
 	ldx temp5 ;target id
-	cmp temp3 ; maxHP - predicted health after healing
-	bcc .LMaxedOutHPEnemy
+	cmp temp3 ; maxHP - predicted health after healing 				TODO carry clear iff maxHP < predicted health
+	bcs .LNoEnemyMaxOut
+.LMaxedOutHPEnemy:
+	sta battlerHP,x ;predicted healing is greater, so just store the max hp
+	lda #0
+	rts
+.LNoEnemyMaxOut:
 	lda temp3
 	sta battlerHP,x
 	lda temp2
 	brk ;LBinaryToDecimal
 	rts
-.LMaxedOutHPEnemy:
-	sta battlerHP,x ;predicted healing is greater, so just store the max hp
-	lda #0
-	rts
+
 
 LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Returns FF if this battler does not have mp.s
 	stx temp5 ;target index
@@ -2190,26 +2192,26 @@ LSpellTargetingLookup:
 	.byte $0 ;TRANCE
 	.byte $0 ;WISH
 
-LSpellManaLookup:
-	.byte 0 ;BACK
-	.byte 4 ;FIRE
-	.byte 6 ;SLEEP
-	.byte 6 ;BLIZRD
-	.byte 8 ;DRAIN
-	.byte 6 ;THUNDR
-	.byte 6 ;SHIELD
-	.byte 8 ;METEOR
-	.byte 6 ;CHAOS
-	.byte 5 ;HEAL
-	.byte 4 ;SMITE
-	.byte 5 ;VOLLEY
-	.byte 8 ;SHARP
-	.byte 8 ;BLIGHT
-	.byte 5 ;TRIAGE
-	.byte 4 ;WITHER
-	.byte 5 ;BANISH
-	.byte 0 ;TRANCE
-	.byte 15 ;WISH
+LSpellManaLookup: ;These numbers are in decimal
+	.byte $0 ;BACK
+	.byte $4 ;FIRE
+	.byte $6 ;SLEEP
+	.byte $6 ;BLIZRD
+	.byte $8 ;DRAIN
+	.byte $6 ;THUNDR
+	.byte $6 ;SHIELD
+	.byte $8 ;METEOR
+	.byte $6 ;CHAOS
+	.byte $5 ;HEAL
+	.byte $4 ;SMITE
+	.byte $5 ;VOLLEY
+	.byte $8 ;SHARP
+	.byte $8 ;BLIGHT
+	.byte $5 ;TRIAGE
+	.byte $4 ;WITHER
+	.byte $5 ;BANISH
+	.byte $0 ;TRANCE
+	.byte $15 ;WISH 15 MP, not 21
 
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
 	RORG $FD00
@@ -2414,10 +2416,10 @@ LGoopHP:
 	.byte 30 ;Warlok
 	.byte 35 ;Imp
 	.byte 30 ;Wisp
-	.byte 70 ;RedOrb
-	.byte 70 ;BluOrb
-	.byte 70 ;GrnOrb
-	.byte 70 ;GldOrb
+	.byte 35 ;RedOrb
+	.byte 35 ;BluOrb
+	.byte 35 ;GrnOrb
+	.byte 35 ;GldOrb
 	.byte 16 ;Bear
 	.byte 14 ;Unicrn
 	.byte 20 ;Volcio
@@ -2459,10 +2461,10 @@ LEnemyResistances:
 	.byte #%00000000 ;Warlok
 	.byte #%00000000 ;Imp
 	.byte #%00000000 ;Wisp
-	.byte #%00000000 ;RedOrb
-	.byte #%00000000 ;BluOrb
-	.byte #%00000000 ;GrnOrb
-	.byte #%00000000 ;GldOrb
+	.byte #%10000000 ;RedOrb
+	.byte #%10000000 ;BluOrb
+	.byte #%10000000 ;GrnOrb
+	.byte #%10000000 ;GldOrb
 	.byte #%00000000 ;Bear
 	.byte #%00000000 ;Unicrn
 	.byte #%10000000 ;Volcio
