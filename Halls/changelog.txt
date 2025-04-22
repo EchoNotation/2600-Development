@@ -810,6 +810,11 @@
 	-Buffed sleep chances, now 75% on normal enemies, and 25% on bosses
 	-Damage against bosses can now be shown to be an odd number
 	-Enemies always heal at least one health now
+4/13/25
+	-Pretty confident that only specials were able to cause status-related lockups
+	-Less error-prone solution for summoning immediates
+	-Reduced GIFT health significantly
+	-Fixed bug where SClearMazeData would only clear a single byte!
 
 KNOWN BUGS:
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
@@ -817,12 +822,9 @@ KNOWN BUGS:
 	-Occasional audio glitches?
 
 PLAYTEST NOTES:
-	-Make sure that ally blight into basic attack miss doesn't lock battle
 	-Power gap between levels 1 and 2 is really high
 	-Jester should use special by default possibly
-	-Gifts have too much health, really punish being underlevelled
 	-Is it possible to make parrying increase the Rogue's targeting bias?
-	-Maze generation seems really open
 	-Start LICH with one or both enemies spawned already
 
 TODO:
@@ -831,17 +833,20 @@ TODO:
 		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
-	-Change constants in Lich special to be immediates
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
+		-Maybe could look at stack pointer to tell
 	-Sharp does not increase attack power of unconscious party members, indifference about fixing
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
 
 	Dreamlist:
 	-Variable pitch for certain sound effects (e.g. swing, shoot, hit, heal, down)
-	-Default names for each class
 	-Legendary actions for some bosses
+	-Default names for each class?
+
+	Post-release:
+	-PAL version
 
 	Additional sounds to consider:
 		-Near exit indicator
@@ -852,6 +857,7 @@ TODO:
 		-Game over jingle
 		-Going down stairs sound?
 		-Guarded sound
+		-Parrying sound
 
 	DOESN'T REQUIRE LOGIC:
 		-More text/messaging work

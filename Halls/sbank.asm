@@ -53,17 +53,17 @@ SSoftReset:
 
 #if BUILD_DEBUG
 	;Debug only code, do not include in final version!
-	ldy #0
+	ldy #24
 	sty cursorIndexAndMessageY
-	lda #$01 ;Maze level 0, party level 9
+	lda #$09 ;Maze level 0, party level 9
 	sta mazeAndPartyLevel
 	;lda #24
 	;sta cursorIndexAndMessageY
 	;lda #0
 	;sta currentMenu
-	lda #$33
-	sta char1
-	sta mp1
+	;lda #$33
+	;sta char1
+	;sta mp1
 	;lda #$20
 	;sta campfireLocation
 	;lda #$01
@@ -71,23 +71,23 @@ SSoftReset:
 	;sta hp2
 	;sta hp3
 	;sta hp4
-	lda #$80
-	sta inBattle
-	sta hp1
-	lda #$80
-	sta currentMenu
-	lda #2
-	sta menuSize
-	lda #$19
-	sta enemyID
+	;lda #$80
+	;sta inBattle
+	;sta hp1
+	;lda #$80
+	;sta currentMenu
+	;lda #2
+	;sta menuSize
+	;lda #$1D
+	;sta enemyID
 	;lda #$11
 	;sta enemyID+2
-	lda #100
-	sta enemyHP
+	;lda #15
+	;sta enemyHP
 	;sta battlerStatus
 	;sta battlerStatus+4
-	lda #$88
-	sta hasAction
+	;lda #$88
+	;sta hasAction
 	;sta enemyHP+1
 	;sta enemyHP+2
 	;sta enemyHP+3
@@ -867,7 +867,7 @@ SClearMazeData: SUBROUTINE ;Sets all the vertical and horizontal edges of the ma
 	lda #%11111111
 .SClearMazeLoop:
 	sta #vEdges,x
-	dey
+	dex
 	bpl .SClearMazeLoop
 	rts
 

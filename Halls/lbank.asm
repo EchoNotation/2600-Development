@@ -510,9 +510,8 @@ LProcessCasting:
 	ldx currentBattler
 	jsr LApplyRestoration ;Restore 1/4 max mp
 	lda #$2A ;X MP UP
-	sta currentMessage ;targetID should already be set from previous message
-.LGoToNormalTgtedExit:
-	jmp .LNormalTgtedExit
+.LGoToNormalTgtedExitSaveMessage:
+	jmp .LNormalTgtedExitSaveMessage
 
 .LHandleSingleTgtEffect:
 	lda temp1
@@ -577,8 +576,7 @@ LProcessCasting:
 	bpl .LSpellConnects
 .LNoEffect:
 	lda #$15 ;NO EFFECT
-	sta currentMessage
-	bne .LGoToNormalTgtedExit
+	bne .LGoToNormalTgtedExitSaveMessage
 
 .LSpellConnects:
 	;Need to check if this spell will be shielded or not
@@ -587,12 +585,10 @@ LProcessCasting:
 	bmi .LShieldDestroyed
 .LShieldWeakened:
 	lda #$10 ;X HAS A SHIELD
-	sta currentMessage
-	bne .LGoToNormalTgtedExit
+	bne .LGoToNormalTgtedExitSaveMessage
 .LShieldDestroyed:
 	lda #$1E ;X SHIELD FADES
-	sta currentMessage
-	bne .LGoToNormalTgtedExit
+	bne .LGoToNormalTgtedExitSaveMessage
 
 .LGoToTgtDamageKilled:
 	jmp .LTgtDamageKilled
@@ -1202,6 +1198,7 @@ LProcessParrying:
 LProcessSpecial:
 	lda #$81
 	sta inBattle ;Just in case nothing ends up setting inBattle after status code, guarantee escape
+
 	ldx currentBattler
 	lda battleActions,x ;battleActions is 4 bytes before enemyID
 	cmp #$1E
@@ -1234,11 +1231,11 @@ LProcessSpecial:
 	bpl .LSummonZombie
 .LSummonSkeleton:
 	lda #$A
-	ldy LSkltonHP ;Can actually save some bytes by replacing these with immediates
+	ldy SKLTON_HP
 	bne .LSummon
 .LSummonZombie:
 	lda #$9
-	ldy LZombieHP
+	ldy ZOMBIE_HP
 	bne .LSummon
 
 .LLichCannotSummon:
@@ -2402,17 +2399,13 @@ LEnemyHP:
 	.byte 18 ;Squire
 	.byte 12 ;Archer
 	.byte 10 ;Priest
-LGiftHP:
-	.byte 8 ;Gift
+	.byte GIFT_HP ;Gift
 	.byte 20 ;Sword
 	.byte 20 ;Shield
-LZombieHP:
-	.byte 30 ;Zombie
-LSkltonHP:
-	.byte 24 ;Sklton
+	.byte ZOMBIE_HP ;Zombie
+	.byte SKLTON_HP ;Sklton
 	.byte 20 ;Mage
-LGoopHP:
-	.byte 20 ;Goop
+	.byte GOOP_HP ;Goop
 	.byte 30 ;Warlok
 	.byte 35 ;Imp
 	.byte 30 ;Wisp
@@ -2429,15 +2422,14 @@ LGoopHP:
 	.byte 50 ;Jester
 	.byte 50 ;Armor
 	.byte 50 ;Spider
-LSlimeHP:
-	.byte 60 ;Slime
+	.byte SLIME_HP ;Slime
 	.byte 85 ;Lich
 	.byte 70 ;Shfflr
 	.byte 85 ;Shmblr
 	.byte 1 ;Trophy
 	.byte 35 ;Thickt
 	.byte 200 ;Horror
-	.byte 150 ;Ooze
+	.byte OOZE_HP ;Ooze
 	.byte 1 ;Campfire
  
 ;Format is  LPFIHEPR
