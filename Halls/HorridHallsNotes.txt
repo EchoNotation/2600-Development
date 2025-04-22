@@ -126,9 +126,9 @@ $0F - WITHER
 $10 - BANISH spell
 $11 - TRANCE
 $12 - WISH
-$13 - Unallocated
-$14 - Menu move
-$15 - Menu confirm
+$13 - Blight
+$14 - Menu confirm
+$15 - Menu move
 $16 - Menu nope
 $17 - Footstep
 $18 - Hit
@@ -136,7 +136,7 @@ $19 - Swing
 $1A - Tink
 $1B - Heal
 $1C - Dead
-$1D - Blight
+$1D - Unallocated
 $1E - Shoot
 
 --- SUBROUTINE IDs ---
