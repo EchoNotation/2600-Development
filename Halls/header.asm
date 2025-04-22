@@ -1,7 +1,7 @@
 	processor 6502
 	include "vcs.h"
 
-BUILD_DEBUG = 1
+BUILD_DEBUG = 0
 
 ; --- Constants ---
 ;Kernel related
@@ -87,7 +87,7 @@ WEST = $01
 MAZE_WIDTH = 8
 MAX_MAZE_LEVEL = 3
 STEP_GRACE_PERIOD = 1
-ENCOUNTER_RATE_MASK = $FF ;00 is 256/256, FF is 1/256
+ENCOUNTER_RATE_MASK = $01 ;00 is 256/256, FF is 1/256
 
 ;Battle related
 TIMER_MASK = $80
@@ -130,6 +130,9 @@ EXCITED = 4
 PAIN = 5
 SLEEPING = 6
 SICK = 7
+
+;Sound related
+PITCHABLE_SOUND_CUTOFF = $15
 
 	SEG.U Variables
 	ORG $80
@@ -206,6 +209,7 @@ effectCountdown ds 1
 mazeAndPartyLevel ds 1
 flags ds 1
 viewedPartyInfo ds 1
+pitchShift ds 1
 fireMazeHeightAndMessageLine ds 1
 mazeAndEffectColor ds 1
 returnValue ds 1

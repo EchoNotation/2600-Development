@@ -368,7 +368,7 @@ STryStartGame:
 	cpy #24 ;The ready button
 	bne SWaitForOverscanTimer
 	;If here, that means that the button was pressed when on the ready option
-	ldx #$15 ;Menu confirm
+	ldx #$14 ;Menu confirm
 	jsr STryLoadSound
 	lda #$01 ;Maze level 1, party level 1
 	;lda #$19
@@ -1350,7 +1350,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SReturn:
 	rts
 .SContinue:
-	ldx #$15 ;Menu confirm
+	ldx #$14 ;Menu confirm
 	jsr STryLoadSound
 	lda currentMenu
 	beq .SReturn
@@ -1890,7 +1890,7 @@ SUpdateMenuCursorLeftRight:
 	lda currentInput
 	cmp previousInput
 	beq .SReturn
-	ldx #$14 ;Menu move
+	ldx #$15 ;Menu move
 	jsr STryLoadSound
 .SReturn:
 	rts
@@ -2540,7 +2540,7 @@ SShootPitches:
 
 STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
 	lda currentSound
-	cmp #$15
+	cmp #$14 ;Menu confirm
 	beq .SForceLoad
 	cpx currentSound
 	bcc .SDontLoad ;Don't load a sound if ID is lower than one that is already playing
@@ -2555,6 +2555,14 @@ STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
 	sta soundOffset
 	lda #1
 	sta soundFrequency
+	sta pitchShift
+	cpx #PITCHABLE_SOUND_CUTOFF
+	bcc .SNotPitchable
+	lda rand8
+	bpl .SShifted
+.SNotPitchable:
+	dec pitchShift
+.SShifted:
 .SDontLoad:
 	rts
 
@@ -2584,6 +2592,8 @@ SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
 	lda #(SFirePitches >> 8 & $FF)
 	sta tempPointer1+1
 	lda (tempPointer1),y
+	clc
+	adc pitchShift
 	sta AUDF0
 	lda #3
 	sta AUDV0
@@ -2619,9 +2629,9 @@ SSoundMetadata:
 	.byte $A6 ;BANISH
 	.byte $86 ;TRANCE
 	.byte $86 ;WISH
-	.byte $00
-	.byte $21 ;Menu move
+	.byte $A2 ;Blight
 	.byte $24 ;Menu confirm
+	.byte $21 ;Menu move
 	.byte $16 ;Menu nope
 	.byte $22 ;Footstep
 	.byte $43 ;Hit
@@ -2629,7 +2639,7 @@ SSoundMetadata:
 	.byte $44 ;Tink
 	.byte $64 ;Heal
 	.byte $83 ;Dead
-	.byte $A2 ;Blight
+	.byte $00
 	.byte $53 ;Shoot
 
 SVoices:
@@ -2652,7 +2662,7 @@ SVoices:
 	.byte (SBanishSpellVoices & $FF)
 	.byte (STranceVoices & $FF)
 	.byte (SWishVoices & $FF)
-	.byte 0
+	.byte (SBlightVoices & $FF)
 	.byte (SMenuMoveVoices & $FF)
 	.byte (SMenuMoveVoices & $FF) ;Confirm and move are the same length using the same voices
 	.byte (SWitherVoices & $FF) ;Menu nope only uses 1 sample of voice 7
@@ -2662,7 +2672,7 @@ SVoices:
 	.byte (STinkVoices & $FF)
 	.byte (SHealVoices & $FF)
 	.byte (SDeadVoices & $FF)
-	.byte (SBlightVoices & $FF)
+	.byte 0
 	.byte (SShootVoices & $FF)
 
 SPitches:
@@ -2685,9 +2695,9 @@ SPitches:
 	.byte (SBanishSpellPitches & $FF)
 	.byte (STrancePitches & $FF)
 	.byte (SWishPitches & $FF)
-	.byte 0
-	.byte (SMenuMovePitches & $FF)
+	.byte (SBlightPitches & $FF)
 	.byte (SMenuConfirmPitches & $FF)
+	.byte (SMenuMovePitches & $FF)
 	.byte (SMenuNopePitches & $FF)
 	.byte (SFootstepPitches & $FF)
 	.byte (SHitPitches & $FF)
@@ -2695,7 +2705,7 @@ SPitches:
 	.byte (STinkPitches & $FF)
 	.byte (SHealPitches & $FF)
 	.byte (SDeadPitches & $FF)
-	.byte (SBlightPitches & $FF)
+	.byte 0
 	.byte (SShootPitches & $FF)
 
 	ORG $FEC0

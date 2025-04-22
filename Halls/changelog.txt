@@ -815,6 +815,9 @@
 	-Less error-prone solution for summoning immediates
 	-Reduced GIFT health significantly
 	-Fixed bug where SClearMazeData would only clear a single byte!
+4/21/25
+	-Moved LCheckBattlerStatus from a subroutine to inline in LDoBattle, saving some ROM and RAM!
+	-Used one byte of RAM to add variable pitches for some sound effects
 
 KNOWN BUGS:
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
@@ -823,6 +826,8 @@ KNOWN BUGS:
 
 PLAYTEST NOTES:
 	-Power gap between levels 1 and 2 is really high
+		-Takes too long to reach level 2
+	-Campfire is too hard to find, should be forced within range of the exit
 	-Jester should use special by default possibly
 	-Is it possible to make parrying increase the Rogue's targeting bias?
 	-Start LICH with one or both enemies spawned already
@@ -841,7 +846,6 @@ TODO:
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
 
 	Dreamlist:
-	-Variable pitch for certain sound effects (e.g. swing, shoot, hit, heal, down)
 	-Legendary actions for some bosses
 	-Default names for each class?
 

@@ -24,7 +24,7 @@ LBattleProcessHighBytes:
 LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.
 	lda currentSound
 	beq .LNoSound
-	cmp #$15 ;Menu confirm sound
+	cmp #$14 ;Menu confirm sound
 	bne .LReturn ;Do not advance battle logic if a non-UI sound is playing!
 .LNoSound:
 	ldx currentBattler
@@ -321,12 +321,11 @@ LProcessCharacterAdvancement:
 	sta inBattle
 	rts
 
-.LGoToHandleAoEEffect:
-	jmp .LHandleAoEEffect
-
 .LProcessAction:
 	lda temp1
-	bmi LProcessCasting
+	bpl .LNonCastingAction
+	jmp LProcessCasting
+.LNonCastingAction
 	and #$07
 	tay
 	lda LBattleProcessLowBytes,y
@@ -335,10 +334,101 @@ LProcessCharacterAdvancement:
 	sta tempPointer1+1
 	jmp (tempPointer1)
 LAdvanceBattlerStatus:
-	jsr LCheckBattlerStatus
+	lda inBattle
+	cmp #$81
+	beq .LCheckIfBlighted
+	cmp #$83
+	beq .LSetBlightDamage
+	cmp #$84
+	beq .LDiedToBlight
+	cmp #$85
 	bne .LProcessAction
+.LCheckIfSleeping:
+	lda battlerStatus,x
+	and #ASLEEP_MASK
+	beq .LProcessAction
+.LIsAsleep:
+	;This person is currently asleep
+	sec
+	sbc #$08
+	sta temp2
+	beq .LWakeUpBattler
+	;Still asleep
+	lda #$81
+	sta inBattle
+	lda #$1C ;X IS ASLEEP
+	bne .LStoreNewSleepValue
+.LWakeUpBattler:
+	lda #$82
+	sta inBattle
+	lda #$18 ;X WAKES UP
+.LStoreNewSleepValue:
+	sta currentMessage
+	lda battlerStatus,x
+	and #$E7
+	ora temp2
+	sta battlerStatus,x
+	stx startingCursorIndexAndTargetID
+	rts
+.LCheckIfBlighted:
+	lda battlerStatus,x
+	and #BLIGHTED_MASK
+	beq .LCheckIfSleeping
+	;This battler has blight
+	stx startingCursorIndexAndTargetID
+	lda #$0E ;X WASTES AWAY
+	sta currentMessage
+	ldx #$13 ;Blight
+	jsr LLoadSoundInS
+	lda #$83
+	bne .LSaveInBattle2
+.LDiedToBlight:
+	lda #$09
+	sta currentMessage
+	ldx currentBattler
+	stx startingCursorIndexAndTargetID
+	lda viewedPartyInfo
+	sta enemyAction ;enemy action should be a safe place to move this to prevent corruption by loading the sound
+	jsr LDeathCleanup
+	lda enemyAction
+	sta viewedPartyInfo
+	lda #$81
+	bne .LSaveInBattle2
+.LSetBlightDamage:
+	jsr LGetBattlerMaxHP
+	lsr
+	lsr
+	lsr
+	sta temp2 ;Damage to deal in binary
+	beq .LAtLeast1Damage
+	bne .LNoDamageClampNeeded
+.LAtLeast1Damage:
+	inc temp2
+.LNoDamageClampNeeded:
+	ldx currentBattler
+	stx startingCursorIndexAndTargetID
+	ldy #POISON_RESIST_MASK
+	jsr LApplyDamageNoStoring ;Use temp2 as the damage to deal
+	sta temp3
+
+	lda temp2 ;Actual damage dealt by LApplyDamage
+	brk ;LBinaryToDecimal
+	sta cursorIndexAndMessageY
+	lda #$07 ;X LOSES Y HP
+	sta currentMessage
+
+	lda temp3
+	bne .LDied
+	lda #$85
+	bne .LSaveInBattle2
+.LDied:
+	lda #$84
+.LSaveInBattle2:
+	sta inBattle
 	rts
 
+.LGoToHandleAoEEffect:
+	jmp .LHandleAoEEffect
 .LGoToHandleSingleTgtEffect:
 	jmp .LHandleSingleTgtEffect
 .LGoToSingleTgtPhase2:
@@ -1605,106 +1695,7 @@ LFindFirstLivingAlly: SUBROUTINE ;Returns the id of first party member with posi
 	inx
 	bne .LLoop
 .LEnd:
-	rts
-
-LCheckBattlerStatus: SUBROUTINE ;Similar to LDoBattle, but just processes control flow logic to do with SLEEP and BLIGHT
-	lda inBattle
-	cmp #$81
-	beq .LCheckIfBlighted
-	cmp #$83
-	beq .LSetBlightDamage
-	cmp #$84
-	beq .LDiedToBlight
-	cmp #$85
-	beq .LCheckIfSleeping
-	rts
-.LCheckIfSleeping:
-	lda battlerStatus,x
-	and #ASLEEP_MASK
-	bne .LIsAsleep
-	lda #$FF ;Continue in LDoBattle
-	rts
-.LIsAsleep:
-	;This person is currently asleep
-	sec
-	sbc #$08
-	sta temp2
-	beq .LWakeUpBattler
-	;Still asleep
-	lda #$81
-	sta inBattle
-	lda #$1C ;X IS ASLEEP
-	bne .LStoreNewSleepValue
-.LWakeUpBattler:
-	lda #$82
-	sta inBattle
-	lda #$18 ;X WAKES UP
-.LStoreNewSleepValue:
-	sta currentMessage
-	lda battlerStatus,x
-	and #$E7
-	ora temp2
-	sta battlerStatus,x
-	stx startingCursorIndexAndTargetID
-	lda #0 ;Return in LDoBattle
-	rts
-.LCheckIfBlighted:
-	lda battlerStatus,x
-	and #BLIGHTED_MASK
-	beq .LCheckIfSleeping
-	;This battler has blight
-	stx startingCursorIndexAndTargetID
-	lda #$0E ;X WASTES AWAY
-	sta currentMessage
-	ldx #$1D ;Blight
-	jsr LLoadSoundInS
-	lda #$83
-	bne .LSaveInBattle
-.LDiedToBlight:
-	lda #$09
-	sta currentMessage
-	ldx currentBattler
-	stx startingCursorIndexAndTargetID
-	lda viewedPartyInfo
-	sta enemyAction ;enemy action should be a safe place to move this to prevent corruption by loading the sound
-	jsr LDeathCleanup
-	lda enemyAction
-	sta viewedPartyInfo
-	lda #$81
-	bne .LSaveInBattle
-.LSetBlightDamage:
-	jsr LGetBattlerMaxHP
-	lsr
-	lsr
-	lsr
-	sta temp2 ;Damage to deal in binary
-	beq .LAtLeast1Damage
-	bne .LNoDamageClampNeeded
-.LAtLeast1Damage:
-	inc temp2
-.LNoDamageClampNeeded:
-	ldx currentBattler
-	stx startingCursorIndexAndTargetID
-	ldy #POISON_RESIST_MASK
-	jsr LApplyDamageNoStoring ;Use temp2 as the damage to deal
-	sta temp3
-
-	lda temp2 ;Actual damage dealt by LApplyDamage
-	brk ;LBinaryToDecimal
-	sta cursorIndexAndMessageY
-	lda #$07 ;X LOSES Y HP
-	sta currentMessage
-
-	lda temp3
-	bne .LDied
-	lda #$85
-	bne .LSaveInBattle
-.LDied:
-	lda #$84
-.LSaveInBattle:
-	sta inBattle
-	lda #0 ;Return in LDoBattle
-	rts
+	rts	
 
 LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, and doubles their damage for this attack if so.
 	lda battlerStatus,x
