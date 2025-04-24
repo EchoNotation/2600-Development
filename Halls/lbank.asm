@@ -24,7 +24,7 @@ LBattleProcessHighBytes:
 LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.
 	lda currentSound
 	beq .LNoSound
-	cmp #$14 ;Menu confirm sound
+	cmp #$20 ;Menu confirm sound
 	bne .LReturn ;Do not advance battle logic if a non-UI sound is playing!
 .LNoSound:
 	ldx currentBattler
@@ -988,9 +988,9 @@ LProcessCasting:
 	ldx startingCursorIndexAndTargetID
 	lda #SHARPENED_MASK
 	jsr LApplyStatus
-	lda #$1A ;X ATTACK UP, and Tink funnily enough
-	tax
+	lda #$1A ;X ATTACK UP
 	sta currentMessage
+	ldx #$26 ;tink
 	jsr LLoadSoundInS
 	bne .LTryNextTgt
 
@@ -1090,10 +1090,10 @@ LProcessFighting:
 	jsr LGetBattlerResistances ;X should already contain currentBattler
 	and #RANGED_MASK
 	beq .LMeleeSound
-	ldx #$1E ;Shoot
+	ldx #$2A ;Shoot
 	bne .LFightSound
 .LMeleeSound:
-	ldx #$19 ;Swing
+	ldx #$25 ;Swing
 .LFightSound:
 	jsr LLoadSoundInS
 
@@ -1124,7 +1124,7 @@ LProcessFighting:
 	lda #$90
 	bne .LSaveInBattle
 .LTargetWasParrying:
-	ldx #$1A ;Tink
+	ldx #$26 ;tink
 	jsr LLoadSoundInS
 	lda #$23 ;X BLOCKS
 	sta currentMessage
@@ -1138,7 +1138,7 @@ LProcessFighting:
 	lda #$93
 	bne .LSaveInBattle
 .LRetortDescription:
-	ldx #$19 ;Swing
+	ldx #$25 ;Swing
 	jsr LLoadSoundInS
 	lda #$22 ;X STABS Y (parry version)
 	sta currentMessage
@@ -1644,7 +1644,7 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 	eor temp5
 	beq .LAlliedSpellsNotBlocked
 
-	ldx #$1A ;Tink
+	ldx #$26 ;tink
 	jsr LLoadSoundInS
 	ldx startingCursorIndexAndTargetID ;Gets reset by LLoadSoundInS
 
@@ -1733,7 +1733,7 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	lda viewedPartyInfo
 	sta tempPointer6
 
-	ldx #$18 ;Hit
+	ldx #$24 ;Hit
 	jsr LLoadSoundInS
 
 	jsr LRandom ;Moved to here because of recursion depth exception in LApplyRandomModifier
@@ -1839,7 +1839,7 @@ LDeathCleanup: SUBROUTINE ;Performs death housekeeping for target X
 	lda #0
 	sta battlerHP,x
 	sta battlerStatus,x
-	ldx #$1C ;Dead
+	ldx #$28 ;Dead
 	jsr LLoadSoundInS
 	rts
 
@@ -1861,7 +1861,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	stx temp5 ;target index
 	sta temp2 ;binary amount to regain
 
-	ldx #$1B ;Heal
+	ldx #$27 ;Heal
 	jsr LLoadSoundInS
 	ldx temp5
 

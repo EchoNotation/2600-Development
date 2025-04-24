@@ -127,17 +127,29 @@ $10 - BANISH spell
 $11 - TRANCE
 $12 - WISH
 $13 - Blight
-$14 - Menu confirm
-$15 - Menu move
-$16 - Menu nope
-$17 - Footstep
-$18 - Hit
-$19 - Swing
-$1A - Tink
-$1B - Heal
-$1C - Dead
-$1D - Unallocated
-$1E - Shoot
+$14 - Near exit
+$15
+$16
+$17
+$18
+$19
+$1A
+$1B
+$1C
+$1D
+$1E
+$1F
+$20 - Menu confirm
+$21 - Menu move
+$22 - Menu nope
+$23 - Footstep
+$24 - Hit
+$25 - Swing
+$26 - Tink
+$27 - Heal
+$28 - Dead
+$29 - Unallocated
+$2A - Shoot
 
 --- SUBROUTINE IDs ---
 $00 - LDoBattle

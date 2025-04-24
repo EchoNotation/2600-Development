@@ -15,11 +15,9 @@ SClear:
 	bne SClear
 	cld
 
+	sta SWACNT
 	lda #%00010001
 	sta CTRLPF ;Sets the playfield to reflect, and makes the ball 4 clocks wide
-
-	lda #0
-	sta SWACNT
 
 	;The top two lines here can be removed once mazes are no longer being generated without the setup screen.
 	lda INTIM ;Seed the random number generator
@@ -100,7 +98,7 @@ SSoftReset:
 	;jsr STryLoadSound
 #endif
 	
-	;ldx #$1D
+	;ldx #$14
 	;jsr STryLoadSound
 
 SStartOfFrame:
@@ -308,7 +306,7 @@ SDidNotTriggerCampfire:
 	beq SGenerateEncounter ;Always trigger an encounter if stepping onto the exit
 SDidNotTriggerExit:
 	;Check to see if a random encounter should occur
-	ldx #$17 ;Footstep
+	ldx #$23 ;Footstep
 	jsr STryLoadSound
 	ldx highlightedLineAndSteps
 	bne SNoRandomEncounter
@@ -368,7 +366,7 @@ STryStartGame:
 	cpy #24 ;The ready button
 	bne SWaitForOverscanTimer
 	;If here, that means that the button was pressed when on the ready option
-	ldx #$14 ;Menu confirm
+	ldx #$20 ;Menu confirm
 	jsr STryLoadSound
 	lda #$01 ;Maze level 1, party level 1
 	;lda #$19
@@ -1350,7 +1348,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SReturn:
 	rts
 .SContinue:
-	ldx #$14 ;Menu confirm
+	ldx #$20 ;Menu confirm
 	jsr STryLoadSound
 	lda currentMenu
 	beq .SReturn
@@ -1524,7 +1522,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	ldy highlightedLineAndSteps
 	bpl .SConfirmSpell
 	;Not enough mana to select this spell. Play an error sound effect
-	ldx #$16 ;Menu nope
+	ldx #$22 ;Menu nope
 	jsr STryLoadSound
 	rts
 .SConfirmSpell:	
@@ -1890,7 +1888,7 @@ SUpdateMenuCursorLeftRight:
 	lda currentInput
 	cmp previousInput
 	beq .SReturn
-	ldx #$15 ;Menu move
+	ldx #$21 ;Menu move
 	jsr STryLoadSound
 .SReturn:
 	rts
@@ -2024,34 +2022,50 @@ SAfterLoadingEnemyAI:
 	sta enemyAction
 	rts
 
-S4Lsr: SUBROUTINE
-	lsr
-	lsr
-	lsr
-	lsr
-	rts
-
-S5Asl: SUBROUTINE
-	asl
-S4Asl:
-	asl
-	asl
-	asl
-	asl
-	rts
-
-SNormalBattleTable:
-	.byte $80
-	.byte $81
-	.byte $83
-SKnightBattleTable:
-	.byte $80
-	.byte $84
-	.byte $83
-SRogueBattleTable:
-	.byte $80
-	.byte $85
-	.byte $83
+SSoundMetadata:
+	.byte $00 ;No sound
+	.byte $8A ;FIRE
+	.byte $68 ;SLEEP
+	.byte $D5 ;BLIZRD
+	.byte $64 ;DRAIN
+	.byte $A5 ;THUNDR
+	.byte $84 ;SHIELD
+	.byte $F5 ;METEOR
+	.byte $B4 ;CHAOS
+	.byte $45 ;HEAL
+	.byte $A5 ;SMITE
+	.byte $B3 ;VOLLEY
+	.byte $45 ;SHARP
+	.byte $C2 ;BLIGHT spell
+	.byte $95 ;TRIAGE
+	.byte $94 ;WITHER
+	.byte $A6 ;BANISH
+	.byte $86 ;TRANCE
+	.byte $86 ;WISH
+	.byte $A2 ;Blight
+	.byte $83 ;Near exit
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte $24 ;Menu confirm
+	.byte $21 ;Menu move
+	.byte $16 ;Menu nope
+	.byte $22 ;Footstep
+	.byte $43 ;Hit
+	.byte $44 ;Swing
+	.byte $44 ;Tink
+	.byte $64 ;Heal
+	.byte $83 ;Dead
+	.byte $00
+	.byte $53 ;Shoot
 
 	ORG $FC00
 	RORG $FC00
@@ -2291,6 +2305,15 @@ SShootVoices:
 	.byte $C
 	.byte $8
 	.byte $8
+SNearExitVoices:
+	.byte $4
+	.byte $4
+	.byte $0
+	.byte $4
+	.byte $4
+	.byte $0
+	.byte $4
+	.byte $4
 
 	ORG $FD00
 	RORG $FD00
@@ -2534,13 +2557,22 @@ SShootPitches:
 	.byte $5
 	.byte $1
 	.byte $2
+SNearExitPitches:
+	.byte $5
+	.byte $6
+	.byte $0
+	.byte $5
+	.byte $6
+	.byte $0
+	.byte $5
+	.byte $6
 
 	ORG $FDF0
 	RORG $FDF0
 
 STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
 	lda currentSound
-	cmp #$14 ;Menu confirm
+	cmp #$20 ;Menu confirm
 	beq .SForceLoad
 	cpx currentSound
 	bcc .SDontLoad ;Don't load a sound if ID is lower than one that is already playing
@@ -2609,39 +2641,6 @@ SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
 .SReturn:
 	rts
 
-SSoundMetadata:
-	.byte $00 ;No sound
-	.byte $8A ;FIRE
-	.byte $68 ;SLEEP
-	.byte $D5 ;BLIZRD
-	.byte $64 ;DRAIN
-	.byte $A5 ;THUNDR
-	.byte $84 ;SHIELD
-	.byte $F5 ;METEOR
-	.byte $B4 ;CHAOS
-	.byte $45 ;HEAL
-	.byte $A5 ;SMITE
-	.byte $B3 ;VOLLEY
-	.byte $45 ;SHARP
-	.byte $C2 ;BLIGHT spell
-	.byte $95 ;TRIAGE
-	.byte $94 ;WITHER
-	.byte $A6 ;BANISH
-	.byte $86 ;TRANCE
-	.byte $86 ;WISH
-	.byte $A2 ;Blight
-	.byte $24 ;Menu confirm
-	.byte $21 ;Menu move
-	.byte $16 ;Menu nope
-	.byte $22 ;Footstep
-	.byte $43 ;Hit
-	.byte $44 ;Swing
-	.byte $44 ;Tink
-	.byte $64 ;Heal
-	.byte $83 ;Dead
-	.byte $00
-	.byte $53 ;Shoot
-
 SVoices:
 	.byte 0
 	.byte (SFireVoices & $FF)
@@ -2663,6 +2662,18 @@ SVoices:
 	.byte (STranceVoices & $FF)
 	.byte (SWishVoices & $FF)
 	.byte (SBlightVoices & $FF)
+	.byte (SNearExitVoices & $FF)
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
 	.byte (SMenuMoveVoices & $FF)
 	.byte (SMenuMoveVoices & $FF) ;Confirm and move are the same length using the same voices
 	.byte (SWitherVoices & $FF) ;Menu nope only uses 1 sample of voice 7
@@ -2696,6 +2707,18 @@ SPitches:
 	.byte (STrancePitches & $FF)
 	.byte (SWishPitches & $FF)
 	.byte (SBlightPitches & $FF)
+	.byte (SNearExitPitches & $FF)
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
+	.byte 0
 	.byte (SMenuConfirmPitches & $FF)
 	.byte (SMenuMovePitches & $FF)
 	.byte (SMenuNopePitches & $FF)
@@ -2756,7 +2779,34 @@ SX2Delta:
 	.byte -2
 	.byte 0
 
-	;There are 24 bytes in here...
+S4Lsr: SUBROUTINE
+	lsr
+	lsr
+	lsr
+	lsr
+	rts
+
+S5Asl: SUBROUTINE
+	asl
+S4Asl:
+	asl
+	asl
+	asl
+	asl
+	rts
+
+SNormalBattleTable:
+	.byte $80
+	.byte $81
+	.byte $83
+SKnightBattleTable:
+	.byte $80
+	.byte $84
+	.byte $83
+SRogueBattleTable:
+	.byte $80
+	.byte $85
+	.byte $83
 
 	ORG $FF00
 	RORG $FF00

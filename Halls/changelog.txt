@@ -818,6 +818,9 @@
 4/21/25
 	-Moved LCheckBattlerStatus from a subroutine to inline in LDoBattle, saving some ROM and RAM!
 	-Used one byte of RAM to add variable pitches for some sound effects
+4/22/25
+	-Moved some sound effect IDs around
+	-Developed algorithm for playing near exit sound
 
 KNOWN BUGS:
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
@@ -841,7 +844,6 @@ TODO:
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
-		-Maybe could look at stack pointer to tell
 	-Sharp does not increase attack power of unconscious party members, indifference about fixing
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
 
