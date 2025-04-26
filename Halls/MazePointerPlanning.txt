@@ -1,0 +1,12 @@
+Current is F53B to F646 : 267 bytes
+
+PF0 is always the same pointer, ROutermost
+PF1 is either RNearDoor, RNoNearDoor, or RDeadEnd
+PF2 is either RFarDoor, RNoFarDoor, RNoFarDoorOnlyTwo, RFarDoorOnlyTwo, ROnly1Room, or RDeadEnd
+
+1. Check if there is even 1 room
+	->If not,  ptr2-5 = RDeadEnd
+2. If at least one room
+	->Combine two adjacent edges of 1st room into two low bits, use lookup 
+
+New is F53B to F61A : 223 bytes
