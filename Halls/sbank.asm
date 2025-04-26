@@ -960,10 +960,20 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	ldy playerY
 	lda playerFacing
 	beq .SFacingEast
-	cmp #1
-	beq .SFacingSouth
-	cmp #2
-	beq .SFacingWest
+	cmp #3
+	beq .SFacingNorth
+	lsr
+	bcs .SFacingSouth
+.SFacingWest:
+	dex
+	brk ;SGetMazeRoomData
+	sta temp1
+	ldx playerX
+	dex
+	dex
+	brk ;SGetMazeRoomData
+	sta temp2
+	jmp .SUpdatePointers
 .SFacingNorth:
 	dey
 	brk ;SGetMazeRoomData
@@ -989,16 +999,6 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	sta temp1
 	ldx playerX
 	iny
-	brk ;SGetMazeRoomData
-	sta temp2
-	jmp .SUpdatePointers
-.SFacingWest:
-	dex
-	brk ;SGetMazeRoomData
-	sta temp1
-	ldx playerX
-	dex
-	dex
 	brk ;SGetMazeRoomData
 	sta temp2
 .SUpdatePointers:
@@ -1052,30 +1052,22 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	lda #(RFarDoor >> 8 & $FF)
 	sta tempPointer3+1
 	sta tempPointer4
-	ldx #0
-	stx temp1
-	ldx temp2
-	txa
+	lda #0
+	sta temp1
+
+	ldx #3
+.SConstructIndexLoop:
+	lda temp2
 	and SMazeLeftMask,y
 	clc
-	bne .SNoFarLeftDoor
+	bne .SNoDoorHere
 	sec
-.SNoFarLeftDoor:
+.SNoDoorHere:
 	rol temp1
-	txa
-	and SMazeForwardMask,y
-	clc
-	bne .SOnlyTwoRooms
-	sec
-.SOnlyTwoRooms:
-	rol temp1
-	txa
-	and SMazeRightMask,y
-	clc
-	bne .SNoFarRightDoor
-	sec
-.SNoFarRightDoor:
-	rol temp1 ;Now contains a number from 0 to 7
+	iny ;Effectively changes SMazeLeftMask to SMazeForwardMask, then SMazeRightMask
+	dex
+	bne .SConstructIndexLoop
+
 	ldx temp1
 	lda SFarLeftPointers,x
 	sta tempPointer3
@@ -1202,6 +1194,7 @@ SUpdatePlayerMovement: SUBROUTINE ;Checks the joystick input to see if the playe
 	bne .SReturnFromPlayerMovement ;If equals 1, then there is a wall ahead in this direction
 
 	;Possible to move in this direction, so do so.
+	lda #$FF
 	ldy playerFacing
 	beq .SEast
 	dey
@@ -1210,28 +1203,16 @@ SUpdatePlayerMovement: SUBROUTINE ;Checks the joystick input to see if the playe
 	beq .SWest
 
 .SNorth:
-	ldy playerY
-	dey
-	sty playerY
-	lda #$FF
+	dec playerY
 	rts
 .SEast:
-	ldx playerX
-	inx
-	stx playerX
-	lda #$FF
+	inc playerX
 	rts
 .SSouth:
-	ldy playerY
-	iny
-	sty playerY
-	lda #$FF
+	inc playerY
 	rts
 .SWest:
-	ldx playerX
-	dex
-	stx playerX
-	lda #$FF
+	dec playerX
 .SReturnFromPlayerMovement
 	rts
 
