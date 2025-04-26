@@ -1010,10 +1010,9 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	sta aoeValueAndCampfireControl ;Do not show campfire if looking at a dead end
 	lda #(RDeadEnd1 & $FF)
 	sta tempPointer2
-	sta temp5
-	lda #(RDeadEnd2 & $FF)
 	sta tempPointer3
 	sta temp4
+	sta temp5
 	lda #(RDeadEnd1 >> 8 & $FF)
 	sta tempPointer2+1
 	sta tempPointer3+1
@@ -1021,39 +1020,27 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	sta tempPointer5
 	rts
 .SAtLeast1Room:
-	lda #MAZE_POINTER_PAGE_1
+	lda #(RNearDoor >> 8 & $FF)
 	sta tempPointer2+1
+	sta tempPointer5
+	ldx #(RNoNearDoor & $FF)
+	stx tempPointer2
+	stx temp5
+	ldx #(RNearDoor & $FF)
 	lda temp1
 	and SMazeLeftMask,y
 	bne .SNoNearLeftDoor
-	lda #(RNearDoor & $FF)
-	sta tempPointer2
-	jmp .SCheckForNearRightDoor
+	stx tempPointer2
 .SNoNearLeftDoor:
-	lda #(RNoNearDoor & $FF)
-	sta tempPointer2
-.SCheckForNearRightDoor:
-	lda #MAZE_POINTER_PAGE_1
-	sta tempPointer5
 	lda temp1
 	and SMazeRightMask,y
 	bne .SNoNearRightDoor
-	lda #(RNearDoor & $FF)
-	sta temp5
-	jmp .SCheckIfAtLeast2Rooms
+	stx temp5
 .SNoNearRightDoor:
-	lda #(RNoNearDoor & $FF)
-	sta temp5
-.SCheckIfAtLeast2Rooms:
+	;Check if there are at least two rooms
 	lda temp1
 	and SMazeForwardMask,y
-	beq .SAtLeast2Rooms
-	lda aoeValueAndCampfireControl
-	cmp #1
-	bne .SCampfireIsFine
-	lda #$FF
-	sta aoeValueAndCampfireControl
-.SCampfireIsFine:
+	beq .SAtLeastTwoRooms
 	lda #(ROnly1Room & $FF)
 	sta tempPointer3
 	sta temp4
@@ -1061,62 +1048,60 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	sta tempPointer3+1
 	sta tempPointer4
 	rts
-.SAtLeast2Rooms:
-	lda temp2
+.SAtLeastTwoRooms:
+	lda #(RFarDoor >> 8 & $FF)
+	sta tempPointer3+1
+	sta tempPointer4
+	ldx #0
+	stx temp1
+	ldx temp2
+	txa
+	and SMazeLeftMask,y
+	clc
+	bne .SNoFarLeftDoor
+	sec
+.SNoFarLeftDoor:
+	rol temp1
+	txa
 	and SMazeForwardMask,y
-	bne .S2Rooms
-.SMoreThan2Rooms:
-	lda #MAZE_POINTER_PAGE_1
-	sta tempPointer3+1
-	lda temp2
-	and SMazeLeftMask,y
-	bne .SNoFarLeftDoor1
-	lda #(RFarDoor & $FF)
-	sta tempPointer3
-	jmp .SCheckIfFarRightDoor1
-.SNoFarLeftDoor1:
-	lda #(RNoFarDoor & $FF)
-	sta tempPointer3
-.SCheckIfFarRightDoor1:
-	lda #MAZE_POINTER_PAGE_1
-	sta tempPointer4
-	lda temp2
+	clc
+	bne .SOnlyTwoRooms
+	sec
+.SOnlyTwoRooms:
+	rol temp1
+	txa
 	and SMazeRightMask,y
-	bne .SNoFarRightDoor1
-	lda #(RFarDoor & $FF)
-	sta temp4
-	rts
-.SNoFarRightDoor1:
-	lda #(RNoFarDoor & $FF)
-	sta temp4
-	rts
-.S2Rooms:
-	lda #MAZE_POINTER_PAGE_1
-	sta tempPointer3+1
-	lda temp2
-	and SMazeLeftMask,y
-	bne .SNoFarLeftDoor2
-	lda #(RFarDoorOnlyTwo & $FF)
+	clc
+	bne .SNoFarRightDoor
+	sec
+.SNoFarRightDoor:
+	rol temp1 ;Now contains a number from 0 to 7
+	ldx temp1
+	lda SFarLeftPointers,x
 	sta tempPointer3
-	jmp .SCheckIfFarRightDoor2
-.SNoFarLeftDoor2:
-	lda #(RNoFarDoorOnlyTwo & $FF)
-	sta tempPointer3
-.SCheckIfFarRightDoor2:
-	lda #MAZE_POINTER_PAGE_1
-	sta tempPointer4
-	lda temp2
-	and SMazeRightMask,y
-	bne .SNoFarRightDoor2
-	lda #(RFarDoorOnlyTwo & $FF)
-	sta temp4
-	rts
-.SNoFarRightDoor2:
-	lda #(RNoFarDoorOnlyTwo & $FF)
+	lda SFarRightPointers,x
 	sta temp4
 	rts
 
+SFarLeftPointers:
+	.byte (RNoFarDoorOnlyTwo & $FF)
+	.byte (RNoFarDoorOnlyTwo & $FF)
+	.byte (RNoFarDoor & $FF)
+	.byte (RNoFarDoor & $FF)
+	.byte (RFarDoorOnlyTwo & $FF)
+	.byte (RFarDoorOnlyTwo & $FF)
+	.byte (RFarDoor & $FF)
+	.byte (RFarDoor & $FF)
 
+SFarRightPointers:
+	.byte (RNoFarDoorOnlyTwo & $FF)
+	.byte (RFarDoorOnlyTwo & $FF)
+	.byte (RNoFarDoor & $FF)
+	.byte (RFarDoor & $FF)
+	.byte (RNoFarDoorOnlyTwo & $FF)
+	.byte (RFarDoorOnlyTwo & $FF)
+	.byte (RNoFarDoor & $FF)
+	.byte (RFarDoor & $FF)
 
 SUpdateCampfireRendering: SUBROUTINE ;Updates the campfire control variable according to the player and campfire information
 	lda flags
