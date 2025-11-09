@@ -821,6 +821,12 @@
 4/22/25
 	-Moved some sound effect IDs around
 	-Developed algorithm for playing near exit sound
+4/25/25
+	-SUpdateMazeRenderingPointers optimization, saving ~50 bytes
+11/6/25
+	-Fixed bug where the campfire could be seen through walls sometimes
+	-16 byte optimization with LUpdateAvatars
+
 
 KNOWN BUGS:
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
@@ -846,6 +852,7 @@ TODO:
 	-Being guarded reduces blight damage, fix?
 	-Sharp does not increase attack power of unconscious party members, indifference about fixing
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
+	-VOLLEY shows effect... remove?
 
 	Dreamlist:
 	-Legendary actions for some bosses

@@ -69,9 +69,6 @@ NUMBER7=34
 NUMBER8=35
 NUMBER9=36
 
-;Memory related --- This is actually a bad idea and should maybe be changed
-MAZE_POINTER_PAGE_1 = $FE
-
 ;Flag related
 CAMPFIRE_USED = $80
 TRANSITIONING_TO_BATTLE = $40
@@ -122,14 +119,14 @@ SLIME_HP = 60
 OOZE_HP = 150
 
 ;Avatar related
-DEAD = 0
-SAD = 1
-NEUTRAL = 2
-HAPPY = 3
-EXCITED = 4
-PAIN = 5
-SLEEPING = 6
-SICK = 7
+MOOD_DEAD = $00
+MOOD_SAD = $10
+MOOD_NEUTRAL = $20
+MOOD_HAPPY = $30
+MOOD_EXCITED = $40
+MOOD_PAIN = $50
+MOOD_SLEEPING = $60
+MOOD_SICK = $70
 
 ;Sound related
 PITCHABLE_SOUND_CUTOFF = $21

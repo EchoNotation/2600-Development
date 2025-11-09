@@ -194,9 +194,9 @@ LProcessCharacterAdvancement:
 	ldx #3
 .LApplyLevelUpDeltas:
 	lda char1,x
-	and #$0f
+	and #$0F
 	tay
-	ora #(EXCITED << 4)
+	ora #MOOD_EXCITED
 	sta char1,x
 	lda hp1,x
 	clc
@@ -1320,11 +1320,11 @@ LProcessSpecial:
 	lda rand8
 	bpl .LSummonZombie
 .LSummonSkeleton:
-	lda #$A
+	lda #$A ;Skeleton ID
 	ldy SKLTON_HP
 	bne .LSummon
 .LSummonZombie:
-	lda #$9
+	lda #$9 ;Zombie ID
 	ldy ZOMBIE_HP
 	bne .LSummon
 
@@ -1772,7 +1772,7 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	brk ;LBinaryToDecimal
 	sta temp4
 
-	ldy #PAIN
+	ldy #MOOD_PAIN
 	ldx temp3
 	jsr LOverrideAvatar
 
@@ -2040,7 +2040,7 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 	ldx #3
 .LUpdateAvatarLoop:
 	;Check for status effect
-	stx charIndex
+	ldy #0
 	lda battlerStatus,x
 	and #ASLEEP_MASK
 	bne .LAsleep
@@ -2055,6 +2055,7 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 
 	jsr LGetBattlerMaxHPDecimal ;Doesn't change X
 	;A now contains the max hp of this battler in decimal
+	ldy #0
 	sed
 	sec
 	sbc tempPointer2 ;Repeatedly subtract the current HP
@@ -2062,30 +2063,25 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 	bcc .LAboveHalf ;jump if A would be < 0
 	sbc tempPointer2
 	bcc .LAboveThird
+	bcs .LSad
 
-	lda #$10 ;Mood 1 -- Sad
-	bne .LChangeMood
-.LAboveHalf:
-	lda #$30 ;Mood 3 -- Happy
-	bne .LChangeMood
-.LAboveThird:
-	lda #$20 ;Mood 2 -- Neutral
-	bne .LChangeMood
-.LAsleep:
-	lda #$60 ;Mood 6
-	sta tempPointer1
-	bne .LChangeMoodLater
-.LBlighted:
-	lda #$70 ;Mood 7
-	sta tempPointer1
-	bne .LChangeMoodLater
-.LDead:
-	lda #$00 ;Mood 0
-.LChangeMood:
-	sta tempPointer1
-	ldx charIndex
-.LChangeMoodLater:
+.LBlighted
+	iny
+.LAsleep
+	iny
+	iny
+	iny
+.LAboveHalf
+	iny
+.LAboveThird
+	iny
+.LSad
+	iny
+.LDead
 	cld
+	tya
+	jsr L4Asl
+	sta tempPointer1
 	lda char1,x
 	and #$0F
 	ora tempPointer1
@@ -2095,12 +2091,11 @@ LUpdateAvatars: SUBROUTINE ;Updates each party member's avatar based on their st
 	bpl .LUpdateAvatarLoop
 	rts
 
-LOverrideAvatar: SUBROUTINE ;Sets party member X's mood to Y. 17 bytes
+LOverrideAvatar: SUBROUTINE ;Sets party member X's mood to Y. 14 bytes --- Currently only used once
 	lda char1,x
 	and #$0F ;Get just the class
 	sta temp6
 	tya
-	jsr L4Asl
 	ora temp6
 	sta char1,x
 	rts
@@ -2156,7 +2151,7 @@ LSlimeActionMasks: ;Must be exactly 4 bytes before .byte $0C
 	.byte 2
 
 	.byte $0C
-	.byte $06
+	.byte $06 ;This is actually the data for slime action masks
 	.byte $03
 
 LSpellTargetingLookup:
@@ -2204,17 +2199,6 @@ LSpellManaLookup: ;These numbers are in decimal
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
 	RORG $FD00
 
-LXPToNextLevel:
-	.byte #0 ;Shouldn't be used, xp for level 0 -> 1
-	.byte #15 ; 1 -> 2
-	.byte #30 ; 2 -> 3
-	.byte #30
-	.byte #60
-	.byte #60
-	.byte #120
-	.byte #120
-	.byte #180 ; 8 -> 9
-
 LSpellListLookup:
 	.byte (LEmptySpellList & $FF)
 	.byte (LEmptySpellList & $FF)
@@ -2261,7 +2245,16 @@ LEnemyExperience:
 	.byte 15 ;Thickt
 	.byte 0 ;Horror
 	.byte 60 ;Ooze
-	.byte 0 ;Campfire
+LXPToNextLevel:
+	.byte #0 ;Shouldn't be used, xp for level 0 -> 1 --- Also campfire exp
+	.byte #15 ; 1 -> 2
+	.byte #30 ; 2 -> 3
+	.byte #30
+	.byte #60
+	.byte #60
+	.byte #120
+	.byte #120
+	.byte #180 ; 8 -> 9
 
 LEnemyAttack:
 	.byte 1 ;Bandit

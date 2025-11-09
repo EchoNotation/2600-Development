@@ -1006,8 +1006,6 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	ldy playerFacing
 	and SMazeBackwardMask,y
 	beq .SAtLeast1Room
-	lda #$FF
-	sta aoeValueAndCampfireControl ;Do not show campfire if looking at a dead end
 	lda #(RDeadEnd1 & $FF)
 	sta tempPointer2
 	sta tempPointer3
@@ -1018,7 +1016,7 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	sta tempPointer3+1
 	sta tempPointer4
 	sta tempPointer5
-	rts
+	bne .SHideCampfire
 .SAtLeast1Room:
 	lda #(RNearDoor >> 8 & $FF)
 	sta tempPointer2+1
@@ -1047,6 +1045,12 @@ SUpdateMazeRenderingPointers: SUBROUTINE ;Updates the 6 main pointers to point t
 	lda #(ROnly1Room >> 8 & $FF)
 	sta tempPointer3+1
 	sta tempPointer4
+	lda aoeValueAndCampfireControl
+	beq .SReturn
+.SHideCampfire
+	lda #$FF
+	sta aoeValueAndCampfireControl
+.SReturn
 	rts
 .SAtLeastTwoRooms:
 	lda #(RFarDoor >> 8 & $FF)
