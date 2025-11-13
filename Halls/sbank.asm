@@ -175,6 +175,7 @@ SJustExitedBattle:
 	lda #STEP_GRACE_PERIOD
 	sta highlightedLineAndSteps
 	lda #TRANSITIONING_TO_MAZE
+	ldx #4 ;Maze transition effect
 	jsr SSetupTransitionEffect
 	jmp SMazeLogicVBlankAbridged
 
@@ -271,6 +272,7 @@ STryEnterCampfire:
 	and #CAMPFIRE_USED
 	bne SDidNotTriggerCampfire
 	lda #TRANSITIONING_TO_CAMPFIRE
+	ldx #3 ;Campfire transition effect
 	jsr SSetupTransitionEffect
 	lda #$25 ;"Enemy" ID for Campfire
 	sta enemyID
@@ -320,6 +322,7 @@ SEncounterGenerated:
 	ldy #3 ;LLoadEnemyHP
 	jsr SRunFunctionInLBank
 	lda #TRANSITIONING_TO_BATTLE
+	ldx #2 ;Battle transition effect
 	jsr SSetupTransitionEffect
 	jmp SPartyDidNotMove
 SNoRandomEncounter:
@@ -390,6 +393,7 @@ SForceHappyMood:
 	sta viewedPartyInfo ;Needed because this can actually be set by the SChangePartyInfo on the main screen
 	sta currentMenu
 	lda #TRANSITIONING_TO_MAZE
+	ldx #4 ;Maze transition effect
 	jsr SSetupTransitionEffect
 	lda #$0A
 	sta effectCountdown
@@ -617,26 +621,9 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 .SEffectStillPlaying:
 	rts
 
-SSetupTransitionEffect: SUBROUTINE ;Interprets A as the transition flag constant
-	tay
+SSetupTransitionEffect: SUBROUTINE ;Interprets A as the transition flag constant, X as the effect ID
 	ora flags
-	sta flags
-	cpy #TRANSITIONING_TO_BATTLE
-	beq .STransitionToBattle
-	cpy #TRANSITIONING_TO_CAMPFIRE
-	beq .STransitionToCampfire
-	cpy #TRANSITIONING_TO_MAZE
-	beq .STransitionToMaze
-	rts
-.STransitionToBattle:
-	ldx #$2
-	bne .SLoadEffect
-.STransitionToCampfire:
-	ldx #$3
-	bne .SLoadEffect
-.STransitionToMaze:
-	ldx #$4
-.SLoadEffect:
+	sta flags	
 	ldy #6 ;LLoadEffect
 	jsr SRunFunctionInLBank
 	rts
@@ -1323,19 +1310,22 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	lda currentMenu
 	beq .SReturn
 	ldx currentBattler
-	cmp #$80
+
+	sec
+	sbc #$80
 	beq .SBattleOptionsMenu
-	cmp #$81
+	tay
+	dey
 	beq .SGoToSelectEnemyMenu
-	cmp #$82
+	dey
 	beq .SSelectAllyMenu
-	cmp #$83
+	dey
 	beq .SSelectOtherAllyMenu
-	cmp #$84
+	dey
 	beq .SGoToSelectSpellMenu
-	cmp #$85
+	dey
 	beq .SNoSpellsKnownMenu
-	cmp #$86
+	dey
 	beq .SCampingMenu
 	rts
 
@@ -1358,6 +1348,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	sta inBattle
 	sta cursorIndexAndMessageY
 	lda #TRANSITIONING_TO_MAZE ;LDoBattle never gets called when not using the campfire, so this is required to show the transition back to the maze
+	ldx #4 ;Maze transition effect
 	jsr SSetupTransitionEffect
 	rts
 .SDecidedToCamp:
@@ -1387,10 +1378,10 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SSaveAllyTargeting:
 	tya
 	jsr S5Asl
-	ldx currentBattler
 	ora battleActions,x
 	sta battleActions,x
 	jmp .SCheckNextBattler
+
 .SBattleOptionsMenu:
 	ldy highlightedLineAndSteps
 	lda menuLines,y
@@ -1556,6 +1547,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	ldx currentBattler
 	ora battleActions,x
 	sta battleActions,x
+	
 .SCheckNextBattler:
 	ldx currentBattler
 	cpx #3

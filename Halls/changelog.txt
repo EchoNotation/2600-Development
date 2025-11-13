@@ -826,12 +826,15 @@
 11/6/25
 	-Fixed bug where the campfire could be seen through walls sometimes
 	-16 byte optimization with LUpdateAvatars
+11/12/25
+	-Some menuing and transition related optimizations
 
 
 KNOWN BUGS:
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
 	-Healing exactly to max health doesn't say X HEALS FULLY
 	-Occasional audio glitches?
+	-rand8 was set to 0 after defeating armor, before fighting ooze?
 
 PLAYTEST NOTES:
 	-Power gap between levels 1 and 2 is really high
@@ -841,8 +844,14 @@ PLAYTEST NOTES:
 	-Is it possible to make parrying increase the Rogue's targeting bias?
 	-Start LICH with one or both enemies spawned already
 
+POSSIBLE OPTIMIZATIONS:
+	Potentially movable:
+		-LCheckSpellHit
+		-LCheckSpellShield
+
 TODO:
 	Shortlist:
+	-Make WISH single target?
 	-Implement all enemy special abilities
 		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
 		-Add messages to support these abilities...
@@ -857,6 +866,7 @@ TODO:
 	Dreamlist:
 	-Legendary actions for some bosses
 	-Default names for each class?
+	-Ambient sounds per area
 
 	Post-release:
 	-PAL version

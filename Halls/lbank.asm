@@ -1271,7 +1271,6 @@ LProcessGuarding:
 
 LProcessParrying:
 	lda #PARRYING_MASK
-	ldx currentBattler
 	jsr LApplyStatus
 	lda #$1D ;X GUARDS
 	jmp .LNormalTgtedExitSaveMessage
@@ -1442,16 +1441,15 @@ LProcessSpecial:
 
 LFindNextEmptySpot: SUBROUTINE ;Starting from position 2, returns the first empty spot in X. #$FF if no spot exists
 	ldx #2
-.LFindNextEmptySpotLoop:
-	lda enemyHP,x
-	beq .LGotIt
+	lda enemyHP+2
+	bne .LDone
 	inx
-	cpx #4
-	bcc .LFindNextEmptySpotLoop
-.LNoTarget:
+	lda enemyHP+3
+	bne .LDone
 	ldx #$FF
-.LGotIt:
+.LDone:
 	rts
+
 
 LDetermineSpellPower: SUBROUTINE ;Interprets Y as the damage formula to follow, and returns the appropriate value based on the battler's Attack & Magic
 	ldx currentBattler
@@ -1564,7 +1562,13 @@ LEnterBattleSetup:
 	stx battleActions+3
 	lda #2
 	sta menuSize
-	jsr LFindFirstLivingAlly
+	
+	dex
+.LFindFirstAllyLoop:
+	inx
+	lda hp1,x
+	beq .LFindFirstAllyLoop
+
 	stx currentBattler
 
 	jsr LUpdateAvatars
@@ -1665,6 +1669,9 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 
 LTrySleep: SUBROUTINE ;Performs logic necessary to try to put the targeted battler to sleep.
 	ldx startingCursorIndexAndTargetID
+	lda battlerStatus,x
+	and #ASLEEP_MASK
+	bne .LSleepFailed ;Can't chain sleep an enemy
 	jsr LGetBattlerResistances
 	and #LEGENDARY_RESIST_MASK
 	bne .LTryingToPutBossToSleep
@@ -1685,17 +1692,7 @@ LTrySleep: SUBROUTINE ;Performs logic necessary to try to put the targeted battl
 	ldx startingCursorIndexAndTargetID
 	jsr LApplyStatus
 	lda #$1B ;X FELL ASLEEP
-	bne .LStoreAndReturn
-
-LFindFirstLivingAlly: SUBROUTINE ;Returns the id of first party member with positive HP in X.
-	ldx #0
-.LLoop:
-	lda hp1,x
-	bne .LEnd
-	inx
-	bne .LLoop
-.LEnd:
-	rts	
+	bne .LStoreAndReturn	
 
 LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, and doubles their damage for this attack if so.
 	lda battlerStatus,x
@@ -1845,13 +1842,7 @@ LDeathCleanup: SUBROUTINE ;Performs death housekeeping for target X
 
 LApplyStatus: SUBROUTINE ;Applies additional status A to target X
 	sta temp4
-	cmp #$18
-	beq .LPuttingTargetToSleep
 	eor #$FF
-	bne .LAddNewStatus
-.LPuttingTargetToSleep:
-	lda $E7
-.LAddNewStatus:
 	and battlerStatus,x
 	ora temp4
 	sta battlerStatus,x
@@ -2105,7 +2096,6 @@ LLoadPlayerVars: SUBROUTINE ;Loads each party members max HP and MP
 .LLoadPlayerVarsLoop:
 	stx charIndex
 	jsr LGetBattlerMaxHPDecimal
-	ldx charIndex
 	sta hp1,x
 	jsr LGetBattlerMaxMP
 	brk ;LBinaryToDecimal
