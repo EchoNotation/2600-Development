@@ -1324,7 +1324,6 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	dey
 	beq .SGoToSelectSpellMenu
 	dey
-	beq .SNoSpellsKnownMenu
 	dey
 	beq .SCampingMenu
 	rts
@@ -1333,11 +1332,6 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	jmp .SSelectEnemyMenu
 .SGoToSelectSpellMenu:
 	jmp .SSelectSpellMenu
-
-.SNoSpellsKnownMenu
-	lda #$80
-	sta currentMenu
-	rts
 
 .SCampingMenu:
 	lda #0
@@ -1441,29 +1435,21 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	tay
 	lda mazeAndPartyLevel
 	and #$0F ;Get the level of the party
-	tax
+	sta menuSize
+	cmp #9
+	bcc .SNoClampNeeded
+	dec menuSize
+.SNoClampNeeded:
 	cpy #4
-	bcs .SIsHalfCaster
-	cpx #9
-	bcs .SClampLevel
-	bcc .SDontClampLevel
-.SClampLevel:
-	dex
-.SDontClampLevel:
-	stx menuSize
+	bcc .IsFullCaster
+	inc menuSize
+	lsr menuSize
+	bne .IsFullCaster
+.IsFullCaster:
 	lda #$84
 	sta currentMenu
 	rts
-.SIsHalfCaster:
-	txa
-	lsr
-	beq .SLevel1HalfCaster
-	tax
-	bne .SDontClampLevel
-.SLevel1HalfCaster
-	lda #$85 ;Show a special message if this party member knows no spells (only possible for level 1 Paladin and Ranger)
-	sta currentMenu
-	rts
+
 .SSelectSpellMenu:
 	lda highlightedLineAndSteps
 	and #$7F
@@ -1586,8 +1572,6 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSt
 	beq .SSetupOtherAllyTargeting
 	cmp #$84
 	beq .SGoToSpellOptions
-	cmp #$85
-	beq .SGoToNoSpellsKnown
 	cmp #$86
 	beq .SCampingMenu
 .SReturn
@@ -1596,8 +1580,6 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSt
 	jmp .SSetupEnemyTargeting
 .SGoToSpellOptions:
 	jmp .SSetupSpellOptions
-.SGoToNoSpellsKnown:
-	jmp .SSetupNoSpellsKnown
 
 .SCampingMenu:
 	ldx #$E4
@@ -1703,17 +1685,6 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSt
 .SDone:
 	rts
 
-.SSetupNoSpellsKnown:
-	ldx #$E1
-	stx menuLines
-	inx
-	stx menuLines+1
-	inx
-	stx menuLines+2
-	lda #$FF
-	sta highlightedLineAndSteps
-	rts
-
 .SSetupSpellOptions:
 	lda #$FF
 	sta menuLines+2 ;Set the third line to not show in case there are only two options
@@ -1737,17 +1708,9 @@ SUpdateMenuRendering: SUBROUTINE ;Updates the menuLines and highlightedLineAndSt
 .SAfterLoadingCorrectSpellSize:
 	sta temp1
 
-	jsr SSetMenuActiveLine
+	jsr SSetMenuActiveLine ;Sets startingCursorIndexAndTargetID
 
-	ldx temp2
-	lda SCasterType,x
-	bmi .SIsHalfCaster
-	ldy startingCursorIndexAndTargetID
-	jmp .SSetSpells
-.SIsHalfCaster:
-	lda startingCursorIndexAndTargetID
-	asl
-	tay
+	ldy startingCursorIndexAndTargetID ;This means that half casters cannot have more than 4 spells!
 .SSetSpells:
 	ldx #0
 .SSetSpellLoop:
@@ -2864,14 +2827,6 @@ SBattleTables:
 	.byte (SNormalBattleTable & $FF)
 	.byte (SNormalBattleTable & $FF)
 
-SCasterType:
-	.byte 0 ;Knight
-	.byte 0 ;Rogue
-	.byte 1 ;Cleric
-	.byte 1 ;Wizard
-	.byte $FF ;Ranger
-	.byte $FF ;Paladin
-
 SSpellListLookup:
 	.byte (SEmptySpellList & $FF)
 	.byte (SEmptySpellList & $FF)
@@ -2902,7 +2857,6 @@ SClericSpellList:
 	.byte #$12 ;WISH
 SPaladinSpellList:
 	.byte #$0 ;BACK
-	.byte #$FF 
 	.byte #$9 ;HEAL
 	.byte #$FF
 	.byte #$A ;SMITE
@@ -2910,9 +2864,9 @@ SPaladinSpellList:
 	.byte #$C ;SHARP
 	.byte #$FF 
 	.byte #$6 ;SHIELD
+	.byte #$FF 
 SRangerSpellList:
 	.byte #$0 ;BACK
-	.byte #$FF
 	.byte #$B ;VOLLEY
 	.byte #$FF
 	.byte #$9 ;HEAL
@@ -2920,6 +2874,7 @@ SRangerSpellList:
 	.byte #$2 ;SLEEP
 	.byte #$FF
 	.byte #$D ;BLIGHT
+	.byte #$FF 
 SEmptySpellList:
 	.byte #0
 	.byte #$FF

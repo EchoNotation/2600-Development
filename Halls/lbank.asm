@@ -1442,10 +1442,10 @@ LProcessSpecial:
 LFindNextEmptySpot: SUBROUTINE ;Starting from position 2, returns the first empty spot in X. #$FF if no spot exists
 	ldx #2
 	lda enemyHP+2
-	bne .LDone
+	beq .LDone
 	inx
 	lda enemyHP+3
-	bne .LDone
+	beq .LDone
 	ldx #$FF
 .LDone:
 	rts
@@ -2621,7 +2621,6 @@ LClericSpellList:
 	.byte #$12 ;WISH
 LPaladinSpellList:
 	.byte #$0 ;BACK
-	.byte #$FF 
 	.byte #$9 ;HEAL
 	.byte #$FF
 	.byte #$A ;SMITE
@@ -2629,9 +2628,9 @@ LPaladinSpellList:
 	.byte #$C ;SHARP
 	.byte #$FF 
 	.byte #$6 ;SHIELD
+	.byte #$FF 
 LRangerSpellList:
 	.byte #$0 ;BACK
-	.byte #$FF
 	.byte #$B ;VOLLEY
 	.byte #$FF
 	.byte #$9 ;HEAL
@@ -2639,6 +2638,7 @@ LRangerSpellList:
 	.byte #$2 ;SLEEP
 	.byte #$FF
 	.byte #$D ;BLIGHT
+	.byte #$FF 
 LEmptySpellList:
 	.byte #0
 	.byte #$FF
