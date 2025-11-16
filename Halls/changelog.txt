@@ -828,6 +828,8 @@
 	-16 byte optimization with LUpdateAvatars
 11/12/25
 	-Some menuing and transition related optimizations
+11/13/25
+	-Parrying rogues have a 50% higher targeting bias (2 -> 3)
 
 
 KNOWN BUGS:
@@ -841,7 +843,6 @@ PLAYTEST NOTES:
 		-Takes too long to reach level 2
 	-Campfire is too hard to find, should be forced within range of the exit
 	-Jester should use special by default possibly
-	-Is it possible to make parrying increase the Rogue's targeting bias?
 	-Start LICH with one or both enemies spawned already
 
 POSSIBLE OPTIMIZATIONS:
@@ -867,6 +868,7 @@ TODO:
 	-Legendary actions for some bosses
 	-Default names for each class?
 	-Ambient sounds per area
+		-How is this supposed to work with footsteps?
 
 	Post-release:
 	-PAL version

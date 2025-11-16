@@ -1923,6 +1923,12 @@ SAfterLoadingEnemyAI:
 	lda SClassTargetingBias,y
 .SMemberUnconscious:
 	sta tempPointer1,x
+	;Make parrying party members slightly more likely to be targeted
+	lda battlerStatus,x
+	and #PARRYING_MASK
+	beq .SNotParrying
+	inc tempPointer1,x
+.SNotParrying:
 	inx
 	cpx #4
 	bcc .SPopulatePlayerListLoop
