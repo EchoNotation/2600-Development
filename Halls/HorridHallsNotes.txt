@@ -91,7 +91,7 @@ $81 Targeting enemies
 $82 Targeting allies
 $83 Target other ally (GUARD)
 $84 Show spells to select
-$85 No spells known
+$85 Unused
 $86 Should we camp?
 $FF Party setup (start of game only)
 
@@ -422,7 +422,7 @@ MESSAGES:
 
 Status Effects:
 Pos:
--Sharpened : Target's attack power is doubled.
+-Sharpened : Target's next attack power is doubled.
 -Shielded : Magic attacks are negated twice.
 Neg:
 -Asleep : Target is unable to take any actions for the next 2 turns.
@@ -449,13 +449,13 @@ Cleric Spell List:
 -WISH - 8
 
 Paladin Spell List:
--HEAL - 2
--SMITE - 4
--SHARP - 6
--SHIELD - 8
+-HEAL - 1
+-SMITE - 3
+-SHARP - 5
+-SHIELD - 7
 
 Ranger Spell List:
--VOLLEY - 2
--HEAL - 4
--SLEEP - 6
--BLIGHT - 8
+-VOLLEY - 1
+-HEAL - 3
+-SLEEP - 5
+-BLIGHT - 7

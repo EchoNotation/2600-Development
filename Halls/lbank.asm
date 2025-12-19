@@ -101,17 +101,11 @@ LProcessCharacterAdvancement:
 	sta flags
 
 	lda mazeAndPartyLevel
-	and #$0F
-	sta temp1
-	lda mazeAndPartyLevel
-	and #$F0
-	sta temp2
 	clc
 	adc #$10
-	ora temp1
 	sta mazeAndPartyLevel
+	and #$F0
 
-	lda temp2
 	jsr L4Lsr
 	adc #$2C ;offset to get to INTO THE CASTLE
 
@@ -146,9 +140,8 @@ LProcessCharacterAdvancement:
 	sta temp4 ;The current party level
 	cmp #$9
 	bcs .LGoToCheckTypeOfConclusion ;Party is already at max level
-	lda #0
-	sta temp1 ;temp1 will contain the experience earned during this battle
 	ldx #0
+	stx temp1 ;temp1 will contain the experience earned during this battle
 .LGetTotalXPLoop:
 	lda enemyID,x
 	bmi .LCheckNextEnemy

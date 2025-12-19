@@ -830,7 +830,9 @@
 	-Some menuing and transition related optimizations
 11/13/25
 	-Parrying rogues have a 50% higher targeting bias (2 -> 3)
-
+11/15/25
+	-Half casters now get spells at levels 1, 3, 5, and 7.
+	-Accordingly, removed NO SPELLS KNOWN menu and associated logic
 
 KNOWN BUGS:
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
@@ -842,13 +844,15 @@ PLAYTEST NOTES:
 	-Power gap between levels 1 and 2 is really high
 		-Takes too long to reach level 2
 	-Campfire is too hard to find, should be forced within range of the exit
-	-Jester should use special by default possibly
+	-Jester should use special by default
 	-Start LICH with one or both enemies spawned already
 
 POSSIBLE OPTIMIZATIONS:
 	Potentially movable:
 		-LCheckSpellHit
 		-LCheckSpellShield
+	Seems like the code for handling leveling up could be improved
+	Simplification of WISH spell
 
 TODO:
 	Shortlist:
@@ -857,6 +861,7 @@ TODO:
 		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
+	-Better parry message
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
@@ -866,6 +871,7 @@ TODO:
 
 	Dreamlist:
 	-Legendary actions for some bosses
+		-Thicket, Jester, Ooze, Horror
 	-Default names for each class?
 	-Ambient sounds per area
 		-How is this supposed to work with footsteps?
@@ -885,7 +891,7 @@ TODO:
 		-Parrying sound
 
 	DOESN'T REQUIRE LOGIC:
-		-More text/messaging work
+		-Improve word choice on some messages
 		-Improve font
 		-Improve in-maze campfire graphics to look less squished when they appear
 		-Create all enemy graphics
