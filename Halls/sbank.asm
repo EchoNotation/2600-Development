@@ -2182,9 +2182,14 @@ SWishVoices:
 	.byte $C
 	.byte $C
 	.byte $C
+SMenuConfirmVoices:
+	.byte $C
+	.byte $C
 SMenuMoveVoices:
 	.byte $C
 	.byte $C
+SMenuNopeVoices:
+	.byte $7
 SFootstepVoices:
 	.byte $6
 	.byte $6
@@ -2430,15 +2435,16 @@ SWishPitches:
 	.byte $9
 	.byte $7
 	.byte $7
-SMenuMovePitches:
-	.byte $5
-	.byte $4
 SMenuConfirmPitches:
 	.byte $3
 	.byte $7
+SMenuMovePitches:
+	.byte $5
+	.byte $4
+SMenuNopePitches:
+	.byte $F
 SFootstepPitches:
 	.byte $B
-SMenuNopePitches:
 	.byte $F
 SHitPitches:
 	.byte $6
@@ -2498,8 +2504,8 @@ SNearExitPitches:
 	.byte $5
 	.byte $6
 
-	ORG $FDF0
-	RORG $FDF0
+	ORG $FE00
+	RORG $FE00
 
 STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
 	lda currentSound
@@ -2550,10 +2556,7 @@ SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
 	lda (tempPointer1),y
 	sta AUDC0
 
-	lda SPitches,x
-	sta tempPointer1
-	lda #(SFirePitches >> 8 & $FF)
-	sta tempPointer1+1
+	inc tempPointer1+1
 	lda (tempPointer1),y
 	clc
 	adc pitchShift
@@ -2605,9 +2608,9 @@ SVoices:
 	.byte 0
 	.byte 0
 	.byte 0
+	.byte (SMenuConfirmVoices & $FF)
 	.byte (SMenuMoveVoices & $FF)
-	.byte (SMenuMoveVoices & $FF) ;Confirm and move are the same length using the same voices
-	.byte (SWitherVoices & $FF) ;Menu nope only uses 1 sample of voice 7
+	.byte (SMenuNopeVoices & $FF)
 	.byte (SFootstepVoices & $FF)
 	.byte (SHitVoices & $FF)
 	.byte (SSwingVoices & $FF)
@@ -2616,51 +2619,6 @@ SVoices:
 	.byte (SDeadVoices & $FF)
 	.byte 0
 	.byte (SShootVoices & $FF)
-
-SPitches:
-	.byte 0
-	.byte (SFirePitches & $FF)
-	.byte (SSleepPitches & $FF)
-	.byte (SBlizrdPitches & $FF)
-	.byte (SDrainPitches & $FF)
-	.byte (SThundrPitches & $FF)
-	.byte (SShieldPitches & $FF)
-	.byte (SMeteorPitches & $FF)
-	.byte (SChaosPitches & $FF)
-	.byte (SHealSpellPitches & $FF)
-	.byte (SSmitePitches & $FF)
-	.byte (SVolleyPitches & $FF)
-	.byte (SSharpPitches & $FF)
-	.byte (SBlightSpellPitches & $FF)
-	.byte (STriagePitches & $FF)
-	.byte (SWitherPitches & $FF)
-	.byte (SBanishSpellPitches & $FF)
-	.byte (STrancePitches & $FF)
-	.byte (SWishPitches & $FF)
-	.byte (SBlightPitches & $FF)
-	.byte (SNearExitPitches & $FF)
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte (SMenuConfirmPitches & $FF)
-	.byte (SMenuMovePitches & $FF)
-	.byte (SMenuNopePitches & $FF)
-	.byte (SFootstepPitches & $FF)
-	.byte (SHitPitches & $FF)
-	.byte (SSwingPitches & $FF)
-	.byte (STinkPitches & $FF)
-	.byte (SHealPitches & $FF)
-	.byte (SDeadPitches & $FF)
-	.byte 0
-	.byte (SShootPitches & $FF)
 
 	ORG $FEC0
 	RORG $FEC0

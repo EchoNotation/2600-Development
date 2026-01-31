@@ -833,12 +833,17 @@
 11/15/25
 	-Half casters now get spells at levels 1, 3, 5, and 7.
 	-Accordingly, removed NO SPELLS KNOWN menu and associated logic
+1/29/26
+	-Made some sound effects
+1/30/26
+	-Removed need for separate pitch lookup table, saving ~40 bytes
 
 KNOWN BUGS:
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
 	-Healing exactly to max health doesn't say X HEALS FULLY
 	-Occasional audio glitches?
 	-rand8 was set to 0 after defeating armor, before fighting ooze?
+	-Cast FIRE on Volcio, NO EFFECT??
 
 PLAYTEST NOTES:
 	-Power gap between levels 1 and 2 is really high
@@ -852,26 +857,28 @@ POSSIBLE OPTIMIZATIONS:
 		-LCheckSpellHit
 		-LCheckSpellShield
 	Seems like the code for handling leveling up could be improved
+		-Read out of learned spells could be removed
 	Simplification of WISH spell
 
 TODO:
 	Shortlist:
 	-Make WISH single target?
 	-Implement all enemy special abilities
-		-HORROR (attack, attack + sleep, attack + blight, attack + mp sap?)
+		-HORROR (attack, attack + sleep, attack + blight?)
 		-Add messages to support these abilities...
 	-Connect visual and sound effects
 	-Better parry message
+	-Legendary actions for some bosses
+		-Thicket, Jester, Lich, Ooze, Horror
+		-AI code for making use of legendary actions
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
 	-Sharp does not increase attack power of unconscious party members, indifference about fixing
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
-	-VOLLEY shows effect... remove?
+	-Remove VOLLEY effect
 
 	Dreamlist:
-	-Legendary actions for some bosses
-		-Thicket, Jester, Ooze, Horror
 	-Default names for each class?
 	-Ambient sounds per area
 		-How is this supposed to work with footsteps?
@@ -880,13 +887,13 @@ TODO:
 	-PAL version
 
 	Additional sounds to consider:
-		-Near exit indicator
-		-Enter battle sound
-		-Level up jingle
-		-Battle victory jingle
+		-Near exit indicator*
+		-Enter battle sound*
+		-Level up jingle*
+		-Battle victory jingle*
 		-Game victory jingle
 		-Game over jingle
-		-Going down stairs sound?
+		-Going down stairs sound?*
 		-Guarded sound
 		-Parrying sound
 

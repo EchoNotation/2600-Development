@@ -1514,8 +1514,31 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	beq .LEnemiesDefeated
 	lda hasAction
 	bne .LContinue
-	;If here, that means that all actions have been taken, so need to take new actions
-	beq .LUpdateHasAction
+
+	;All normal actions have been taken
+	lda flags
+	and #LEGENDARY_ACTION_USED
+	bne .LUpdateHasAction
+	ldy enemyID
+	cpy #THICKT_ID
+	beq .LGiveExtraAction
+	cpy #JESTER_ID
+	beq .LGiveExtraAction
+	cpy #LICH_ID
+	beq .LGiveExtraAction
+	cpy #OOZE_ID
+	beq .LGiveExtraAction
+	cpy #HORROR_ID
+	bne .LUpdateHasAction
+.LGiveExtraAction:
+	lda flags
+	ora #LEGENDARY_ACTION_USED
+	sta flags
+	lda hasAction
+	ora #$08
+	sta hasAction
+	bne .LContinue
+
 .LPartyDead:
 	lda #$F1
 	sta inBattle
