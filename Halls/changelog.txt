@@ -837,13 +837,21 @@
 	-Made some sound effects
 1/30/26
 	-Removed need for separate pitch lookup table, saving ~40 bytes
+	-Removed X LEARNS Y readouts when spellcasters level up
+	-Fixed bug where legendary actions only worked on the first round
+	-Fixed bug with showing incorrect INTO THE X message
+	-Removed VOLLEY effect
+	-Legendary action functionality in place
+	-Added battle start and level up sounds
 
 KNOWN BUGS:
-	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
 	-Healing exactly to max health doesn't say X HEALS FULLY
 	-Occasional audio glitches?
 	-rand8 was set to 0 after defeating armor, before fighting ooze?
-	-Cast FIRE on Volcio, NO EFFECT??
+
+	Possibly related to pitchable bug
+	-Cast FIRE on Volcio, NO EFFECT?? Only happened once
+	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
 
 PLAYTEST NOTES:
 	-Power gap between levels 1 and 2 is really high
@@ -871,12 +879,13 @@ TODO:
 	-Legendary actions for some bosses
 		-Thicket, Jester, Lich, Ooze, Horror
 		-AI code for making use of legendary actions
+	-Logic for near exit sound
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
 	-Sharp does not increase attack power of unconscious party members, indifference about fixing
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
-	-Remove VOLLEY effect
+	-Volley is blocked by shield, probably fine
 
 	Dreamlist:
 	-Default names for each class?
@@ -887,9 +896,6 @@ TODO:
 	-PAL version
 
 	Additional sounds to consider:
-		-Near exit indicator*
-		-Enter battle sound*
-		-Level up jingle*
 		-Battle victory jingle*
 		-Game victory jingle
 		-Game over jingle

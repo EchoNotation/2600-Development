@@ -324,6 +324,8 @@ SEncounterGenerated:
 	lda #TRANSITIONING_TO_BATTLE
 	ldx #2 ;Battle transition effect
 	jsr SSetupTransitionEffect
+	ldx #$15 ;Battle start
+	jsr STryLoadSound
 	jmp SPartyDidNotMove
 SNoRandomEncounter:
 	dec highlightedLineAndSteps
@@ -371,7 +373,7 @@ STryStartGame:
 	;If here, that means that the button was pressed when on the ready option
 	ldx #$20 ;Menu confirm
 	jsr STryLoadSound
-	lda #$01 ;Maze level 1, party level 1
+	lda #$04 ;Maze level 1, party level 1
 	;lda #$19
 	sta mazeAndPartyLevel
 	lda #15
@@ -1975,8 +1977,8 @@ SSoundMetadata:
 	.byte $86 ;WISH
 	.byte $A2 ;Blight
 	.byte $83 ;Near exit
-	.byte 0
-	.byte 0
+	.byte $86 ;Battle start
+	.byte $67 ;Level up
 	.byte 0
 	.byte 0
 	.byte 0
@@ -2250,6 +2252,22 @@ SNearExitVoices:
 	.byte $0
 	.byte $4
 	.byte $4
+SBattleStartVoices:
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+SLevelUpVoices:
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
 
 	ORG $FD00
 	RORG $FD00
@@ -2503,6 +2521,22 @@ SNearExitPitches:
 	.byte $0
 	.byte $5
 	.byte $6
+SBattleStartPitches:
+	.byte $F
+	.byte $D
+	.byte $C
+	.byte $8
+	.byte $B
+	.byte $C
+	.byte $D
+	.byte $F
+SLevelUpPitches:
+	.byte $7
+	.byte $B
+	.byte $E
+	.byte $11
+	.byte $F
+	.byte $11
 
 	ORG $FE00
 	RORG $FE00
@@ -2533,6 +2567,7 @@ STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
 	dec pitchShift
 .SShifted:
 .SDontLoad:
+	lda #$FF
 	rts
 
 SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
@@ -2597,8 +2632,8 @@ SVoices:
 	.byte (SWishVoices & $FF)
 	.byte (SBlightVoices & $FF)
 	.byte (SNearExitVoices & $FF)
-	.byte 0
-	.byte 0
+	.byte (SBattleStartVoices & $FF)
+	.byte (SLevelUpVoices & $FF)
 	.byte 0
 	.byte 0
 	.byte 0

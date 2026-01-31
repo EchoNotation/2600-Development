@@ -73,8 +73,6 @@ LProcessCharacterAdvancement:
 	cmp #$F3
 	beq .LGoToCheckTypeOfConclusion
 	cmp #$F4
-	beq .LGoToCheckForNewSpells
-	cmp #$FC
 	beq .LGameOver
 	cmp #$FD
 	beq .LGoToNextFloor
@@ -90,8 +88,6 @@ LProcessCharacterAdvancement:
 	jmp .LPartyLeveledUp
 .LGoToCheckTypeOfConclusion:
 	jmp .LCheckTypeOfConclusion
-.LGoToCheckForNewSpells:
-	jmp .LCheckForNewSpells
 .LGoToExitBattle:
 	jmp .LExitBattle
 
@@ -107,7 +103,7 @@ LProcessCharacterAdvancement:
 	and #$F0
 
 	jsr L4Lsr
-	adc #$2C ;offset to get to INTO THE CASTLE
+	adc #$2B ;offset to get to INTO THE CASTLE
 
 	sta currentMessage
 	lda #$FF
@@ -206,68 +202,8 @@ LProcessCharacterAdvancement:
 
 	lda #$0A ;PARTY LEVELS UP
 	sta currentMessage
-	ldx #0
-	stx aoeTargetsRemaining
-	;Determine how many battlers learned a spell
-	lda mazeAndPartyLevel
-	and #$0F
-	tay
-.LCheckForNewSpellLoop
-	stx aoeTargetID
-	lda char1,x
-	and #$0F
-	tax
-	lda LSpellListLookup,x
-	sta tempPointer1
-	lda #(LWizardSpellList >> 8 & $FF)
-	sta tempPointer1+1
-	lda (tempPointer1),y
-	bmi .LSkipIncrement
-	beq .LSkipIncrement
-	inc aoeTargetsRemaining
-.LSkipIncrement:
-	ldx aoeTargetID
-	inx
-	cpx #4
-	bcc .LCheckForNewSpellLoop
-	lda #0
-	sta aoeTargetID
-	ldx aoeTargetsRemaining
-	bne .LSomeoneLearnedSpell
-	beq .LCheckTypeOfConclusion ;Nobody learned anything!
-.LSomeoneLearnedSpell
-	lda #$F4
-	bne .LCampfireStoreAndExit
-
-.LCheckForNewSpells:
-	lda mazeAndPartyLevel
-	and #$0F
-	tay
-.LCheckSpellLoop:
-	ldx aoeTargetID
-	lda char1,x
-	and #$0F
-	tax
-	lda LSpellListLookup,x
-	sta tempPointer1
-	lda #(LWizardSpellList >> 8 & $FF)
-	sta tempPointer1+1
-	lda (tempPointer1),y
-	bpl .LLearnedNewSpell
-	inc aoeTargetID
-	bpl .LCheckSpellLoop
-.LLearnedNewSpell:
-	ldx aoeTargetID
-	stx currentBattler
-	inc aoeTargetID
-	sta cursorIndexAndMessageY
-	lda #$0B ;X LEARNS Y
-	sta currentMessage
-	dec aoeTargetsRemaining
-	beq .LCheckTypeOfConclusion
-	bmi .LCheckTypeOfConclusion
-	rts
-
+	ldx #$16 ;Level up
+	jsr LLoadSoundInS
 .LCheckTypeOfConclusion:
 	lda playerX
 	jsr L4Asl
@@ -468,14 +404,16 @@ LProcessCasting:
 	lda #$21 ;X SHOT A Y
 .LStoreCastsMessage:
 	sta currentMessage
-
-	ldx cursorIndexAndMessageY ;spellID
-	jsr LLoadSoundInS
-	stx mazeAndEffectColor
+	lda cursorIndexAndMessageY
+	sta mazeAndEffectColor
+	cmp #$0B ;Volley
+	beq .LSkipSpellEffect
 	ldx #7 ;Pre-spell delay
 	jsr LLoadEffect
+.LSkipSpellEffect:
+	ldx cursorIndexAndMessageY ;spellID
+	jsr LLoadSoundInS ;Does not change X
 
-	ldx cursorIndexAndMessageY ;spell ID
 	ldy currentBattler
 	cpy #4
 	bcs .LDontRemoveMana
@@ -1561,6 +1499,9 @@ LEnterBattleSetup:
 	lda LHasActionMasks,x
 	ora hasAction
 	sta hasAction
+	lda flags
+	and #(~LEGENDARY_ACTION_USED)
+	sta flags
 .NoActionThisTurn:	
 	dex
 	bpl .LSetHasActionLoop
@@ -2205,14 +2146,6 @@ LSpellManaLookup: ;These numbers are in decimal
 	ORG $DD00 ;Used to hold enemy stats and related data) No new tables can really be added here
 	RORG $FD00
 
-LSpellListLookup:
-	.byte (LEmptySpellList & $FF)
-	.byte (LEmptySpellList & $FF)
-	.byte (LClericSpellList & $FF)
-	.byte (LWizardSpellList & $FF)
-	.byte (LRangerSpellList & $FF)
-	.byte (LPaladinSpellList & $FF)
-
 LEnemyExperience:
 	.byte 1 ;Bandit
 	.byte 1 ;Druid
@@ -2614,57 +2547,6 @@ LClassHPDecimalLookup:
 	.byte (LLowHPGrowthDecimal & $FF)
 	.byte (LMidHPGrowthDecimal & $FF)
 	.byte (LMidHPGrowthDecimal & $FF)
-
-LWizardSpellList:
-	.byte #$0 ;BACK
-	.byte #$1 ;FIRE
-	.byte #$3 ;BLIZRD
-	.byte #$4 ;DRAIN
-	.byte #$2 ;SLEEP
-	.byte #$5 ;THUNDR
-	.byte #$6 ;SHIELD
-	.byte #$8 ;CHAOS
-	.byte #$7 ;METEOR
-LClericSpellList:
-	.byte #$0 ;BACK
-	.byte #$9 ;HEAL
-	.byte #$F ;WITHER
-	.byte #$C ;SHARP
-	.byte #$E ;TRIAGE
-	.byte #$D ;BLIGHT
-	.byte #$11 ;TRANCE
-	.byte #$10 ;BANISH
-	.byte #$12 ;WISH
-LPaladinSpellList:
-	.byte #$0 ;BACK
-	.byte #$9 ;HEAL
-	.byte #$FF
-	.byte #$A ;SMITE
-	.byte #$FF
-	.byte #$C ;SHARP
-	.byte #$FF 
-	.byte #$6 ;SHIELD
-	.byte #$FF 
-LRangerSpellList:
-	.byte #$0 ;BACK
-	.byte #$B ;VOLLEY
-	.byte #$FF
-	.byte #$9 ;HEAL
-	.byte #$FF
-	.byte #$2 ;SLEEP
-	.byte #$FF
-	.byte #$D ;BLIGHT
-	.byte #$FF 
-LEmptySpellList:
-	.byte #0
-	.byte #$FF
-	.byte #$FF
-	.byte #$FF
-	.byte #$FF
-	.byte #$FF
-	.byte #$FF
-	.byte #$FF
-	.byte #$FF
 
 LLowAllyStatPointers:
 	.byte (LClassAttackLookup & $FF)

@@ -128,8 +128,8 @@ $11 - TRANCE
 $12 - WISH
 $13 - Blight
 $14 - Near exit
-$15
-$16
+$15 - Battle start
+$16 - Level up
 $17
 $18
 $19
