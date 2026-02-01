@@ -36,14 +36,13 @@ RPrepareToDrawMaze:
 	bmi RGoToDrawMazeNoFire
 RConfigureFarFire:
 	sta WSYNC
-	jsr RSpinWheels
-	jsr RSpinWheels
-	jsr RSpinWheels
 
-	nop
-	nop
-	nop
-	nop
+	;44 cycle delay
+	brk ;13 cycle delay
+	brk
+	asl CXCLR ;5 cycle delay
+	cmp temp1
+
 	sta RESP0
 	lda #$20
 	sta HMP0
@@ -59,11 +58,13 @@ RConfigureFarFire:
 	bne RStoreFireMazeHeight
 RConfigureNearFire:
 	sta WSYNC
-	jsr RSpinWheels
-	jsr RSpinWheels
-	jsr RSpinWheels
+
+	;40 cycle delay
+	brk
+	brk
 	nop
 	nop
+
 	lda #$10
 	sta RESP0
 	sta RESP1
@@ -290,18 +291,14 @@ RDoneDrawingMaze:
 	sty charIndex
 RPlaceCompass:
 	sta WSYNC
-	lda mazeAndPartyLevel
-	lsr
-	lsr
-	lsr
-	lsr
-	tay ;This doesn't do anything...
 	lda mazeAndEffectColor
 	sta COLUP0
 
-	;Delay in order to put the compass in the middle of the screen
-	;cpx temp1
-	jsr RSpinWheels
+	;25 cycle delay
+	brk ;18 cycle delay
+	asl CXCLR ;5 cycle delay
+	nop
+
 	lda #$C0
 	sta HMP0
 	lda enemyAction
@@ -583,7 +580,7 @@ RUseSpecialColor:
 	lda menuLines,x
 	and #$1F
 	clc
-	adc #57 ;This constant needs to be updated whenever there is message indexing tomfoolery.
+	adc #57 ;MAINTENANCE This constant needs to be updated whenever there is message indexing tomfoolery.
 	tax
 	jsr RLoadString
 	jsr RSetTextPointers
@@ -658,12 +655,11 @@ RDrawLogo:
 	sta HMP1
 	
 	ldy #15
-	jsr RSpinWheels
-	nop
-	nop
-	nop
-	nop
-	cmp temp1
+
+	;23 cycle delay
+	brk
+	asl CXCLR
+
 	sta RESP0
 	sta RESP1
 	
@@ -852,8 +848,8 @@ RDrawBattleMenuLine: SUBROUTINE ;Draws one line of battle menu text, using A as 
 
 	jsr RSetTextPointers
 	jsr RDrawText
-RSpinWheels: SUBROUTINE
 	rts
+
 
 RMessageConstructors:
 RXAttacksY:
@@ -3401,6 +3397,7 @@ RLoadString:
 	nop
 	nop
 	nop
+RSpinWheels
 	rts
 
 	ORG $CFC0
@@ -3427,9 +3424,9 @@ RCatchFromVBlank:
 	jmp RMainPicture
 RGoToOverscan:
 	sta $1FF9 ;Go to bank 3
-	nop
-	nop
-	nop
+RSpinWheels2: SUBROUTINE ;18 cycle delay triggered by brk instruction
+	dec $FE
+	rti
 
 	ORG $CFFA
 	RORG $FFFA
@@ -3437,6 +3434,6 @@ RGoToOverscan:
 	;NMI, IRQ, and RESET information
 	.word RReset
 	.word RReset
-	.word RReset
+	.word RSpinWheels2
 
 
