@@ -843,15 +843,18 @@
 	-Removed VOLLEY effect
 	-Legendary action functionality in place
 	-Added battle start and level up sounds
+1/31/26
+	-First use of illegal opcode (LAX in R bank)
+	-Removed RIndexToEnemyPosition subroutine (unused)
 
 KNOWN BUGS:
-	-Healing exactly to max health doesn't say X HEALS FULLY
 	-Occasional audio glitches?
 	-rand8 was set to 0 after defeating armor, before fighting ooze?
 
 	Possibly related to pitchable bug
 	-Cast FIRE on Volcio, NO EFFECT?? Only happened once
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
+	-Healing exactly to max health doesn't say X HEALS FULLY
 
 PLAYTEST NOTES:
 	-Power gap between levels 1 and 2 is really high

@@ -7,6 +7,9 @@
 RReset:
 	nop $1FF9 ;Switch to bank 3, which contains the startup information
 
+RGoToRenderSetupScreen
+	jmp RRenderSetupScreen
+
 RMainPicture:
 	ldx #$80
 	stx VBLANK ;Disable blanking
@@ -18,9 +21,6 @@ RMainPicture:
 	lda inBattle
 	beq RRenderMazeView
 	jmp RBattleRendering
-
-RGoToRenderSetupScreen
-	jmp RRenderSetupScreen
 
 RRenderMazeView:
 RPrepareToDrawMaze:
@@ -39,6 +39,7 @@ RConfigureFarFire:
 	jsr RSpinWheels
 	jsr RSpinWheels
 	jsr RSpinWheels
+
 	nop
 	nop
 	nop
@@ -237,6 +238,11 @@ RDrawMazeNearFire:
 	lda #NEAR_FIRE_GRAPHICS2+11,y
 	sta GRP1
 
+	lda #$76
+	sta COLUP0
+	lda #$86
+	sta COLUP1
+
 	dey
 	cpy #NEAR_FIRE_MAZE_HEIGHT - 5
 	bcs RDrawMazeNearFire
@@ -314,8 +320,7 @@ RDrawCompass:
 
 RDrawPartyInfoMaze:
 	cmp temp1
-	cmp temp1
-	cmp temp1
+	lax ($FF,x) ;6 cycles
 
 	ldx #$03 ;Triplicate
 	stx NUSIZ0 ;Set both duplication registers to triplicate the sprites.
@@ -1415,7 +1420,7 @@ RDrawCharacterInfo: SUBROUTINE ;Draws one party members mood and name, hp and mp
 	nop
 	jmp .RDrawTheText
 
-RDrawMinimalCharacterInfo: SUBROUTINE
+RDrawMinimalCharacterInfo: SUBROUTINE ;Draws one party member's name and class for use on the start menu
 	ldx charIndex
 	lda char1,x
 	and #$0F
@@ -1555,21 +1560,6 @@ RSetTextPointers: SUBROUTINE ;Will treat the values in temp1-6 as character indi
 	lda RCharacterHighLookupTable,x
 	sta tempPointer6
 	rts
-
-RIndexToEnemyPosition: SUBROUTINE ;Converts the position of a menu cursor into the correct location in the enemyID array of the target
-	ldy #0
-	inx
-.RIndexConversionLoop
-	lda enemyHP,y ;opt
-	cmp #0
-	beq .RNoHit
-	dex
-	beq .RDone
-.RNoHit:
-	iny
-	jmp .RIndexConversionLoop
-.RDone
-	rts ;Y is the correct offset into the enemyID array
 
 	ORG $C928 ;Used to hold enemy names, nothing else can go in this section
 	RORG $F928
@@ -2424,15 +2414,6 @@ RAvatarExcited:
 	.byte #%10000001
 	.byte #%11111111
 RAvatarPain:	
-	;.byte %11111111
-	;.byte %11111111
-	;.byte %11011011
-	;.byte %11100111
-	;.byte %10111101
-	;.byte %11011011
-	;.byte %11111111
-	;.byte %11111111
-
 	.byte %11010101
 	.byte %10010100
 	.byte %10011101
