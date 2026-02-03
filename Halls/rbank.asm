@@ -48,7 +48,7 @@ RConfigureFarFire:
 	sta HMP0
 	sta WSYNC
 	sta HMOVE
-	lda #CAMPFIRE_COLOR
+	lda RFarFireColors+6
 	sta COLUP0
 	lda #(RDrawMazeFarFire >> 8 & $FF)
 	sta tempPointer1+1
@@ -69,9 +69,9 @@ RConfigureNearFire:
 	sta RESP0
 	sta RESP1
 	sta HMP1
-	lda #CAMPFIRE_COLOR
-	sta COLUP0
-	sta COLUP1
+	;lda #CAMPFIRE_COLOR
+	;sta COLUP0
+	;sta COLUP1
 	sta WSYNC
 	sta HMOVE
 	lda #(RDrawMazeNearFire >> 8 & $FF)
@@ -137,6 +137,9 @@ RDrawMazeFarFire:
 	stx PF2 
 	sta PF1
 
+	lda FAR_FIRE_COLORS+1,Y
+	sta COLUP0
+
 	sta WSYNC
 	lda ROutermost,y; 4 cycles
 	sta PF0 ;2
@@ -154,6 +157,9 @@ RDrawMazeFarFire:
 	stx PF2 
 	sta PF1
 	
+	lda FAR_FIRE_COLORS+4,Y
+	sta COLUP0
+
 	sta WSYNC
 	lda ROutermost,y; 4 cycles
 	sta PF0 ;2
@@ -171,12 +177,14 @@ RDrawMazeFarFire:
 
 	stx PF2 
 	sta PF1
+
+	lda FAR_FIRE_COLORS+7,Y
+	sta COLUP0
+
 	dey
 	cpy #FAR_FIRE_MAZE_HEIGHT - 3
 	bcs RDrawMazeFarFire
-	lda #0
-	sta GRP0
-	beq RDrawMazeNoFire
+	jmp RDrawMazeNoFire
 
 RDrawMazeNearFire:
 	sta WSYNC
@@ -199,6 +207,10 @@ RDrawMazeNearFire:
 	lda #NEAR_FIRE_GRAPHICS2+1,y
 	sta GRP1
 
+	lda RNearFireColors,y
+	sta COLUP0
+	sta COLUP1
+
 	sta WSYNC
 	lda ROutermost,y; 4 cycles
 	sta PF0 ;2
@@ -218,6 +230,10 @@ RDrawMazeNearFire:
 	
 	lda #NEAR_FIRE_GRAPHICS2+6,y
 	sta GRP1
+
+	lda RNearFireColors,y
+	sta COLUP0
+	sta COLUP1
 
 	sta WSYNC
 	lda ROutermost,y; 4 cycles
@@ -239,17 +255,14 @@ RDrawMazeNearFire:
 	lda #NEAR_FIRE_GRAPHICS2+11,y
 	sta GRP1
 
-	lda #$76
+	lda RNearFireColors,y
 	sta COLUP0
-	lda #$86
 	sta COLUP1
 
 	dey
 	cpy #NEAR_FIRE_MAZE_HEIGHT - 5
 	bcs RDrawMazeNearFire
-	lda #0
-	sta GRP0
-	sta GRP1
+RDoneWithNearFire:
 	lda #3
 	sta charIndex
 	bne RDrawMazeNoFireNoExtraLine
@@ -265,16 +278,18 @@ RDrawMazeNoFireNoExtraLine:
 	sta PF1 ;2
 	lda (tempPointer3),y ;5
 	sta PF2 ;2
+	
+	lda #0
+	sta GRP0
+	sta GRP1
+
 	lda (temp4),y ;5
-	tax ;2
+	tax
 	lda (temp5),y ;5
 
-	nop ;2
-	nop ;2
-	nop ;2
-	nop ;2
 	stx PF2 
 	sta PF1
+
 	dec charIndex
 	bne RDrawMazeNoFireLoop
 	lda #3
@@ -316,8 +331,10 @@ RDrawCompass:
 	jmp RDrawCompass
 
 RDrawPartyInfoMaze:
-	cmp temp1
-	lax ($FF,x) ;6 cycles
+	;9 cycle delay
+	asl CXCLR
+	nop
+	nop
 
 	ldx #$03 ;Triplicate
 	stx NUSIZ0 ;Set both duplication registers to triplicate the sprites.
@@ -1254,14 +1271,6 @@ RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 va
 	jsr RLoadString
 	rts
 
-RClassFightStrings:
-	.byte $9 ;Knight -- SLICES
-	.byte $5 ;Rogue -- STABS
-	.byte $7 ;Cleric -- BASHES
-	.byte $6 ;Wizard -- SHOOTS
-	.byte $6 ;Ranger -- SHOOTS
-	.byte $5 ;Paladin -- STABS
-
 RDrawCharacterInfo: SUBROUTINE ;Draws one party members mood and name, hp and mp, or class name depending on viewedPartyInfo variable
 	ldx charIndex ;Determine which character's data is about to be drawn
 	lda char1,x
@@ -1556,6 +1565,24 @@ RSetTextPointers: SUBROUTINE ;Will treat the values in temp1-6 as character indi
 	lda RCharacterHighLookupTable,x
 	sta tempPointer6
 	rts
+
+RNearFireColors:
+	.byte $80
+	.byte $82
+	.byte $84
+	.byte $86
+	.byte $88
+	.byte $8a
+	.byte $8c
+	.byte $8e
+	.byte $b0
+	.byte $b2
+	.byte $b4
+	.byte $b6
+	.byte $b8
+	.byte $ba
+	.byte $48
+	.byte $48
 
 	ORG $C928 ;Used to hold enemy names, nothing else can go in this section
 	RORG $F928
@@ -2094,7 +2121,13 @@ REnemyColorLookup:
 	.byte $C4 ;Ooze
 	.byte $2A ;Campfire
 
-	;Only around 8 more bytes can fit here...
+RClassFightStrings:
+	.byte $9 ;Knight -- SLICES
+	.byte $5 ;Rogue -- STABS
+	.byte $7 ;Cleric -- BASHES
+	.byte $6 ;Wizard -- SHOOTS
+	.byte $6 ;Ranger -- SHOOTS
+	.byte $5 ;Paladin -- STABS
 
 	ORG $CB00 ;Used to hold miscellaneous data/lookup tables and text
 	RORG $FB00
@@ -2585,39 +2618,43 @@ RArrowDown:
 	.byte %00011000
 
 RNearFire:
-	.byte %00111101 ;L13
-	.byte %01101111 ;L10
-	.byte %01100011 ;L7
-	.byte %00000110 ;L4
-	.byte %00000000 ;L1
-	.byte %00011100 ;L14
-	.byte %01101110 ;L11
-	.byte %01111111 ;L8
-	.byte %00100110 ;L5
-	.byte %00000000 ;L2
-	.byte %00001111 ;L15
-	.byte %00110101 ;L12
-	.byte %01110111 ;L9
-	.byte %01000111 ;L6
-	.byte %00000011 ;L3
+	.byte %00000111 ;L13
+	.byte %00000011 ;L10
+	.byte %00000000 ;L7
+	.byte %00000000 ;L4
+	.byte %00110000 ;L1
+	.byte %00011011 ;L14
+	.byte %00000011 ;L11
+	.byte %00000001 ;L8
+	.byte %00000000 ;L5
+	.byte %00001100 ;L2
+	.byte %00010010 ;L15
+	.byte %00000001 ;L12
+	.byte %00000011 ;L9
+	.byte %00000000 ;L6
+	.byte %00000010 ;L3
 	.byte $FF ;----
-	.byte %10011100 ;R14
-	.byte %11111110 ;R11
-	.byte %00111110 ;R8
-	.byte %01110000 ;R5
-	.byte %10010000 ;R2
-	.byte %11110000 ;R15
-	.byte %11011110 ;R12
-	.byte %01101110 ;R9
-	.byte %01111010 ;R6
-	.byte %00100000 ;R3
+	.byte %11111000 ;R14
+	.byte %11000000 ;R11
+	.byte %11100000 ;R8
+	.byte %10000000 ;R5
+	.byte %00000000 ;R2
+	.byte %01011100 ;R15
+	.byte %11000000 ;R12
+	.byte %11100000 ;R9
+	.byte %11000000 ;R6
+	.byte %00000000 ;R3
 	.byte $FF ;----
-	.byte %10110110 ;R13
-	.byte %11001110 ;R10
-	.byte %00111100 ;R7
-	.byte %00100000 ;R4
+	.byte %00111000 ;R13
+	.byte %11100000 ;R10
+	.byte %11000000 ;R7
+	.byte %00000000 ;R4
 	.byte $FF ;----
 
+	;.byte %11110100 ;R16
+	;.byte %00000000 ;R1
+	;.byte %00011101 ;L16
+	
 RLogo2:
 	.byte %01110111 ;maze
 	.byte %11000100 ;maze
@@ -3376,15 +3413,27 @@ ROnly1Room: ;Used for PF2
 	.byte #%00000000
 
 RFarFire:
-	.byte %11101111 ;7th
-	.byte %10011011 ;4th
+	.byte %01110100 ;7th
+	.byte %00010000 ;4th
 	.byte %00001000 ;1st
-	.byte %01111111 ;8th
-	.byte %11011011 ;5th
-	.byte %00010001 ;2nd
-	.byte %00111110 ;9th
-	.byte %11001101 ;6th
-	.byte %01011010 ;3rd
+	.byte %01011010 ;8th
+	.byte %00011000 ;5th
+	.byte %00001000 ;2nd
+	.byte %01011010 ;9th
+	.byte %00111000 ;6th
+	.byte %00011000 ;3rd
+
+
+RFarFireColors:
+	.byte $f4 ;8th
+	.byte $34 ;5th
+	.byte $3a ;2nd
+	.byte $f2 ;9th
+	.byte $f4 ;6th
+	.byte $38 ;3rd
+	.byte $3c ;1st
+	.byte $f2 ;7th 
+	.byte $36 ;4th
 
 	ORG $CFB0
 	RORG $FFB0

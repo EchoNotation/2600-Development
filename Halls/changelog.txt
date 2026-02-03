@@ -844,15 +844,13 @@
 	-Legendary action functionality in place
 	-Added battle start and level up sounds
 1/31/26
-	-First use of illegal opcode (LAX in R bank)
 	-Removed RIndexToEnemyPosition subroutine (unused)
+	-Replaced lots of RSpinWheels occurrences with new brk routine that takes 18 cycles
 
 KNOWN BUGS:
-	-Occasional audio glitches?
 	-rand8 was set to 0 after defeating armor, before fighting ooze?
-
-	Possibly related to pitchable bug
-	-Cast FIRE on Volcio, NO EFFECT?? Only happened once
+	-Occasional audio glitches?
+	-Cast FIRE on Volcio, NO EFFECT??
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
 	-Healing exactly to max health doesn't say X HEALS FULLY
 
@@ -868,7 +866,6 @@ POSSIBLE OPTIMIZATIONS:
 		-LCheckSpellHit
 		-LCheckSpellShield
 	Seems like the code for handling leveling up could be improved
-		-Read out of learned spells could be removed
 	Simplification of WISH spell
 
 TODO:
