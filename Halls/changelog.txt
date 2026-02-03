@@ -846,6 +846,9 @@
 1/31/26
 	-Removed RIndexToEnemyPosition subroutine (unused)
 	-Replaced lots of RSpinWheels occurrences with new brk routine that takes 18 cycles
+2/2/26
+	-Working code framework for colored campfires, art still needs more time
+	-Color cycling logo :O
 
 KNOWN BUGS:
 	-rand8 was set to 0 after defeating armor, before fighting ooze?
@@ -857,7 +860,6 @@ KNOWN BUGS:
 PLAYTEST NOTES:
 	-Power gap between levels 1 and 2 is really high
 		-Takes too long to reach level 2
-	-Campfire is too hard to find, should be forced within range of the exit
 	-Jester should use special by default
 	-Start LICH with one or both enemies spawned already
 
@@ -865,8 +867,8 @@ POSSIBLE OPTIMIZATIONS:
 	Potentially movable:
 		-LCheckSpellHit
 		-LCheckSpellShield
-	Seems like the code for handling leveling up could be improved
-	Simplification of WISH spell
+	-Seems like the code for handling leveling up could be improved
+	-Simplification of WISH spell
 
 TODO:
 	Shortlist:
@@ -880,17 +882,14 @@ TODO:
 		-Thicket, Jester, Lich, Ooze, Horror
 		-AI code for making use of legendary actions
 	-Logic for near exit sound
+	-Force campfire within certain range of exit
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
-	-Sharp does not increase attack power of unconscious party members, indifference about fixing
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
-	-Volley is blocked by shield, probably fine
 
 	Dreamlist:
 	-Default names for each class?
-	-Ambient sounds per area
-		-How is this supposed to work with footsteps?
 
 	Post-release:
 	-PAL version

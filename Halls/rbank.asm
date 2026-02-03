@@ -685,7 +685,7 @@ RDrawLogo:
 	sta NUSIZ1
 	sta WSYNC
 	sta HMOVE
-	lda #$66
+	lda currentBattler
 	sta COLUPF
 RDrawLogoLoop:
 	sta WSYNC
@@ -693,7 +693,7 @@ RDrawLogoLoop:
 	sta GRP0
 	lda RLogo1,y
 	sta GRP1
-	lda RLogoColors,y
+	lda currentBattler,y
 	sta COLUP0
 	sta COLUP1
 
@@ -711,7 +711,7 @@ RDrawLogoLoop:
 	sta GRP0
 	lda RLogo1,y
 	sta GRP1
-	lda RLogoColors,y
+	lda currentBattler,y
 	sta COLUP0
 	sta COLUP1
 

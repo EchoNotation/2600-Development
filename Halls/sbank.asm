@@ -48,6 +48,12 @@ SSoftReset:
 	stx currentSound
 	lda #24
 	sta menuSize
+	lda #$0E ;Text color -- Conveniently also the number 14 for the iterator value
+	tax
+SLogoColorsLoop:
+	sta currentBattler,x
+	dex
+	bne SLogoColorsLoop
 
 #if BUILD_DEBUG
 	;Debug only code, do not include in final version!
@@ -333,11 +339,37 @@ SPartyDidNotMove:
 
 	lda flags
 	and #(TRANSITIONING_TO_BATTLE | TRANSITIONING_TO_CAMPFIRE | TRANSITIONING_TO_MAZE)
-	beq SNotTransitioning
+	beq SGoToNotTransitioning
 	jsr SPerformTransitionLogic
 	jmp SWaitForOverscanTimer
 
+SGoToNotTransitioning:
+	jmp SNotTransitioning
+
 SSetupLogicOverscan:
+SCycleLogo:
+	dec mp2
+	bpl SDontCycleLogo
+	lda #3
+	sta mp2
+	dec mp1
+	bpl SDontNeedCycleReset
+	lda #13
+	sta mp1
+SDontNeedCycleReset:
+	ldx mp1
+	lda SLogoColors,x
+
+	sta currentBattler
+	sta currentBattler+1
+	sta currentBattler+7
+	sta currentBattler+8
+	sta currentBattler+14
+	sta currentBattler+15
+	
+
+
+SDontCycleLogo:
 	lda currentInput
 	and #$08
 	beq STryStartGame
@@ -2889,6 +2921,41 @@ SLoadSoundEffectFromL:
 	jsr STryLoadSound
 	sta $1FF7
 	nop
+
+SLogoColors:
+	.byte $26
+	.byte $36
+	.byte $46
+	.byte $56
+	.byte $66
+	.byte $76
+	.byte $86
+	.byte $96
+	.byte $A6
+	.byte $B6
+	.byte $C6
+	.byte $D6
+	.byte $E6
+	.byte $F6
+
+	; .byte $64
+	; .byte $66
+	; .byte $68
+	; .byte $78
+	; .byte $76
+	; .byte $74
+	; .byte $84
+	; .byte $86
+	; .byte $88
+	; .byte $98
+	; .byte $96
+	; .byte $94
+	; .byte $84
+	; .byte $86
+	; .byte $88
+	; .byte $78
+	; .byte $76
+	; .byte $74
 
 	ORG $FFA3 ;Bankswitching nonsense
 	RORG $FFA3
