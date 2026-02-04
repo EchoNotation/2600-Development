@@ -849,6 +849,8 @@
 2/2/26
 	-Working code framework for colored campfires, art still needs more time
 	-Color cycling logo :O
+2/3/26
+	-Lots more campfire art, including hopefully final designs for the in battle and near fires
 
 KNOWN BUGS:
 	-rand8 was set to 0 after defeating armor, before fighting ooze?

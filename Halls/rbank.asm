@@ -69,9 +69,9 @@ RConfigureNearFire:
 	sta RESP0
 	sta RESP1
 	sta HMP1
-	;lda #CAMPFIRE_COLOR
-	;sta COLUP0
-	;sta COLUP1
+	lda RNearFireColors+10
+	sta COLUP0
+	sta COLUP1
 	sta WSYNC
 	sta HMOVE
 	lda #(RDrawMazeNearFire >> 8 & $FF)
@@ -207,7 +207,7 @@ RDrawMazeNearFire:
 	lda #NEAR_FIRE_GRAPHICS2+1,y
 	sta GRP1
 
-	lda RNearFireColors,y
+	lda NEAR_FIRE_COLORS+1,y
 	sta COLUP0
 	sta COLUP1
 
@@ -231,7 +231,7 @@ RDrawMazeNearFire:
 	lda #NEAR_FIRE_GRAPHICS2+6,y
 	sta GRP1
 
-	lda RNearFireColors,y
+	lda NEAR_FIRE_COLORS+6,y
 	sta COLUP0
 	sta COLUP1
 
@@ -255,7 +255,7 @@ RDrawMazeNearFire:
 	lda #NEAR_FIRE_GRAPHICS2+11,y
 	sta GRP1
 
-	lda RNearFireColors,y
+	lda NEAR_FIRE_COLORS+11,y
 	sta COLUP0
 	sta COLUP1
 
@@ -345,7 +345,7 @@ RDrawPartyInfoMaze:
 	;Need some sort of delay here in order to more or less center this data.
 	lda #0
 	sta GRP0
-	cmp temp1
+	nop
 	sta RESP0
 	sta RESP1
 
@@ -1567,22 +1567,22 @@ RSetTextPointers: SUBROUTINE ;Will treat the values in temp1-6 as character indi
 	rts
 
 RNearFireColors:
-	.byte $80
-	.byte $82
-	.byte $84
-	.byte $86
-	.byte $88
-	.byte $8a
-	.byte $8c
-	.byte $8e
-	.byte $b0
-	.byte $b2
-	.byte $b4
-	.byte $b6
-	.byte $b8
-	.byte $ba
-	.byte $48
-	.byte $48
+	.byte $f4 ;14th
+	.byte $34 ;11th
+	.byte $38 ;8th
+	.byte $3a ;5th
+	.byte $3e ;2nd
+	.byte $f2 ;15th
+	.byte $f4 ;12th 
+	.byte $36 ;9th 
+	.byte $3a ;6th
+	.byte $3c ;3rd
+	.byte $38 ;1st --- Actually the first one Needs to be loaded ahead of time
+	.byte $f2 ;13th
+	.byte $36 ;10th
+	.byte $38 ;7th
+	.byte $3c ;4th 
+
 
 	ORG $C928 ;Used to hold enemy names, nothing else can go in this section
 	RORG $F928
@@ -2618,42 +2618,38 @@ RArrowDown:
 	.byte %00011000
 
 RNearFire:
-	.byte %00000111 ;L13
-	.byte %00000011 ;L10
-	.byte %00000000 ;L7
-	.byte %00000000 ;L4
-	.byte %00110000 ;L1
-	.byte %00011011 ;L14
-	.byte %00000011 ;L11
-	.byte %00000001 ;L8
-	.byte %00000000 ;L5
-	.byte %00001100 ;L2
-	.byte %00010010 ;L15
-	.byte %00000001 ;L12
-	.byte %00000011 ;L9
-	.byte %00000000 ;L6
-	.byte %00000010 ;L3
+	.byte %00011111 ;L13
+	.byte %00001111 ;L10
+	.byte %00000111 ;L7
+	.byte %00000011 ;L4
+	.byte %00001110 ;L1
+	.byte %00111111 ;L14
+	.byte %00000111 ;L11
+	.byte %00000111 ;L8
+	.byte %00000011 ;L5
+	.byte %00000111 ;L2
+	.byte %00000111 ;L15
+	.byte %00111011 ;L12
+	.byte %00001111 ;L9
+	.byte %00000011 ;L6
+	.byte %00000111 ;L3
 	.byte $FF ;----
-	.byte %11111000 ;R14
+	.byte %11111100 ;R14
 	.byte %11000000 ;R11
-	.byte %11100000 ;R8
-	.byte %10000000 ;R5
+	.byte %11110000 ;R8
+	.byte %11110000 ;R5
 	.byte %00000000 ;R2
-	.byte %01011100 ;R15
-	.byte %11000000 ;R12
-	.byte %11100000 ;R9
-	.byte %11000000 ;R6
-	.byte %00000000 ;R3
+	.byte %11110000 ;R15
+	.byte %10101000 ;R12
+	.byte %11110000 ;R9
+	.byte %11110000 ;R6
+	.byte %11000000 ;R3
 	.byte $FF ;----
-	.byte %00111000 ;R13
+	.byte %11111000 ;R13
 	.byte %11100000 ;R10
-	.byte %11000000 ;R7
-	.byte %00000000 ;R4
+	.byte %11110000 ;R7
+	.byte %11100000 ;R4
 	.byte $FF ;----
-
-	;.byte %11110100 ;R16
-	;.byte %00000000 ;R1
-	;.byte %00011101 ;L16
 	
 RLogo2:
 	.byte %01110111 ;maze
