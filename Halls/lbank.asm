@@ -72,7 +72,7 @@ LProcessCharacterAdvancement:
 	beq .LGoToPartyLeveledUp
 	cmp #$F3
 	beq .LGoToCheckTypeOfConclusion
-	cmp #$F4
+	cmp #$FC
 	beq .LGameOver
 	cmp #$FD
 	beq .LGoToNextFloor
@@ -112,9 +112,9 @@ LProcessCharacterAdvancement:
 .LPartyDown:
 	lda #$FC
 	sta inBattle
-	lda #$11
+	lda #$11 ;PARTY DOWN
 .LStoreEndMessage:
-	sta currentMessage ;PARTY DOWN
+	sta currentMessage 
 	rts
 .LGameOver:
 	lda #$1F ;GAME OVER
@@ -1294,6 +1294,12 @@ LProcessSpecial:
 	lda #$83 ;Cast BLIZRD (can't tell the difference between this and fire damage)
 	sta enemyAction
 	sta temp1 ;Inject the new enemyAction
+	ldx #$1 ;FIRE
+	stx mazeAndEffectColor
+	jsr LLoadSoundInS
+	ldx #$7
+	jsr LLoadEffect
+
 	jmp .LIsOffensive ;Jumps into the relevant part of AoE spell setup code
 
 .LOozeSpecial:
@@ -1454,6 +1460,8 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	bne .LContinue
 
 	;All normal actions have been taken
+	lda enemyHP
+	beq .LUpdateHasAction ;Boss must have health in order to use legendary action!
 	lda flags
 	and #LEGENDARY_ACTION_USED
 	bne .LUpdateHasAction

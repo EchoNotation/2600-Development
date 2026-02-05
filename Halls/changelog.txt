@@ -851,13 +851,17 @@
 	-Color cycling logo :O
 2/3/26
 	-Lots more campfire art, including hopefully final designs for the in battle and near fires
+2/4/26
+	-Added sound that plays when near the level exit
+	-Fixed bug where legendary actions could be taken when the boss had 0 health
+	-Added sound and visual effects to GIFT explosion
+	-Campfire location is now dependent on exit location, maybe a little too close
 
 KNOWN BUGS:
 	-rand8 was set to 0 after defeating armor, before fighting ooze?
 	-Occasional audio glitches?
 	-Cast FIRE on Volcio, NO EFFECT??
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
-	-Healing exactly to max health doesn't say X HEALS FULLY
 
 PLAYTEST NOTES:
 	-Power gap between levels 1 and 2 is really high
@@ -883,12 +887,11 @@ TODO:
 	-Legendary actions for some bosses
 		-Thicket, Jester, Lich, Ooze, Horror
 		-AI code for making use of legendary actions
-	-Logic for near exit sound
-	-Force campfire within certain range of exit
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
+	-Healing exactly to max health doesn't say X HEALS FULLY
 
 	Dreamlist:
 	-Default names for each class?
@@ -904,7 +907,7 @@ TODO:
 		-Guarded sound
 		-Parrying sound
 
-	DOESN'T REQUIRE LOGIC:
+	DOESN'T (generally) REQUIRE LOGIC:
 		-Improve word choice on some messages
 		-Improve font
 		-Improve in-maze campfire graphics to look less squished when they appear

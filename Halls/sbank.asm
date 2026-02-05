@@ -103,9 +103,6 @@ SLogoColorsLoop:
 	;ldx #$14
 	;jsr STryLoadSound
 #endif
-	
-	;ldx #$14
-	;jsr STryLoadSound
 
 SStartOfFrame:
 	lda #$82
@@ -306,16 +303,35 @@ SMazeLogicWithoutSetupCheck:
 	lda playerX
 	jsr S4Asl
 	ora playerY
+	sta temp1
 	cmp campfireLocation
 	beq STryEnterCampfire
 SDidNotTriggerCampfire:
 	cmp exitLocation
-	bne SDidNotTriggerExit
 	beq SGenerateEncounter ;Always trigger an encounter if stepping onto the exit
 SDidNotTriggerExit:
-	;Check to see if a random encounter should occur
+	;Check to see if we are next to the exit
+	sed
+	ldx #3
+SNearExitCheckLoop:
+	lda temp1
+	clc
+	adc SNearbyExitDeltas,x
+	cmp exitLocation
+	beq SAdjacentToExit
+	dex
+	bpl SNearExitCheckLoop
+	cld
+	bmi SNotNearExit
+SAdjacentToExit:
+	cld
+	ldx #$14 ;Near exit
+	jsr STryLoadSound
+	jmp STryGenerateEncounter
+SNotNearExit:
 	ldx #$23 ;Footstep
 	jsr STryLoadSound
+STryGenerateEncounter:
 	ldx highlightedLineAndSteps
 	bne SNoRandomEncounter
 	lda rand8
@@ -552,26 +568,6 @@ SUpdateBallPosition: SUBROUTINE ;Calculates the fine and coarse position of the 
 	sta enemyID
 	rts
 
-SMazeEntrances:
-	.byte $10
-	.byte $71
-	.byte $77
-	.byte $06
-	.byte $37
-	.byte $63
-	.byte $46
-	.byte $55
-
-SMazeExits:
-	.byte $76
-	.byte $14
-	.byte $22
-	.byte $50
-	.byte $00
-	.byte $15
-	.byte $11
-	.byte $41
-
 SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each transition based on transition type.
 	cmp #TRANSITIONING_TO_BATTLE
 	beq .SCheckBattleTransitionLogic
@@ -626,12 +622,7 @@ SPerformTransitionLogic: SUBROUTINE ;Performs individual logic during each trans
 	lda SMazeEntrances,y
 	jsr S4Lsr
 	sta playerX
-	jsr SRandom
-	and #$77 ;Only 3 bits needed for each of x and y
-	bne .SNoRandomORForCampfireLoc
-	ora #$41 ;suitably random number
-.SNoRandomORForCampfireLoc:
-	eor exitLocation
+	lda SCampfireLocations,y
 	sta campfireLocation
 
 	lda flags
@@ -2911,6 +2902,17 @@ SEmptySpellList:
 	.byte #$FF
 	.byte #$FF
 
+SCampfireLocations:
+	.byte $55
+	.byte $11
+	.byte $14
+	.byte $43
+	.byte $21
+	.byte $27
+	.byte $30
+	.byte $62
+
+
 	ORG $FF80
 	RORG $FF80
 
@@ -2920,7 +2922,6 @@ SLoadSoundEffectFromL:
 	nop
 	jsr STryLoadSound
 	sta $1FF7
-	nop
 
 SLogoColors:
 	.byte $26
@@ -2937,6 +2938,16 @@ SLogoColors:
 	.byte $D6
 	.byte $E6
 	.byte $F6
+
+SMazeEntrances:
+	.byte $10
+	.byte $71
+	.byte $77
+	.byte $06
+	.byte $37
+	.byte $63
+	.byte $46
+	.byte $55
 
 	; .byte $64
 	; .byte $66
@@ -2996,10 +3007,11 @@ SSpellManaLookup:
 	.byte 0 ;TRANCE
 	.byte 15 ;WISH
 	nop
-	nop
-	nop
-	nop
-	nop
+SNearbyExitDeltas:
+	.byte $01
+	.byte $10
+	.byte $90
+	.byte $99
 	rts
 
 	ORG $FFD0
@@ -3030,6 +3042,16 @@ SCatchFromMainPicture:
 	.byte 3
 	.byte 0
 	jmp SOverscan
+
+SMazeExits:
+	.byte $76
+	.byte $14
+	.byte $22
+	.byte $50
+	.byte $00
+	.byte $15
+	.byte $11
+	.byte $41
 
 	ORG $FFFA
 	RORG $FFFA

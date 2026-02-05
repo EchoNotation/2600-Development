@@ -36,16 +36,15 @@ $E2 Exit battle via running
 
 $F0 Party wins, check to see if party leveled up (F2 if yes), else check which type of positive conclusion this was (go to FD, FE, or FF)
 $F1 Party down, go to FC
-$F2 Party leveled up, check to see if member learned spell, else go to F3
+$F2 Party leveled up, go to F3
 $F3 Check which type of positive conclusion this was (go to FD, FE, or FF)
-$F4 Party member learned spell, check to see if member learned spell, else go to F3
 $FC Game over! (player must reset)
 $FD THE --- AWAITS (next button press ends the battle, and moves to the next floor)
 $FE Game completed! (player must reset)
 $FF (next button press ends the battle)
 
 --- ENEMY IDs ---
-$00 Wolf
+$00 Bandit
 $01 Druid
 $02 Shroom
 $03 Squire
