@@ -159,10 +159,12 @@ MimicAI:
 	.byte %10100100 ;Cast DRAIN party
 
 JesterAI:
-	.byte %00100000 ;Attack party
-	.byte %00100000 ;
-	.byte %00000101 ;Special
-	.byte %00000101 ;
+	;.byte %00100000 ;Attack party
+	;.byte %00100000 ;
+	.byte %00100101 ;Special
+	.byte %00100101 ;
+	.byte %00100101 ;
+	.byte %00100101 ;
 ArmorAI:
 	.byte %11101001 ;Cast HEAL self
 	.byte %10001100 ;Cast SHARP
@@ -181,8 +183,8 @@ SlimeAI:
 LichAI:
 	.byte %10101111 ;Cast WITHER party
 	.byte %11101001 ;Cast HEAL self
-	.byte %00000101 ;Special
-	.byte %00000101 ;
+	.byte %00100101 ;Special
+	.byte %00100101 ;
 ShfflrAI:
 	.byte %00100000 ;Attack party
 	.byte %00100000 ;
@@ -3666,10 +3668,14 @@ EBossEncounters:
 	.byte $FF
 	.byte $FF
 	;CASTLE BOSS 2
-	.byte $07 ;Sword
-	.byte $1B ;Armor
+	; .byte $07 ;Sword
+	; .byte $1B ;Armor
+	; .byte $FF
+	; .byte $08 ;Shield
+	.byte $1A ;Jester
 	.byte $FF
-	.byte $08 ;Shield
+	.byte $FF
+	.byte $FF
 
 	;CRYPT BOSS 1
 	.byte $24 ;Ooze

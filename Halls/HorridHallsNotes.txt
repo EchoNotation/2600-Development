@@ -112,26 +112,26 @@ $02 - SLEEP
 $03 - BLIZRD
 $04 - DRAIN
 $05 - THUNDR
-$06 - SHIELD
+$06 - Single target sound
 $07 - METEOR
 $08 - CHAOS
-$09 - HEAL spell
+$09 - Single target sound
 $0A - SMITE
 $0B - VOLLEY
-$0C - SHARP
+$0C - AoE sound
 $0D - BLIGHT spell
-$0E - TRIAGE
+$0E - AoE sound
 $0F - WITHER
 $10 - BANISH spell
 $11 - TRANCE
 $12 - WISH
-$13 - Blight
+$13 - SHIELD sound
 $14 - Near exit
 $15 - Battle start
 $16 - Level up
-$17
-$18
-$19
+$17 - Guard
+$18 - Shield down
+$19 - Shield absorbs hit
 $1A
 $1B
 $1C

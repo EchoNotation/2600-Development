@@ -1568,21 +1568,20 @@ RSetTextPointers: SUBROUTINE ;Will treat the values in temp1-6 as character indi
 
 RNearFireColors:
 	.byte $f4 ;14th
-	.byte $34 ;11th
-	.byte $38 ;8th
-	.byte $3a ;5th
+	.byte $f4 ;11th
+	.byte $36 ;8th
+	.byte $38 ;5th
 	.byte $3e ;2nd
 	.byte $f2 ;15th
-	.byte $f4 ;12th 
-	.byte $36 ;9th 
-	.byte $3a ;6th
+	.byte $f2 ;12th
+	.byte $34 ;9th
+	.byte $38 ;6th
 	.byte $3c ;3rd
-	.byte $38 ;1st --- Actually the first one Needs to be loaded ahead of time
-	.byte $f2 ;13th
-	.byte $36 ;10th
-	.byte $38 ;7th
-	.byte $3c ;4th 
-
+	.byte $3e ;1st --- Actually the first one Needs to be loaded ahead of time
+	.byte $f4 ;13th
+	.byte $f2 ;10th
+	.byte $36 ;7th
+	.byte $3c ;4th
 
 	ORG $C928 ;Used to hold enemy names, nothing else can go in this section
 	RORG $F928
@@ -2618,37 +2617,37 @@ RArrowDown:
 	.byte %00011000
 
 RNearFire:
-	.byte %00011111 ;L13
-	.byte %00001111 ;L10
-	.byte %00000111 ;L7
-	.byte %00000011 ;L4
-	.byte %00001110 ;L1
-	.byte %00111111 ;L14
-	.byte %00000111 ;L11
-	.byte %00000111 ;L8
-	.byte %00000011 ;L5
-	.byte %00000111 ;L2
-	.byte %00000111 ;L15
-	.byte %00111011 ;L12
-	.byte %00001111 ;L9
-	.byte %00000011 ;L6
-	.byte %00000111 ;L3
+	.byte %00110111 ;L13
+	.byte %00011011 ;L10
+	.byte %00001111 ;L7
+	.byte %00001011 ;L4
+	.byte %00000001 ;L1
+	.byte %01110110 ;L14
+	.byte %00011011 ;L11
+	.byte %00001111 ;L8
+	.byte %00000111 ;L5
+	.byte %00000011 ;L2
+	.byte %01100110 ;L15
+	.byte %00110111 ;L12
+	.byte %00000111 ;L9
+	.byte %00000111 ;L6
+	.byte %00000011 ;L3
 	.byte $FF ;----
-	.byte %11111100 ;R14
-	.byte %11000000 ;R11
+	.byte %01110110 ;R14
+	.byte %01101100 ;R11
 	.byte %11110000 ;R8
 	.byte %11110000 ;R5
-	.byte %00000000 ;R2
-	.byte %11110000 ;R15
-	.byte %10101000 ;R12
+	.byte %01100000 ;R2
+	.byte %01110110 ;R15
+	.byte %01101100 ;R12
 	.byte %11110000 ;R9
-	.byte %11110000 ;R6
-	.byte %11000000 ;R3
+	.byte %11111010 ;R6
+	.byte %10100000 ;R3
 	.byte $FF ;----
-	.byte %11111000 ;R13
-	.byte %11100000 ;R10
-	.byte %11110000 ;R7
-	.byte %11100000 ;R4
+	.byte %01100110 ;R13
+	.byte %01101100 ;R10
+	.byte %11111000 ;R7
+	.byte %11110000 ;R4
 	.byte $FF ;----
 	
 RLogo2:

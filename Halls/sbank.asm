@@ -147,6 +147,11 @@ SBattleLogicVBlank:
 	lda #$08
 	bit currentInput
 	bne SWaitForVblankTimer ;Button must be pressed in
+	lda currentSound
+	beq SNoSound
+	cmp #$20 ;Menu confirm sound
+	bne SWaitForVblankTimer ;Only the menu confirm sound is allowed to be playing
+SNoSound:
 	lda inBattle
 	cmp #$81
 	bne SDontNeedANewBattler
@@ -421,7 +426,7 @@ STryStartGame:
 	;If here, that means that the button was pressed when on the ready option
 	ldx #$20 ;Menu confirm
 	jsr STryLoadSound
-	lda #$04 ;Maze level 1, party level 1
+	lda #$03 ;Maze level 1, party level 1
 	;lda #$19
 	sta mazeAndPartyLevel
 	lda #15
@@ -1985,26 +1990,26 @@ SSoundMetadata:
 	.byte $D5 ;BLIZRD
 	.byte $64 ;DRAIN
 	.byte $A5 ;THUNDR
-	.byte $84 ;SHIELD
+	.byte $45 ;Single target spell
 	.byte $F5 ;METEOR
 	.byte $B4 ;CHAOS
 	.byte $45 ;HEAL
 	.byte $A5 ;SMITE
 	.byte $B3 ;VOLLEY
-	.byte $45 ;SHARP
-	.byte $C2 ;BLIGHT spell
-	.byte $95 ;TRIAGE
+	.byte $95 ;AoE spell
+	.byte $A2 ;BLIGHT
+	.byte $95 ;AoE spell
 	.byte $94 ;WITHER
 	.byte $A6 ;BANISH
 	.byte $86 ;TRANCE
 	.byte $86 ;WISH
-	.byte $A2 ;Blight
-	.byte $83 ;Near exit
+	.byte $84 ;Shield up
+	.byte $53 ;Near exit
 	.byte $86 ;Battle start
 	.byte $67 ;Level up
-	.byte 0
-	.byte 0
-	.byte 0
+	.byte $56 ;Guard
+	.byte $56 ;Shield down
+	.byte $62 ;Shield absorbs hit
 	.byte 0
 	.byte 0
 	.byte 0
@@ -2112,7 +2117,7 @@ SChaosVoices:
 	.byte $3
 	.byte $7
 	.byte $7
-SHealSpellVoices:
+SSingleTargetSpellVoices:
 	.byte $6
 	.byte $6
 	.byte $6
@@ -2140,25 +2145,18 @@ SVolleyVoices:
 	.byte $0
 	.byte $8
 	.byte $8
-SSharpVoices:
-	.byte $6
-	.byte $6
-	.byte $6
-	.byte $6
-SBlightSpellVoices:
-	.byte $E
+SBlightVoices:
 	.byte $E
 	.byte $E
 	.byte $E
 	.byte $E
 	.byte $0
 	.byte $0
-	.byte $4
-	.byte $4
-	.byte $4
-	.byte $4
-	.byte $C
-STriageVoices:
+	.byte $0
+	.byte $E
+	.byte $E
+	.byte $E
+SAoESpellVoices:
 	.byte $6
 	.byte $6
 	.byte $6
@@ -2249,17 +2247,6 @@ SDeadVoices:
 	.byte $6
 	.byte $6
 	.byte $6
-SBlightVoices:
-	.byte $E
-	.byte $E
-	.byte $E
-	.byte $E
-	.byte $0
-	.byte $0
-	.byte $0
-	.byte $E
-	.byte $E
-	.byte $E
 SShootVoices:
 	.byte $C
 	.byte $C
@@ -2267,9 +2254,6 @@ SShootVoices:
 	.byte $8
 	.byte $8
 SNearExitVoices:
-	.byte $4
-	.byte $4
-	.byte $0
 	.byte $4
 	.byte $4
 	.byte $0
@@ -2291,6 +2275,18 @@ SLevelUpVoices:
 	.byte $C
 	.byte $C
 	.byte $C
+SGuardVoices:
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $0
+	.byte $6
+SShieldDownVoices:
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $7
+	.byte $7
 
 	ORG $FD00
 	RORG $FD00
@@ -2381,7 +2377,7 @@ SChaosPitches:
 	.byte $3
 	.byte $1F
 	.byte $5
-SHealSpellPitches:
+SSingleTargetSpellPitches:
 	.byte $3
 	.byte $5
 	.byte $6
@@ -2409,25 +2405,18 @@ SVolleyPitches:
 	.byte $0
 	.byte $0
 	.byte $1
-SSharpPitches:
-	.byte $3
-	.byte $1
-	.byte $3
-	.byte $1
-SBlightSpellPitches:
-	.byte $1
-	.byte $0
+SBlightPitches:
 	.byte $1
 	.byte $0
 	.byte $1
 	.byte $0
 	.byte $0
-	.byte $F
-	.byte $1F
-	.byte $10
-	.byte $F
-	.byte $1F
-STriagePitches:
+	.byte $0
+	.byte $0
+	.byte $1
+	.byte $0
+	.byte $1
+SAoESpellPitches:
 	.byte $2
 	.byte $3
 	.byte $4
@@ -2518,17 +2507,6 @@ SDeadPitches:
 	.byte $5
 	.byte $5
 	.byte $F
-SBlightPitches:
-	.byte $1
-	.byte $0
-	.byte $1
-	.byte $0
-	.byte $0
-	.byte $0
-	.byte $0
-	.byte $1
-	.byte $0
-	.byte $1
 SShootPitches:
 	.byte $7
 	.byte $6
@@ -2536,9 +2514,6 @@ SShootPitches:
 	.byte $1
 	.byte $2
 SNearExitPitches:
-	.byte $5
-	.byte $6
-	.byte $0
 	.byte $5
 	.byte $6
 	.byte $0
@@ -2560,6 +2535,18 @@ SLevelUpPitches:
 	.byte $11
 	.byte $F
 	.byte $11
+SGuardPitches:
+	.byte $3
+	.byte $3
+	.byte $5
+	.byte $0
+	.byte $5
+SShieldDownPitches:
+	.byte $9
+	.byte $6
+	.byte $4
+	.byte $3
+	.byte $6
 
 	ORG $FE00
 	RORG $FE00
@@ -2640,26 +2627,26 @@ SVoices:
 	.byte (SBlizrdVoices & $FF)
 	.byte (SDrainVoices & $FF)
 	.byte (SThundrVoices & $FF)
-	.byte (SShieldVoices & $FF)
+	.byte (SSingleTargetSpellVoices & $FF)
 	.byte (SMeteorVoices & $FF)
 	.byte (SChaosVoices & $FF)
-	.byte (SHealSpellVoices & $FF)
+	.byte (SSingleTargetSpellVoices & $FF)
 	.byte (SSmiteVoices & $FF)
 	.byte (SVolleyVoices & $FF)
-	.byte (SSharpVoices & $FF)
-	.byte (SBlightSpellVoices & $FF)
-	.byte (STriageVoices & $FF)
+	.byte (SAoESpellVoices & $FF)
+	.byte (SBlightVoices & $FF)
+	.byte (SAoESpellVoices & $FF)
 	.byte (SWitherVoices & $FF)
 	.byte (SBanishSpellVoices & $FF)
 	.byte (STranceVoices & $FF)
 	.byte (SWishVoices & $FF)
-	.byte (SBlightVoices & $FF)
+	.byte (SShieldVoices & $FF)
 	.byte (SNearExitVoices & $FF)
 	.byte (SBattleStartVoices & $FF)
 	.byte (SLevelUpVoices & $FF)
-	.byte 0
-	.byte 0
-	.byte 0
+	.byte (SGuardVoices & $FF)
+	.byte (SShieldDownVoices & $FF)
+	.byte ((SShieldVoices+2) & $FF) ;Shield absorbs hit
 	.byte 0
 	.byte 0
 	.byte 0

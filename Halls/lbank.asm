@@ -22,11 +22,6 @@ LBattleProcessHighBytes:
 	.byte (LProcessSpecial >> 8 & $FF)
 
 LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages accordingly. This one's a doozy.
-	lda currentSound
-	beq .LNoSound
-	cmp #$20 ;Menu confirm sound
-	bne .LReturn ;Do not advance battle logic if a non-UI sound is playing!
-.LNoSound:
 	ldx currentBattler
 	cpx #4
 	bcs .LNeedEnemyAction
@@ -307,7 +302,7 @@ LAdvanceBattlerStatus:
 	stx startingCursorIndexAndTargetID
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
-	ldx #$13 ;Blight
+	ldx #$0D ;Blight
 	jsr LLoadSoundInS
 	lda #$83
 	bne .LSaveInBattle2
@@ -599,18 +594,6 @@ LProcessCasting:
 	lda #$15 ;NO EFFECT
 	bne .LGoToNormalTgtedExitSaveMessage
 
-.LSpellConnects:
-	;Need to check if this spell will be shielded or not
-	jsr LCheckSpellShield
-	beq .LNoShield
-	bmi .LShieldDestroyed
-.LShieldWeakened:
-	lda #$10 ;X HAS A SHIELD
-	bne .LGoToNormalTgtedExitSaveMessage
-.LShieldDestroyed:
-	lda #$1E ;X SHIELD FADES
-	bne .LGoToNormalTgtedExitSaveMessage
-
 .LGoToTgtDamageKilled:
 	jmp .LTgtDamageKilled
 .LGoToTgtDamageSurvived:
@@ -618,6 +601,10 @@ LProcessCasting:
 .LGoToTgtDamage:
 	jmp .LTgtDamage
 
+.LSpellConnects:
+	;Need to check if this spell will be shielded or not
+	jsr LCheckSpellShield
+	bne .LNormalTgtedExit
 .LNoShield:
 	ldx temp6
 	lda LHighSpellLogicLocations,x
@@ -688,6 +675,8 @@ LProcessCasting:
 	jsr LApplyStatus
 	lda #TIMER_MASK
 	jsr LApplyStatus
+	ldx #$13 ;Shield up sound
+	jsr LLoadSoundInS
 	lda #$10 ;X HAS A SHIELD
 .LNormalTgtedExitSaveMessage:
 	sta currentMessage
@@ -805,17 +794,7 @@ LProcessCasting:
 .LAoESpellConnects:
 	;Need to check if this spell will be shielded or not
 	jsr LCheckSpellShield
-	beq .LAoENoShield
-	bmi .LAoEShieldDestroyed
-.LAoEShieldWeakened:
-	lda #$10 ;X HAS A SHIELD
-	sta currentMessage
 	bne .LGoToTryNextTgt
-.LAoEShieldDestroyed:
-	lda #$1E ;X SHIELD FADES
-	sta currentMessage
-	bne .LGoToTryNextTgt
-
 .LAoENoShield:
 	ldx temp6
 	lda LHighSpellLogicLocations,x
@@ -1197,6 +1176,8 @@ LProcessGuarding:
 	stx startingCursorIndexAndTargetID
 	lda #GUARDED_MASK
 	jsr LApplyStatus
+	ldx #$17 ;Guard sound
+	jsr LLoadSoundInS
 	lda #$19 ;X GUARDS Y
 	jmp .LNormalTgtedExitSaveMessage
 
@@ -1246,7 +1227,7 @@ LProcessSpecial:
 	sta hasAction
 
 	lda #$34 ;X RAISES Y
-	sta temp2
+	sta currentMessage
 	lda rand8
 	bpl .LSummonZombie
 .LSummonSkeleton:
@@ -1266,27 +1247,22 @@ LProcessSpecial:
 	jmp LProcessCasting
 
 .LJesterSpecial:
-	jsr LFindNextEmptySpot
-	bmi .LJesterCantSummon ;Returns $FF if no spot available
+	lda hasAction
+	bne .LBailOutToBasicAttack ;Basic attack as first action, summon GIFT as second action, as gift is guaranteed destroyed by the end of the round
 	lda #$35 ;X LEAVES Y
-	sta temp2
+	sta currentMessage
 	lda #$6 ;GIFT ID
-	ldy #20 ;TODO GIFT hp
+	ldy #15 ;TODO GIFT hp
+	ldx #2
 .LSummon:
 	sta enemyID,x
 	tya
 	sta enemyHP,x
 	jsr L4INX
 	stx startingCursorIndexAndTargetID
-	lda temp2 ;The correct message
-	jmp .LNormalTgtedExitSaveMessage
-
-.LJesterCantSummon:
-	lda #$37 ;X CANNOT SUMMON
-	jmp .LNormalTgtedExitSaveMessage
+	jmp .LNormalTgtedExit
 
 .LGiftSpecial:
-	;Need to set a firey effect here
 	lda #0
 	sta battlerHP,x
 	lda #$36 ;X BLOWS UP
@@ -1339,7 +1315,7 @@ LProcessSpecial:
 	ora hasAction
 	sta hasAction
 	rts
-.LBailOutToBasicAttack: ;Used by the OOZE, SLIME, and ARMOR
+.LBailOutToBasicAttack: ;Used by the OOZE, SLIME, JESTER, and ARMOR
 	lda enemyAction
 	and #$60
 	sta temp1
@@ -1612,23 +1588,26 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 	and #$04
 	eor temp5
 	beq .LAlliedSpellsNotBlocked
-
-	ldx #$26 ;tink
-	jsr LLoadSoundInS
-	ldx startingCursorIndexAndTargetID ;Gets reset by LLoadSoundInS
-
 	lda battlerStatus,x
 	and #TIMER_MASK
 	beq .LShieldBreaks
 	lda battlerStatus,x
 	and #(~TIMER_MASK) ;The shield only has 1 more hit left
 	sta battlerStatus,x
+	ldx #$19 ;Shield absorbs hit
+	jsr LLoadSoundInS
+	lda #$10 ;X HAS A SHIELD
+	sta currentMessage
 	lda #1
 	rts
 .LShieldBreaks:
 	lda battlerStatus,x
 	and #(~SHIELDED_MASK) ;Destroy the shield
 	sta battlerStatus,x
+	ldx #$18 ;Shield down
+	jsr LLoadSoundInS
+	lda #$1E ;X SHIELD FADES
+	sta currentMessage
 	lda #$FF
 	rts
 
@@ -1670,17 +1649,28 @@ LApplySharpDamageModifier: SUBROUTINE ;Checks if the battler in X is sharpened, 
 .LNoSharp:
 	rts
 
-LApplyRandomModifier: SUBROUTINE ;Adds a random number between 0-1 if the party is level 1, 2, or 3, otherwise adds a random number between 0-7
+LRandomModifiers: ;Highest is only possible once party reaches level 7
+	.byte 0
+	.byte 1
+	.byte 1
+	.byte 2
+	.byte 2
+	.byte 3
+	.byte 3
+	.byte 4
+
+LApplyRandomModifier: SUBROUTINE ;Adds a randomly chosen modifier limited by the party level to temp2. 
 	lda mazeAndPartyLevel
 	and #$0F
-	cmp #6
-	bcc .LLevelLessThan6
-	lda #$03
-	bne .LCalculate
-.LLevelLessThan6:
-	lda #$01
-.LCalculate:
-	and rand8 ;Preferably would've been jsr LRandom, but this exceeds recursion depth when ally takes blight damage...
+	sta tempPointer2 ;Just a safe temporary spot
+	lda rand8
+	and #$07
+	cmp tempPointer2
+	bcc .LLevelGreaterThanRandom
+	lda tempPointer2
+.LLevelGreaterThanRandom:
+	tax
+	lda LRandomModifiers,x
 	clc
 	adc temp2
 	sta temp2
@@ -1691,9 +1681,6 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
 	stx temp3
 	sty temp4
-
-	lda viewedPartyInfo
-	sta tempPointer6
 
 	ldx #$24 ;Hit
 	jsr LLoadSoundInS
@@ -1714,7 +1701,7 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	lda battlerStatus,x
 	and #GUARDED_MASK
 	beq .LNotGuarded
-	lsr temp2
+	lsr temp2 ;TODO Is 75% reduction when guarded too strong? Maybe just apply to the target...
 	lsr temp2
 .LNotGuarded:
 	;Determine if this battler benefits from Legendary resistance
@@ -1738,6 +1725,7 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 	ldx temp3
 	jsr LOverrideAvatar
 
+	ldy #$FF
 	lda battlerHP,x
 	sed
 	sec
@@ -1763,34 +1751,25 @@ LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y t
 
 	ldx temp3
 	lda battlerHP,x
+	ldy #$FF ;battler died return code
 	sec
 	sbc temp2
 	beq .LDied
 	bcc .LDied
 .LSurvived:
-	ldy temp5
-	bpl .LNormalEnemyLived
-	asl temp2
-	lsr rand8
-	bcc .LNormalEnemyLived
-	inc temp2
-.LNormalEnemyLived:
+	iny ;battler survived return code
 	sta battlerHP,x
-
-	lda tempPointer6
-	sta viewedPartyInfo
-
-	lda #0
-	rts
 .LDied:
-	ldy temp5
-	bpl .LNormalEnemyDied
+	ldx temp5
+	bpl .LNormalEnemy
 	asl temp2
-.LNormalEnemyDied
-	lda tempPointer6
-	sta viewedPartyInfo
-
-	lda #$FF
+	;TODO all damage targeting bosses will be even
+	lda rand8
+	and #$1
+	ora temp2
+	sta temp2
+.LNormalEnemy:
+	tya
 	rts
 
 LDeathCleanup: SUBROUTINE ;Performs death housekeeping for target X
@@ -2194,7 +2173,7 @@ LEnemyExperience:
 	.byte 60 ;Ooze
 LXPToNextLevel:
 	.byte #0 ;Shouldn't be used, xp for level 0 -> 1 --- Also campfire exp
-	.byte #15 ; 1 -> 2
+	.byte #12 ; 1 -> 2
 	.byte #30 ; 2 -> 3
 	.byte #30
 	.byte #60
@@ -2423,7 +2402,6 @@ LAllZeroes:
 	.byte 0
 	.byte 0
 LLowStatGrowth:
-	.byte 1
 	.byte 2
 	.byte 3
 	.byte 4
@@ -2432,8 +2410,9 @@ LLowStatGrowth:
 	.byte 7
 	.byte 8
 	.byte 9
+	.byte 10
 LMidStatGrowth:
-	.byte 2
+	.byte 3
 	.byte 4
 	.byte 6
 	.byte 8
@@ -2443,7 +2422,7 @@ LMidStatGrowth:
 	.byte 16
 	.byte 18
 LHighStatGrowth:
-	.byte 3
+	.byte 4
 	.byte 6
 	.byte 9
 	.byte 12

@@ -856,18 +856,34 @@
 	-Fixed bug where legendary actions could be taken when the boss had 0 health
 	-Added sound and visual effects to GIFT explosion
 	-Campfire location is now dependent on exit location, maybe a little too close
+2/5/26
+	-Added newest graphics for near maze campfire
+	-Fixed a bug caused by a brk instruction being on the page boundary
+2/6/26
+	-Shortened near exit sound
+	-Improved LApplyRandomModifier to have a more balanced growth
+2/7/26
+	-Fixed bug where rand8 could be set to 0 when fighting a boss
+	-Fixed bug where LDetermineNextBattler was able to run independently of LDoBattle because of sound effect restrictions
+	-JESTER AI work
+2/8/26
+	-Increased level 1 power a little bit, and buffed lowest stat growth by one at each level
+	-Decreased experience needed to get to level 2 a little bit
+	-Sound effect work
+2/9/26
+	-Refactored shield logic in order to make use of new sounds
+	-Added guard sound, maybe a little annoying though
+	-Fixed bug where LICH special didn't generate a target, and so always attacked position 1 if it couldn't summon
+
 
 KNOWN BUGS:
-	-rand8 was set to 0 after defeating armor, before fighting ooze?
 	-Occasional audio glitches?
 	-Cast FIRE on Volcio, NO EFFECT??
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
 
 PLAYTEST NOTES:
-	-Power gap between levels 1 and 2 is really high
-		-Takes too long to reach level 2
-	-Jester should use special by default
 	-Start LICH with one or both enemies spawned already
+	-Some default names might be nice
 
 POSSIBLE OPTIMIZATIONS:
 	Potentially movable:
@@ -878,20 +894,23 @@ POSSIBLE OPTIMIZATIONS:
 
 TODO:
 	Shortlist:
-	-Make WISH single target?
 	-Implement all enemy special abilities
 		-HORROR (attack, attack + sleep, attack + blight?)
 		-Add messages to support these abilities...
-	-Connect visual and sound effects
+	-Check visual effect timings after sound compression
 	-Better parry message
 	-Legendary actions for some bosses
 		-Thicket, Jester, Lich, Ooze, Horror
 		-AI code for making use of legendary actions
+	-Balance healing on enemies with legendary resistance
+
+	-Check for brk instructions at $XXFE addresses! The R and L banks don't handle decrements fully
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
 	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
 	-Healing exactly to max health doesn't say X HEALS FULLY
+	-Make WISH single target?
 
 	Dreamlist:
 	-Default names for each class?
@@ -904,7 +923,6 @@ TODO:
 		-Game victory jingle
 		-Game over jingle
 		-Going down stairs sound?*
-		-Guarded sound
 		-Parrying sound
 
 	DOESN'T (generally) REQUIRE LOGIC:
