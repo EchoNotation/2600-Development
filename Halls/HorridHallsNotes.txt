@@ -35,7 +35,6 @@ $E1 Succeeded run
 $E2 Exit battle via running
 
 $F0 Party wins, check to see if party leveled up (F2 if yes), else check which type of positive conclusion this was (go to FD, FE, or FF)
-$F1 Party down, go to FC
 $F2 Party leveled up, go to F3
 $F3 Check which type of positive conclusion this was (go to FD, FE, or FF)
 $FC Game over! (player must reset)
@@ -158,6 +157,7 @@ $03 - LLoadEnemyHP
 $04 - LEnterBattleSetup
 $05 - LLoadPlayerVars
 $06 - LLoadEffect
+$07 - LPlaySoundFromMessage
 
 --- BATTLE ACTIONS --- (STTIIIII) S: is Spell, TT: target ID, I: index.
 0TT00000 : FIGHT --- Targeted basic physical attack using battler's Attack stat.
@@ -362,15 +362,15 @@ MESSAGE COMPONENTS (& strings):
 Only 10 more strings can be allocated!
 
 MESSAGES:
-00: X STABS Y
-01: X (target) CAME BACK*
-02: Unallocated
-03: Unallocated
-04: Unallocated
+00: X (attack flavor) Y
+01: X (attack flavor) Y (ranged)
+02: X MISSES
+03: X MISSES (ranged)
+04: X (target) CAME BACK*
 05: X CASTS Y
 06: X HEALS Y HP
 07: X LOSES Y HP
-08: X MISSES
+08: Unallocated
 09: X DOWN
 0A: PARTY LEVELS UP
 0B: X LEARNS Y (no longer used)
@@ -379,12 +379,12 @@ MESSAGES:
 0E: X WASTES AWAY
 0F: X WAS CURED
 10: X HAS A SHIELD
-11: PARTY DOWN (no longer used)
-12: PARTY FLEES*
-13: PARTY WINS*
+11: X HAS A SHIELD (shield blocks attack)
+12: PARTY FLEES
+13: PARTY WINS
 14: X TRIES TO RUN*
-15: NO EFFECT*
-16: X CANNOT ESCAPE*
+15: NO EFFECT
+16: X CANNOT ESCAPE
 17: X EXILED (no longer used)
 18: X WAKES UP*
 19: X GUARDS Y
@@ -393,8 +393,8 @@ MESSAGES:
 1C: X IS ASLEEP*
 1D: X GUARDS
 1E: X SHIELD FADES
-1F: GAME OVER*
-20: GAME CLEAR*
+1F: GAME OVER
+20: GAME CLEAR
 21: X SHOT A VOLLEY
 22: X (target) (attackFlavor) Y (currentBattler)
 23: X BLOCKS
@@ -406,14 +406,14 @@ MESSAGES:
 29: PARTY MIXED UP (no longer used)
 2A: X MP UP*
 2B: X SMITES Y
-2C: INTO THE CASTLE*
-2D: INTO THE CRYPT*
-2E: INTO THE ABYSS*
-2F: X CLAWS Y
-30: X WHIPS Y
-31: X SLIMES Y
-32: SLIME SPLITS APART
-33: OOZE SPLITS APART
+2C: INTO THE CASTLE
+2D: INTO THE CRYPT
+2E: INTO THE ABYSS
+2F: Unallocated
+30: Unallocated
+31: Unallocated
+32: SLIME SPLITS APART*
+33: OOZE SPLITS APART*
 34: X RAISES Y*
 35: X LEAVES Y*
 36: X BLOWS UP

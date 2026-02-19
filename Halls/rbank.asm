@@ -873,22 +873,22 @@ RXAttacksY:
 	.byte $0
 	.byte $4
 	.byte $1
+RXAttacksYRanged:
+	.byte $0
+	.byte $4
+	.byte $1
+RXMisses:
+	.byte $0
+	.byte $D
+	.byte $FF
+RXMissesRanged:
+	.byte $0
+	.byte $D
+	.byte $FF
 RXCameBack:
 	.byte $1
 	.byte $4E
 	.byte $12
-;Unallocated
-	.byte $0
-	.byte $FF
-	.byte $FF
-;Unallocated
-	.byte $0
-	.byte $FF
-	.byte $FF
-;Unallocated
-	.byte $0
-	.byte $FF
-	.byte $FF
 RXCastsY:
 	.byte $0
 	.byte $A
@@ -901,9 +901,9 @@ RXLosesYHP:
 	.byte $1
 	.byte $C
 	.byte $3
-RXMisses:
+;Unallocated
 	.byte $0
-	.byte $D
+	.byte $FF
 	.byte $FF
 RXDown:
 	.byte $1
@@ -937,10 +937,10 @@ RXHasAShield:
 	.byte $1
 	.byte $19
 	.byte $1A
-RPartyDown:
-	.byte $1B
-	.byte $13
-	.byte $FF
+RXHasAShieldBlock: ;Shield blocks attack
+	.byte $1
+	.byte $19
+	.byte $1A
 RPartyFlees:
 	.byte $1B
 	.byte $1C

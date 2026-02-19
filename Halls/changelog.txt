@@ -881,6 +881,8 @@
 	-Made some more sound effects, and shortened some existing ones
 2/18/26
 	-Sound effect shortening and additions
+	-Sound effect refactor to save quite a lot of space in the L bank, also reducing the amount of ROM needed to add new battle-related sound effects
+	-Removed PARTY DOWN battle state and message, now X DOWN goes directly to GAME OVER
 
 KNOWN BUGS:
 	-Occasional audio glitches?
@@ -904,7 +906,7 @@ TODO:
 		-HORROR (attack, attack + sleep, attack + blight?)
 		-Add messages to support these abilities...
 	-Check visual effect timings after sound compression
-	-Better parry message
+	-Better parry message (instead of X GUARDS)
 	-Legendary actions for some bosses
 		-Thicket, Jester, Lich, Ooze, Horror
 		-AI code for making use of legendary actions
@@ -914,7 +916,7 @@ TODO:
 	Longlist:
 	-Being guarded reduces blight damage, fix?
 	-Healing exactly to max health doesn't say X HEALS FULLY
-	-Make WISH single target?
+	-Re-evaluate WISH spell
 
 	Dreamlist:
 	-Default names for each class?

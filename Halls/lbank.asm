@@ -61,8 +61,6 @@ LDoBattle: SUBROUTINE ;Perform the correct battle logic and update the messages 
 
 LProcessCharacterAdvancement:
 	beq .LGoToCheckPartyXP
-	cmp #$F1
-	beq .LPartyDown
 	cmp #$F2
 	beq .LGoToPartyLeveledUp
 	cmp #$F3
@@ -104,34 +102,24 @@ LProcessCharacterAdvancement:
 	lda #$FF
 	bne .LSaveInBattleAdvancement
 
-.LPartyDown:
-	lda #$FC
-	sta inBattle
-	lda #$11 ;PARTY DOWN
+
+.LGameOver:
+	lda #$1F ;GAME OVER
 .LStoreEndMessage:
 	sta currentMessage 
 	rts
-.LGameOver:
-	ldx #$1E ;Game over
-	jsr LLoadSoundInS
-	lda #$1F ;GAME OVER
-	bne .LStoreEndMessage
 .LGameCompleted:
 	ldx #6
 	jsr LLoadEffect
 	lda #$21 ;Trophy enemy id
 	sta enemyID+1
 	sta enemyHP+1
-	ldx #$1C ;Game clear
-	jsr LLoadSoundInS
 	lda #$20 ;GAME CLEAR
 	bne .LStoreEndMessage
 
 .LCheckPartyXP:
 	lda #$13 ;PARTY WINS
 	sta currentMessage
-	ldx #$1D ;Battle victory
-	jsr LLoadSoundInS
 	lda mazeAndPartyLevel
 	and #$0F
 	sta temp4 ;The current party level
@@ -203,8 +191,6 @@ LProcessCharacterAdvancement:
 
 	lda #$0A ;PARTY LEVELS UP
 	sta currentMessage
-	ldx #$16 ;Level up
-	jsr LLoadSoundInS
 .LCheckTypeOfConclusion:
 	lda playerX
 	jsr L4Asl
@@ -308,8 +294,6 @@ LAdvanceBattlerStatus:
 	stx startingCursorIndexAndTargetID
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
-	ldx #$1F ;Blight
-	jsr LLoadSoundInS
 	lda #$83
 	bne .LSaveInBattle2
 .LDiedToBlight:
@@ -413,8 +397,6 @@ LProcessCasting:
 	jsr LLoadEffect
 .LSkipSpellEffect:
 	ldx cursorIndexAndMessageY ;spellID
-	jsr LLoadSoundInS ;Does not change X
-
 	ldy currentBattler
 	cpy #4
 	bcs .LDontRemoveMana
@@ -681,8 +663,6 @@ LProcessCasting:
 	jsr LApplyStatus
 	lda #TIMER_MASK
 	jsr LApplyStatus
-	ldx #$13 ;Shield up sound
-	jsr LLoadSoundInS
 	lda #$10 ;X HAS A SHIELD
 .LNormalTgtedExitSaveMessage:
 	sta currentMessage
@@ -725,8 +705,6 @@ LProcessCasting:
 	ldx startingCursorIndexAndTargetID
 	lda #BLIGHTED_MASK
 	jsr LApplyStatus
-	ldx #$1F ;Blight
-	jsr LLoadSoundInS
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
 	bne .LNormalTgtedExit
@@ -857,8 +835,6 @@ LProcessCasting:
 .LChaosBlight:
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
-	ldx #$1F ;Blight
-	jsr LLoadSoundInS
 	lda #BLIGHTED_MASK
 	ldx startingCursorIndexAndTargetID
 	jsr LApplyStatus
@@ -900,8 +876,6 @@ LProcessCasting:
 	jsr LDeathCleanup
 	jmp .LTryNextTgt
 .LNoBanishing:
-	ldx #$22 ;Uh-uh
-	jsr LLoadSoundInS
 	lda #$15 ;NO EFFECT
 	sta currentMessage
 	bne .LTryNextTgt
@@ -912,8 +886,6 @@ LProcessCasting:
 	jsr LApplyStatus
 	lda #$1A ;X ATTACK UP
 	sta currentMessage
-	ldx #$26 ;tink
-	jsr LLoadSoundInS
 	bne .LTryNextTgt
 
 .LVolley:
@@ -1011,13 +983,7 @@ LProcessFighting:
 	;Check rangedness
 	jsr LGetBattlerResistances ;X should already contain currentBattler
 	and #RANGED_MASK
-	beq .LMeleeSound
-	ldx #$2A ;Shoot
-	bne .LFightSound
-.LMeleeSound:
-	ldx #$25 ;Swing
-.LFightSound:
-	jsr LLoadSoundInS
+	sta mazeAndEffectColor ;Just store the rangedness for determining the correct sound effect
 
 	jsr LGetTargetFromActionOffensive ;Returns the absolute target ID from the currentBattler's action in X 
 	lda battlerHP,x
@@ -1026,13 +992,17 @@ LProcessFighting:
 	and #$0F
 	bne .LAttackHit
 .LAttackMissed:
-	lda #$08 ;X MISSES
+	lda #$02 ;X MISSES
+	clc
+	adc mazeAndEffectColor
 	sta currentMessage
 	lda #$81
 	bne .LSaveInBattle
 .LAttackHit:
 	stx startingCursorIndexAndTargetID
-	lda #$00 ;X {ATTACK} Y
+	lda #$00 ;X (attack flavor) Y
+	clc
+	adc mazeAndEffectColor ;ranged offset
 	sta currentMessage
 
 	;Check if this battler is parrying
@@ -1046,8 +1016,6 @@ LProcessFighting:
 	lda #$90
 	bne .LSaveInBattle
 .LTargetWasParrying:
-	ldx #$26 ;tink
-	jsr LLoadSoundInS
 	lda #$23 ;X BLOCKS
 	sta currentMessage
 	ldx currentBattler
@@ -1060,16 +1028,11 @@ LProcessFighting:
 	lda #$93
 	bne .LSaveInBattle
 .LRetortDescription:
-	ldx #$25 ;Swing
-	jsr LLoadSoundInS
 	lda #$22 ;X STABS Y (parry version)
 	sta currentMessage
 	lda #$94
 	bne .LSaveInBattle
-.LRetortDamage:
-	ldx #$18 ;Hit
-	jsr LLoadSoundInS
-	
+.LRetortDamage:	
 	ldx startingCursorIndexAndTargetID ;The person who was parrying
 	jsr LGetBattlerAttack
 	sta temp2 ;The raw damage number
@@ -1167,15 +1130,11 @@ LProcessRunning:
 .LFailedToRun:
 	lda #$16 ;X CANNOT ESCAPE
 	sta currentMessage
-	ldx #$22 ;Uh-uh
-	jsr LLoadSoundInS
 	lda #$81
 	bne .LGoToSaveInBattle
 .LRanAway:
 	lda #$12 ;PARTY FLEES
 	sta currentMessage
-	ldx #$1B ;Run away
-	jsr LLoadSoundInS
 	lda #$E2
 	bne .LGoToSaveInBattle
 .LExitBattle:
@@ -1192,16 +1151,12 @@ LProcessGuarding:
 	stx startingCursorIndexAndTargetID
 	lda #GUARDED_MASK
 	jsr LApplyStatus
-	ldx #$17 ;Guard sound
-	jsr LLoadSoundInS
 	lda #$19 ;X GUARDS Y
 	jmp .LNormalTgtedExitSaveMessage
 
 LProcessParrying:
 	lda #PARRYING_MASK
 	jsr LApplyStatus
-	ldx #$26 ;Tink sound
-	jsr LLoadSoundInS
 	lda #$1D ;X GUARDS
 	jmp .LNormalTgtedExitSaveMessage
 
@@ -1290,7 +1245,6 @@ LProcessSpecial:
 	sta temp1 ;Inject the new enemyAction
 	ldx #$1 ;FIRE
 	stx mazeAndEffectColor
-	jsr LLoadSoundInS
 	ldx #$7
 	jsr LLoadEffect
 
@@ -1357,7 +1311,7 @@ LProcessSpecial:
 	lda #4
 	sta startingCursorIndexAndTargetID
 .LArmorExitAndReturn:
-	lda #$01 ;X CAME BACK
+	lda #$04 ;X CAME BACK
 	sta currentMessage
 	rts
 .LArmorRevivePhase2:
@@ -1480,7 +1434,7 @@ LDetermineNextBattler: SUBROUTINE ;Performs the logic required to determine the 
 	bne .LContinue
 
 .LPartyDead:
-	lda #$F1
+	lda #$FC
 	sta inBattle
 	rts
 .LEnemiesDefeated:
@@ -1612,9 +1566,7 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 	lda battlerStatus,x
 	and #(~TIMER_MASK) ;The shield only has 1 more hit left
 	sta battlerStatus,x
-	ldx #$19 ;Shield absorbs hit
-	jsr LLoadSoundInS
-	lda #$10 ;X HAS A SHIELD
+	lda #$11 ;X HAS A SHIELD (shield blocks spell)
 	sta currentMessage
 	lda #1
 	rts
@@ -1622,8 +1574,6 @@ LCheckSpellShield: SUBROUTINE ;Determines if the current spell should be negated
 	lda battlerStatus,x
 	and #(~SHIELDED_MASK) ;Destroy the shield
 	sta battlerStatus,x
-	ldx #$18 ;Shield down
-	jsr LLoadSoundInS
 	lda #$1E ;X SHIELD FADES
 	sta currentMessage
 	lda #$FF
@@ -1699,9 +1649,6 @@ LApplyDamage: SUBROUTINE ;Applies binary damage A of damage type Y to target X. 
 LApplyDamageNoStoring: ;Applies binary damage stored in temp2 of damage type Y to target X. Returns 0 in A if target survived, FF if target died.
 	stx temp3
 	sty temp4
-
-	ldx #$24 ;Hit
-	jsr LLoadSoundInS
 
 	jsr LRandom ;Moved to here because of recursion depth exception in LApplyRandomModifier
 	jsr LApplyRandomModifier
@@ -1798,8 +1745,6 @@ LDeathCleanup: SUBROUTINE ;Performs death housekeeping for target X
 	lda #0
 	sta battlerHP,x
 	sta battlerStatus,x
-	ldx #$28 ;Dead
-	jsr LLoadSoundInS
 	rts
 
 LApplyStatus: SUBROUTINE ;Applies additional status A to target X
@@ -1813,10 +1758,6 @@ LApplyStatus: SUBROUTINE ;Applies additional status A to target X
 LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if healing was denied by blight, 0 if this battler's health was maxed out, else the decimal amount that was healed
 	stx temp5 ;target index
 	sta temp2 ;binary amount to regain
-
-	ldx #$27 ;Heal
-	jsr LLoadSoundInS
-	ldx temp5
 
 	lda #BLIGHTED_MASK
 	and battlerStatus,x
@@ -2699,6 +2640,75 @@ LSetStatPointers:
 	lda (temp4),y
 	rts
 
+LPlaySoundFromMessage:
+	ldx currentMessage
+	cpx #$5 ;X CASTS Y
+	beq .LDetermineSpellSound
+	lda LMessageSounds,x
+	tax
+	bne LLoadSoundInS
+.LDetermineSpellSound
+	ldx cursorIndexAndMessageY
+	bne LLoadSoundInS
+
+LMessageSounds:
+	.byte $25 ;X (attack flavor) Y -- swing
+	.byte $2A ;X (attack flavor) Y -- shoot
+	.byte $25 ;X MISSES -- swing
+	.byte $2A ;X MISSES -- shoot
+	.byte $0 ;X CAME BACK -- ***
+	.byte $0 ;X CASTS Y -- handled separately
+	.byte $27 ;X HEALS Y HP -- heal
+	.byte $24 ;X LOSES Y HP -- hit
+	.byte $0 ;unallocated
+	.byte $28 ;X DOWN -- dead
+	.byte $16 ;PARTY LEVELS UP -- level up
+	.byte $0 ;no longer used
+	.byte $0 ;no longer used
+	.byte $0 ;no longer used
+	.byte $1F ;X WASTES AWAY -- blight
+	.byte $27 ;X WAS CURED -- heal
+	.byte $13 ;X HAS A SHIELD -- shield up
+	.byte $19 ;X HAS A SHIELD -- shield absorbs hit
+	.byte $1B ;PARTY FLEES -- run away
+	.byte $1D ;PARTY WINS -- battle victory
+	.byte $0 ;X TRIES TO RUN -- ***
+	.byte $22 ;NO EFFECT -- uh-uh
+	.byte $22 ;X CANNOT ESCAPE -- uh-uh
+	.byte $0 ;no longer used
+	.byte $0 ;X WAKES UP -- ***
+	.byte $17 ;X GUARDS Y -- guard
+	.byte $26 ;X ATTACK UP -- tink
+	.byte $0 ;X FELL ASLEEP -- ***
+	.byte $0 ;X IS ASLEEP -- ***
+	.byte $26 ;X GUARDS -- tink
+	.byte $18 ;X SHIELD FADES -- shield down
+	.byte $1E ;GAME OVER -- game over
+	.byte $1C ;GAME CLEAR -- game clear
+	.byte $0B ;X SHOT A VOLLEY -- volley (not handled by casts message)
+	.byte $25 ;X (attack flavor) Y (riposte) -- swing
+	.byte $26 ;X BLOCKS -- tink
+	.byte $0 ;PARTY HP UP -- ***
+	.byte $0 ;PARTY MP UP -- ***
+	.byte $27 ;X HEALS FULLY -- heal
+	.byte $27 ;PARTY HEALS FULLY (campfire) -- heal
+	.byte $0 ;PARTY STATUS CLEAR -- ***
+	.byte $0 ;no longer used
+	.byte $0 ;X MP UP -- ***
+	.byte $0A ;X SMITES Y -- smite (not handled by casts message)
+	.byte $1A ;INTO THE CASTLE -- descent
+	.byte $1A ;INTO THE CRYPT -- descent
+	.byte $1A ;INTO THE ABYSS -- descent
+	.byte $0 ;unallocated
+	.byte $0 ;unallocated
+	.byte $0 ;unallocated
+	.byte $0 ;SLIME SPLITS APART -- ***
+	.byte $0 ;OOZE SPLITS APART -- ***
+	.byte $0 ;X RAISES Y -- ***
+	.byte $0 ;X LEAVES Y -- ***
+	.byte $01 ;X BLOWS UP -- fire
+	.byte $0 ;unallocated
+
 	ORG $DF80
 	RORG $FF80
 
@@ -2735,6 +2745,7 @@ LLowLabelBytes:
 	.byte (LEnterBattleSetup & $FF)
 	.byte (LLoadPlayerVars & $FF)
 	.byte (LLoadEffect & $FF)
+	.byte (LPlaySoundFromMessage & $FF)
 
 LHighLabelBytes:
 	.byte (LDoBattle >> 8 & $FF)
@@ -2744,6 +2755,7 @@ LHighLabelBytes:
 	.byte (LEnterBattleSetup >> 8 & $FF)
 	.byte (LLoadPlayerVars >> 8 & $FF)
 	.byte (LLoadEffect >> 8 & $FF)
+	.byte (LPlaySoundFromMessage >> 8 & $FF)
 
 	ORG $DFB0
 	RORG $FFB0

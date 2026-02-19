@@ -101,7 +101,7 @@ SLogoColorsLoop:
 	;ldx #$07 ;Effect ID
 	;jsr SRunFunctionInLBank
 	;ldx #$1B
-	;jsr STryLoadSound
+	;jsr SLoadSound
 #endif
 
 SStartOfFrame:
@@ -175,7 +175,10 @@ SDontNeedANewBattler:
 	ldy #0 ;Subroutine ID for LDoBattle
 	jsr SRunFunctionInLBank
 	lda inBattle
-	bmi SWaitForVblankTimer
+	beq SJustExitedBattle
+	ldy #7 ;Subroutine ID for LPlaySoundFromMessage
+	jsr SRunFunctionInLBank
+	jmp SWaitForVblankTimer
 
 SJustExitedBattle:
 	ldy #2 ;Subroutine ID for LUpdateAvatars
@@ -331,11 +334,11 @@ SNearExitCheckLoop:
 SAdjacentToExit:
 	cld
 	ldx #$14 ;Near exit
-	jsr STryLoadSound
+	jsr SLoadSound
 	jmp STryGenerateEncounter
 SNotNearExit:
 	ldx #$23 ;Footstep
-	jsr STryLoadSound
+	jsr SLoadSound
 STryGenerateEncounter:
 	ldx highlightedLineAndSteps
 	bne SNoRandomEncounter
@@ -352,7 +355,7 @@ SEncounterGenerated:
 	ldx #2 ;Battle transition effect
 	jsr SSetupTransitionEffect
 	ldx #$15 ;Battle start
-	jsr STryLoadSound
+	jsr SLoadSound
 	jmp SPartyDidNotMove
 SNoRandomEncounter:
 	dec highlightedLineAndSteps
@@ -425,7 +428,7 @@ STryStartGame:
 	bne SWaitForOverscanTimer
 	;If here, that means that the button was pressed when on the ready option
 	ldx #$20 ;Menu confirm
-	jsr STryLoadSound
+	jsr SLoadSound
 	lda #$03 ;Maze level 1, party level 1
 	;lda #$19
 	sta mazeAndPartyLevel
@@ -1336,7 +1339,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	rts
 .SContinue:
 	ldx #$20 ;Menu confirm
-	jsr STryLoadSound
+	jsr SLoadSound
 	lda currentMenu
 	beq .SReturn
 	ldx currentBattler
@@ -1500,7 +1503,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	bpl .SConfirmSpell
 	;Not enough mana to select this spell. Play an error sound effect
 	ldx #$22 ;Menu nope
-	jsr STryLoadSound
+	jsr SLoadSound
 	rts
 .SConfirmSpell:	
 	;Need to determine what the targeting of this spell is in order to advance to none or correct targeting
@@ -1844,7 +1847,7 @@ SUpdateMenuCursorLeftRight:
 	cmp previousInput
 	beq .SReturn
 	ldx #$21 ;Menu move
-	jsr STryLoadSound
+	jsr SLoadSound
 .SReturn:
 	rts
 
@@ -2623,13 +2626,7 @@ SUhUhPitches:
 	ORG $FE00
 	RORG $FE00
 
-STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
-; 	lda currentSound
-; 	cmp #$20 ;Menu confirm
-; 	beq .SForceLoad
-; 	cpx currentSound
-; 	bcc .SDontLoad ;Don't load a sound if ID is lower than one that is already playing
-; .SForceLoad:
+SLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
 	stx currentSound
 	lda SSoundMetadata,x
 	lsr
@@ -2648,8 +2645,6 @@ STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
 .SNotPitchable:
 	dec pitchShift
 .SShifted:
-.SDontLoad:
-	lda #$FF
 	rts
 
 SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
@@ -2979,7 +2974,7 @@ SLoadSoundEffectFromL:
 	nop
 	nop
 	nop
-	jsr STryLoadSound
+	jsr SLoadSound
 	sta $1FF7
 
 SLogoColors:
