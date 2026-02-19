@@ -100,7 +100,7 @@ SLogoColorsLoop:
 	;ldy #6 ;Function ID
 	;ldx #$07 ;Effect ID
 	;jsr SRunFunctionInLBank
-	;ldx #$14
+	;ldx #$1B
 	;jsr STryLoadSound
 #endif
 
@@ -1985,7 +1985,7 @@ SAfterLoadingEnemyAI:
 
 SSoundMetadata:
 	.byte $00 ;No sound
-	.byte $8A ;FIRE
+	.byte $6A ;FIRE
 	.byte $68 ;SLEEP
 	.byte $D5 ;BLIZRD
 	.byte $64 ;DRAIN
@@ -1996,11 +1996,11 @@ SSoundMetadata:
 	.byte $45 ;HEAL
 	.byte $A5 ;SMITE
 	.byte $B3 ;VOLLEY
-	.byte $95 ;AoE spell
-	.byte $A2 ;BLIGHT
-	.byte $95 ;AoE spell
+	.byte $75 ;AoE spell
+	.byte $45 ;Single target spell
+	.byte $75 ;AoE spell
 	.byte $94 ;WITHER
-	.byte $A6 ;BANISH
+	.byte $76 ;BANISH
 	.byte $86 ;TRANCE
 	.byte $86 ;WISH
 	.byte $84 ;Shield up
@@ -2010,15 +2010,15 @@ SSoundMetadata:
 	.byte $56 ;Guard
 	.byte $56 ;Shield down
 	.byte $62 ;Shield absorbs hit
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
+	.byte $B6 ;Descent
+	.byte $B4 ;Run away
+	.byte $F6 ;Game clear
+	.byte $96 ;Battle victory
+	.byte $A9 ;Game over
+	.byte $A2 ;Blight
 	.byte $24 ;Menu confirm
 	.byte $21 ;Menu move
-	.byte $16 ;Menu nope
+	.byte $45 ;Uh-uh
 	.byte $22 ;Footstep
 	.byte $43 ;Hit
 	.byte $44 ;Swing
@@ -2032,8 +2032,6 @@ SSoundMetadata:
 	RORG $FC00
 
 SFireVoices:
-	.byte $8
-	.byte $8
 	.byte $8
 	.byte $8
 	.byte $8
@@ -2160,9 +2158,7 @@ SAoESpellVoices:
 	.byte $6
 	.byte $6
 	.byte $6
-	.byte $6
 	.byte $0
-	.byte $6
 	.byte $6
 	.byte $6
 	.byte $6
@@ -2181,9 +2177,6 @@ SBanishSpellVoices:
 	.byte $F
 	.byte $3
 	.byte $3
-	.byte $8
-	.byte $8
-	.byte $8
 	.byte $8
 	.byte $8
 	.byte $8
@@ -2211,8 +2204,6 @@ SMenuConfirmVoices:
 SMenuMoveVoices:
 	.byte $C
 	.byte $C
-SMenuNopeVoices:
-	.byte $7
 SFootstepVoices:
 	.byte $6
 	.byte $6
@@ -2287,6 +2278,51 @@ SShieldDownVoices:
 	.byte $6
 	.byte $7
 	.byte $7
+SDescentVoices:
+	.byte $6
+	.byte $6
+	.byte $0
+	.byte $6
+	.byte $6
+	.byte $0
+	.byte $6
+	.byte $6
+	.byte $0
+	.byte $6
+	.byte $6
+SGameClearVoices:
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $6
+SBattleVictoryVoices:
+	.byte $6
+	.byte $6
+	.byte $6
+	.byte $0
+	.byte $6
+	.byte $0
+	.byte $6
+	.byte $0
+	.byte $6
+	.byte $0
+	.byte $6
+SGameOverVoices:
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $C
+	.byte $0
+	.byte $C
+	.byte $C
+	.byte $C
+SUhUhVoices:
+	.byte $E
+	.byte $A
+	.byte $E
+	.byte $A
 
 	ORG $FD00
 	RORG $FD00
@@ -2296,8 +2332,6 @@ SFirePitches:
 	.byte $18
 	.byte $18
 	.byte $1F
-	.byte $1F
-	.byte $18
 	.byte $1F
 	.byte $18
 SSleepPitches:
@@ -2419,13 +2453,11 @@ SBlightPitches:
 SAoESpellPitches:
 	.byte $2
 	.byte $3
-	.byte $4
 	.byte $5
 	.byte $0
 	.byte $3
 	.byte $5
 	.byte $6
-	.byte $7
 SWitherPitches:
 	.byte $14
 	.byte $11
@@ -2443,10 +2475,7 @@ SBanishSpellPitches:
 	.byte $4
 	.byte $3
 	.byte $1
-	.byte $1F
-	.byte $1
-	.byte $1F
-	.byte $1
+	.byte $6
 STrancePitches:
 	.byte $A
 	.byte $9
@@ -2471,8 +2500,6 @@ SMenuConfirmPitches:
 SMenuMovePitches:
 	.byte $5
 	.byte $4
-SMenuNopePitches:
-	.byte $F
 SFootstepPitches:
 	.byte $B
 	.byte $F
@@ -2547,17 +2574,62 @@ SShieldDownPitches:
 	.byte $4
 	.byte $3
 	.byte $6
+SDescentPitches:
+	.byte $E
+	.byte $F
+	.byte $0
+	.byte $D
+	.byte $F
+	.byte $0
+	.byte $C
+	.byte $F
+	.byte $0
+	.byte $B
+	.byte $F
+SGameClearPitches:
+	.byte $2
+	.byte $3
+	.byte $2
+	.byte $1
+SBattleVictoryPitches:
+	.byte $2
+	.byte $3
+	.byte $5
+	.byte $0
+	.byte $2
+	.byte $0
+	.byte $5
+	.byte $0
+	.byte $8
+	.byte $0
+	.byte $3
+SGameOverPitches:
+	.byte $17
+	.byte $17
+	.byte $13
+	.byte $14
+	.byte $14
+	.byte $F
+	.byte $0
+	.byte $13
+	.byte $10
+	.byte $D
+SUhUhPitches:
+	.byte $C
+	.byte $C
+	.byte $7
+	.byte $8
 
 	ORG $FE00
 	RORG $FE00
 
 STryLoadSound: SUBROUTINE ;Attempts to set the sound effect X for loading
-	lda currentSound
-	cmp #$20 ;Menu confirm
-	beq .SForceLoad
-	cpx currentSound
-	bcc .SDontLoad ;Don't load a sound if ID is lower than one that is already playing
-.SForceLoad:
+; 	lda currentSound
+; 	cmp #$20 ;Menu confirm
+; 	beq .SForceLoad
+; 	cpx currentSound
+; 	bcc .SDontLoad ;Don't load a sound if ID is lower than one that is already playing
+; .SForceLoad:
 	stx currentSound
 	lda SSoundMetadata,x
 	lsr
@@ -2634,7 +2706,7 @@ SVoices:
 	.byte (SSmiteVoices & $FF)
 	.byte (SVolleyVoices & $FF)
 	.byte (SAoESpellVoices & $FF)
-	.byte (SBlightVoices & $FF)
+	.byte (SSingleTargetSpellVoices & $FF)
 	.byte (SAoESpellVoices & $FF)
 	.byte (SWitherVoices & $FF)
 	.byte (SBanishSpellVoices & $FF)
@@ -2647,15 +2719,15 @@ SVoices:
 	.byte (SGuardVoices & $FF)
 	.byte (SShieldDownVoices & $FF)
 	.byte ((SShieldVoices+2) & $FF) ;Shield absorbs hit
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
-	.byte 0
+	.byte (SDescentVoices & $FF)
+	.byte (SDescentVoices & $FF)
+	.byte (SGameClearVoices & $FF)
+	.byte (SBattleVictoryVoices & $FF)
+	.byte (SGameOverVoices & $FF)
+	.byte (SBlightVoices & $FF)
 	.byte (SMenuConfirmVoices & $FF)
 	.byte (SMenuMoveVoices & $FF)
-	.byte (SMenuNopeVoices & $FF)
+	.byte (SUhUhVoices & $FF)
 	.byte (SFootstepVoices & $FF)
 	.byte (SHitVoices & $FF)
 	.byte (SSwingVoices & $FF)

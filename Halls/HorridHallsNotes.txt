@@ -119,10 +119,10 @@ $09 - Single target sound
 $0A - SMITE
 $0B - VOLLEY
 $0C - AoE sound
-$0D - BLIGHT spell
+$0D - Single target sound
 $0E - AoE sound
 $0F - WITHER
-$10 - BANISH spell
+$10 - BANISH
 $11 - TRANCE
 $12 - WISH
 $13 - SHIELD sound
@@ -132,15 +132,15 @@ $16 - Level up
 $17 - Guard
 $18 - Shield down
 $19 - Shield absorbs hit
-$1A
-$1B
-$1C
-$1D
-$1E
-$1F
+$1A - Descend down stairs
+$1B - Run away
+$1C - Game clear
+$1D - Battle victory
+$1E - Game over
+$1F - Blight
 $20 - Menu confirm
 $21 - Menu move
-$22 - Menu nope
+$22 - Uh-uh
 $23 - Footstep
 $24 - Hit
 $25 - Swing
@@ -363,7 +363,7 @@ Only 10 more strings can be allocated!
 
 MESSAGES:
 00: X STABS Y
-01: X (target) CAME BACK
+01: X (target) CAME BACK*
 02: Unallocated
 03: Unallocated
 04: Unallocated
@@ -373,51 +373,51 @@ MESSAGES:
 08: X MISSES
 09: X DOWN
 0A: PARTY LEVELS UP
-0B: X LEARNS Y
-0C: X MOVES UP
-0D: X BACKS AWAY
+0B: X LEARNS Y (no longer used)
+0C: X MOVES UP (no longer used)
+0D: X BACKS AWAY (no longer used)
 0E: X WASTES AWAY
 0F: X WAS CURED
 10: X HAS A SHIELD
-11: PARTY DOWN
-12: PARTY FLEES
-13: PARTY WINS
-14: X TRIES TO RUN
-15: NO EFFECT
-16: X CANNOT ESCAPE
-17: X EXILED
-18: X WAKES UP
+11: PARTY DOWN (no longer used)
+12: PARTY FLEES*
+13: PARTY WINS*
+14: X TRIES TO RUN*
+15: NO EFFECT*
+16: X CANNOT ESCAPE*
+17: X EXILED (no longer used)
+18: X WAKES UP*
 19: X GUARDS Y
 1A: X ATTACK UP
-1B: X FELL ASLEEP
-1C: X IS ASLEEP
+1B: X FELL ASLEEP*
+1C: X IS ASLEEP*
 1D: X GUARDS
 1E: X SHIELD FADES
-1F: GAME OVER
-20: GAME CLEAR
+1F: GAME OVER*
+20: GAME CLEAR*
 21: X SHOT A VOLLEY
 22: X (target) (attackFlavor) Y (currentBattler)
 23: X BLOCKS
-24: PARTY HP UP
-25: PARTY MP UP
+24: PARTY HP UP*
+25: PARTY MP UP*
 26: X HEALS FULLY
 27: PARTY HEALS FULLY
 28: PARTY STATUS CLEAR
-29: PARTY MIXED UP
-2A: X MP UP
+29: PARTY MIXED UP (no longer used)
+2A: X MP UP*
 2B: X SMITES Y
-2C: INTO THE CASTLE
-2D: INTO THE CRYPT
-2E: INTO THE ABYSS
+2C: INTO THE CASTLE*
+2D: INTO THE CRYPT*
+2E: INTO THE ABYSS*
 2F: X CLAWS Y
 30: X WHIPS Y
 31: X SLIMES Y
 32: SLIME SPLITS APART
 33: OOZE SPLITS APART
-34: X RAISES Y
-35: X LEAVES Y
+34: X RAISES Y*
+35: X LEAVES Y*
 36: X BLOWS UP
-37: X CANNOT SUMMON
+37: X CANNOT SUMMON (no longer used)
 
 Status Effects:
 Pos:

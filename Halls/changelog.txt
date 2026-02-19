@@ -874,7 +874,13 @@
 	-Refactored shield logic in order to make use of new sounds
 	-Added guard sound, maybe a little annoying though
 	-Fixed bug where LICH special didn't generate a target, and so always attacked position 1 if it couldn't summon
-
+2/11/26
+	-Healing no longer twice as effective on enemies with legendary resistance
+2/15/26
+	-Parrying makes tink sound
+	-Made some more sound effects, and shortened some existing ones
+2/18/26
+	-Sound effect shortening and additions
 
 KNOWN BUGS:
 	-Occasional audio glitches?
@@ -902,13 +908,11 @@ TODO:
 	-Legendary actions for some bosses
 		-Thicket, Jester, Lich, Ooze, Horror
 		-AI code for making use of legendary actions
-	-Balance healing on enemies with legendary resistance
 
 	-Check for brk instructions at $XXFE addresses! The R and L banks don't handle decrements fully
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
-	-Healing enemies does not take legendary resistance into account. As a result, healing enemies that have it is highly effective.
 	-Healing exactly to max health doesn't say X HEALS FULLY
 	-Make WISH single target?
 
@@ -919,16 +923,10 @@ TODO:
 	-PAL version
 
 	Additional sounds to consider:
-		-Battle victory jingle*
-		-Game victory jingle
-		-Game over jingle
-		-Going down stairs sound?*
-		-Parrying sound
 
 	DOESN'T (generally) REQUIRE LOGIC:
 		-Improve word choice on some messages
 		-Improve font
-		-Improve in-maze campfire graphics to look less squished when they appear
 		-Create all enemy graphics
 		-Tune all enemy AI tables
 		-Tune all enemy stats
@@ -938,5 +936,6 @@ TODO:
 		-Tune all encounter tables
 		-Tune spell mana costs
 		-Tune maze exit tables
+		-Tune campfire locations
 		-Tune encounter rate
 		-Create all sound effects

@@ -112,6 +112,8 @@ LProcessCharacterAdvancement:
 	sta currentMessage 
 	rts
 .LGameOver:
+	ldx #$1E ;Game over
+	jsr LLoadSoundInS
 	lda #$1F ;GAME OVER
 	bne .LStoreEndMessage
 .LGameCompleted:
@@ -120,12 +122,16 @@ LProcessCharacterAdvancement:
 	lda #$21 ;Trophy enemy id
 	sta enemyID+1
 	sta enemyHP+1
+	ldx #$1C ;Game clear
+	jsr LLoadSoundInS
 	lda #$20 ;GAME CLEAR
 	bne .LStoreEndMessage
 
 .LCheckPartyXP:
 	lda #$13 ;PARTY WINS
 	sta currentMessage
+	ldx #$1D ;Battle victory
+	jsr LLoadSoundInS
 	lda mazeAndPartyLevel
 	and #$0F
 	sta temp4 ;The current party level
@@ -302,7 +308,7 @@ LAdvanceBattlerStatus:
 	stx startingCursorIndexAndTargetID
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
-	ldx #$0D ;Blight
+	ldx #$1F ;Blight
 	jsr LLoadSoundInS
 	lda #$83
 	bne .LSaveInBattle2
@@ -719,6 +725,8 @@ LProcessCasting:
 	ldx startingCursorIndexAndTargetID
 	lda #BLIGHTED_MASK
 	jsr LApplyStatus
+	ldx #$1F ;Blight
+	jsr LLoadSoundInS
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
 	bne .LNormalTgtedExit
@@ -849,6 +857,8 @@ LProcessCasting:
 .LChaosBlight:
 	lda #$0E ;X WASTES AWAY
 	sta currentMessage
+	ldx #$1F ;Blight
+	jsr LLoadSoundInS
 	lda #BLIGHTED_MASK
 	ldx startingCursorIndexAndTargetID
 	jsr LApplyStatus
@@ -890,6 +900,8 @@ LProcessCasting:
 	jsr LDeathCleanup
 	jmp .LTryNextTgt
 .LNoBanishing:
+	ldx #$22 ;Uh-uh
+	jsr LLoadSoundInS
 	lda #$15 ;NO EFFECT
 	sta currentMessage
 	bne .LTryNextTgt
@@ -1155,11 +1167,15 @@ LProcessRunning:
 .LFailedToRun:
 	lda #$16 ;X CANNOT ESCAPE
 	sta currentMessage
+	ldx #$22 ;Uh-uh
+	jsr LLoadSoundInS
 	lda #$81
-	bne .LSaveInBattle
+	bne .LGoToSaveInBattle
 .LRanAway:
 	lda #$12 ;PARTY FLEES
 	sta currentMessage
+	ldx #$1B ;Run away
+	jsr LLoadSoundInS
 	lda #$E2
 	bne .LGoToSaveInBattle
 .LExitBattle:
@@ -1184,6 +1200,8 @@ LProcessGuarding:
 LProcessParrying:
 	lda #PARRYING_MASK
 	jsr LApplyStatus
+	ldx #$26 ;Tink sound
+	jsr LLoadSoundInS
 	lda #$1D ;X GUARDS
 	jmp .LNormalTgtedExitSaveMessage
 
@@ -1843,8 +1861,13 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	lda #0
 	rts
 .LHealEnemy:
-	;Could check here for legendary resistance
 	sta temp2
+	sta tempPointer5 ;Correct number to show
+	jsr LGetBattlerResistances
+	and #LEGENDARY_RESIST_MASK
+	beq .LNormalEnemy
+	lsr temp2
+.LNormalEnemy:
 	lda battlerHP,x
 	clc
 	adc temp2 ;amount to heal
@@ -1852,20 +1875,16 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	jsr LGetBattlerMaxHP
 	ldx temp5 ;target id
 	cmp temp3 ; maxHP - predicted health after healing 				TODO carry clear iff maxHP < predicted health
-	bcs .LNoEnemyMaxOut
-.LMaxedOutHPEnemy:
-	sta battlerHP,x ;predicted healing is greater, so just store the max hp
-	lda #0
-	rts
+	bcc .LMaxedOutHP
 .LNoEnemyMaxOut:
 	lda temp3
 	sta battlerHP,x
-	lda temp2
+	lda tempPointer5
 	brk ;LBinaryToDecimal
 	rts
 
 
-LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Returns FF if this battler does not have mp.s
+LApplyRestoration: SUBROUTINE ;Applies binary mana restoration A to target X. Returns FF if this battler does not have mp.
 	stx temp5 ;target index
 	brk ;LBinaryToDecimal
 	sta temp3 ;decimal amount to regain
