@@ -26,16 +26,11 @@ SClear:
 SSkipSeeding:
 	sta rand8
 
+	jsr SPickDefaultNames
+
 	lda #$F8
 	sta currentInput
 	sta previousInput
-
-	ldx #19
-	lda #A
-SClearNames:
-	sta name1,x
-	dex
-	bpl SClearNames
 
 SSoftReset:
 	ldx #$FF
@@ -114,16 +109,22 @@ SStartOfFrame:
 	lda #0
 	sta VSYNC ;Stop broadcasting VSYNC signal
 
+	lda #VBLANK_TIMER_DURATION
+	sta TIM64T ;Set timer to complete at the end of VBLANK.
 
 	jsr SRandom ;Tick the random number generator
 
 	lda #1
 	bit SWCHB
-	beq SSoftReset ;Reset the game if the console reset switch is pressed
-
-	lda #VBLANK_TIMER_DURATION
-	sta TIM64T ;Set timer to complete at the end of VBLANK.
-
+	beq SSoftReset ;Reset the game if the console reset switch is pressed\
+	lda #2
+	bit SWCHB
+	bne SGameSelectNotPressed
+	lda currentMenu
+	cmp #$FF
+	bne SGameSelectNotPressed
+	jsr SPickDefaultNames
+SGameSelectNotPressed:
 	lda inBattle
 	bne SBattleLogicVBlank ;Skip this logic if we are not in maze mode...
 	lda currentMenu
@@ -390,10 +391,8 @@ SDontNeedCycleReset:
 	sta currentBattler+8
 	sta currentBattler+14
 	sta currentBattler+15
-	
-
-
 SDontCycleLogo:
+
 	lda currentInput
 	and #$08
 	beq STryStartGame
@@ -496,6 +495,23 @@ SCheckCursorChange: SUBROUTINE ;Facilitates changing party member's names and cl
 	sta tempPointer1
 	lda #0
 	sta tempPointer1+1
+
+	lda flags
+	ldx enemyID
+	and SDefaultNameFlags,x
+	beq .SDefaultNameFlagNotSet
+	;Clear this party members name and the default name flag
+	lda flags
+	eor SDefaultNameFlags,x
+	sta flags
+	lda #0
+	sta name1,x
+	sta name2,x
+	sta name3,x
+	sta name4,x
+	sta name5,x
+
+.SDefaultNameFlagNotSet:
 	lda (tempPointer1),y
 	clc
 	adc temp6
@@ -1878,14 +1894,6 @@ SCheckEnemies: SUBROUTINE ;Returns the number of enemies currently alive in Y, a
 	ldx tempPointer6
 	rts
 
-SClassTargetingBias:
-	.byte 3 ;Knight
-	.byte 2 ;Rogue
-	.byte 2 ;Cleric
-	.byte 1 ;Wizard
-	.byte 2 ;Ranger
-	.byte 3 ;Paladin
-
 SDetermineEnemyAI: SUBROUTINE ;Sets the enemyAction byte.
 	jmp SLoadEnemyAI
 SAfterLoadingEnemyAI:
@@ -1985,6 +1993,53 @@ SAfterLoadingEnemyAI:
 	ora temp6
 	sta enemyAction
 	rts
+
+SPickDefaultNames: SUBROUTINE ;Randomly assigns from the default names to each of the party members. Used at startup and when GAME SELECT is depressed
+	lda #$0F
+	sta flags ;Indicate that all of these names are defaults
+
+	ldx #3
+.SPickDefaultNamesLoop:
+	jsr SRandom
+	and #$01
+	sta temp1
+	txa
+	asl
+	ora temp1
+	tay
+	lda SDefaultNameLocations,y
+	sta tempPointer1
+	lda #(SDefault1 >> 8 & $FF)
+	sta tempPointer1+1
+
+	ldy #4
+	lda (tempPointer1),y
+	sta name5,x
+	dey
+	lda (tempPointer1),y
+	sta name4,x
+	dey
+	lda (tempPointer1),y
+	sta name3,x
+	dey
+	lda (tempPointer1),y
+	sta name2,x
+	dey
+	lda (tempPointer1),y
+	sta name1,x
+	dex
+	bpl .SPickDefaultNamesLoop
+	rts
+
+SDefaultNameLocations:
+	.byte (SDefault1 & $FF)
+	.byte (SDefault2 & $FF)
+	.byte (SDefault3 & $FF)
+	.byte (SDefault4 & $FF)
+	.byte (SDefault5 & $FF)
+	.byte (SDefault6 & $FF)
+	.byte (SDefault7 & $FF)
+	.byte (SDefault8 & $FF)
 
 SSoundMetadata:
 	.byte $00 ;No sound
@@ -2732,6 +2787,56 @@ SVoices:
 	.byte 0
 	.byte (SShootVoices & $FF)
 
+SDefaultNames:
+SDefault1:
+	.byte A
+	.byte L
+	.byte Y
+	.byte X
+	.byte EMPTY
+SDefault2:
+	.byte L
+	.byte U
+	.byte C
+	.byte A
+	.byte S
+SDefault3:
+	.byte D
+	.byte A
+	.byte V
+	.byte E
+	.byte EMPTY
+SDefault4:
+	.byte T
+	.byte E
+	.byte R
+	.byte I
+	.byte EMPTY
+SDefault5:
+	.byte B
+	.byte O
+	.byte W
+	.byte I
+	.byte E
+SDefault6:
+	.byte Z
+	.byte O
+	.byte E
+	.byte Y
+	.byte EMPTY
+SDefault7
+	.byte S
+	.byte T
+	.byte E
+	.byte V
+	.byte E
+SDefault8:
+	.byte J
+	.byte O
+	.byte E
+	.byte EMPTY
+	.byte EMPTY
+
 	ORG $FEC0
 	RORG $FEC0
 
@@ -3027,12 +3132,13 @@ SMazeEntrances:
 
 SGoToGenerateEncounter:
 	nop $1FF8 ;Go to bank 2
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
+SClassTargetingBias:
+	.byte 3 ;Knight
+	.byte 2 ;Rogue
+	.byte 2 ;Cleric
+	.byte 1 ;Wizard
+	.byte 2 ;Ranger
+	.byte 3 ;Paladin
 	jmp SEncounterGenerated
 
 	ORG $FFB0
@@ -3073,10 +3179,11 @@ SNearbyExitDeltas:
 
 SGoToUpdateEffects:
 	nop $1FF8 ;Go to bank 2
-	nop
-	nop
-	nop
-	nop
+SDefaultNameFlags:
+	.byte $08
+	.byte $04
+	.byte $02
+	.byte $01
 	nop
 	nop
 	jmp SAfterEffectUpdate

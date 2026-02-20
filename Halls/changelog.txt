@@ -883,6 +883,10 @@
 	-Sound effect shortening and additions
 	-Sound effect refactor to save quite a lot of space in the L bank, also reducing the amount of ROM needed to add new battle-related sound effects
 	-Removed PARTY DOWN battle state and message, now X DOWN goes directly to GAME OVER
+2/19/26
+	-Default names implemented!
+		-Two options for each party member, automatically cleared when manually entering a name, but can be restored with the SELECT switch when on the
+		startup screen
 
 KNOWN BUGS:
 	-Occasional audio glitches?
@@ -891,7 +895,6 @@ KNOWN BUGS:
 
 PLAYTEST NOTES:
 	-Start LICH with one or both enemies spawned already
-	-Some default names might be nice
 
 POSSIBLE OPTIMIZATIONS:
 	Potentially movable:
@@ -910,6 +913,7 @@ TODO:
 	-Legendary actions for some bosses
 		-Thicket, Jester, Lich, Ooze, Horror
 		-AI code for making use of legendary actions
+	-Prevent GAME OVER and GAME CLEAR noises from being heard repeatedly when continuing to "advance" the battle
 
 	-Check for brk instructions at $XXFE addresses! The R and L banks don't handle decrements fully
 
@@ -919,7 +923,6 @@ TODO:
 	-Re-evaluate WISH spell
 
 	Dreamlist:
-	-Default names for each class?
 
 	Post-release:
 	-PAL version
