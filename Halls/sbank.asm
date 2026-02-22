@@ -334,11 +334,11 @@ SNearExitCheckLoop:
 	bmi SNotNearExit
 SAdjacentToExit:
 	cld
-	ldx #$14 ;Near exit
+	ldx #NEAR_EXIT_SOUND
 	jsr SLoadSound
 	jmp STryGenerateEncounter
 SNotNearExit:
-	ldx #$23 ;Footstep
+	ldx #FOOTSTEP_SOUND
 	jsr SLoadSound
 STryGenerateEncounter:
 	ldx highlightedLineAndSteps
@@ -355,7 +355,7 @@ SEncounterGenerated:
 	lda #TRANSITIONING_TO_BATTLE
 	ldx #2 ;Battle transition effect
 	jsr SSetupTransitionEffect
-	ldx #$15 ;Battle start
+	ldx #BATTLE_START_SOUND
 	jsr SLoadSound
 	jmp SPartyDidNotMove
 SNoRandomEncounter:
@@ -426,10 +426,10 @@ STryStartGame:
 	cpy #24 ;The ready button
 	bne SWaitForOverscanTimer
 	;If here, that means that the button was pressed when on the ready option
-	ldx #$20 ;Menu confirm
+	ldx #MENU_CONFIRM_SOUND
 	jsr SLoadSound
-	lda #$03 ;Maze level 1, party level 1
-	;lda #$19
+	lda #$01 ;Maze level 1, party level 1
+	lda #$39
 	sta mazeAndPartyLevel
 	lda #15
 	sta experienceToNextLevel
@@ -444,7 +444,6 @@ SForceHappyMood:
 	bpl SForceHappyMood
 
 	lda #NEED_NEW_MAZE
-	ora flags
 	sta flags
 	lda #0
 	sta viewedPartyInfo ;Needed because this can actually be set by the SChangePartyInfo on the main screen
@@ -1354,7 +1353,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SReturn:
 	rts
 .SContinue:
-	ldx #$20 ;Menu confirm
+	ldx #MENU_CONFIRM_SOUND
 	jsr SLoadSound
 	lda currentMenu
 	beq .SReturn
@@ -1518,7 +1517,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 	ldy highlightedLineAndSteps
 	bpl .SConfirmSpell
 	;Not enough mana to select this spell. Play an error sound effect
-	ldx #$22 ;Menu nope
+	ldx #UH_UH_SOUND
 	jsr SLoadSound
 	rts
 .SConfirmSpell:	
@@ -1862,7 +1861,7 @@ SUpdateMenuCursorLeftRight:
 	lda currentInput
 	cmp previousInput
 	beq .SReturn
-	ldx #$21 ;Menu move
+	ldx #MENU_MOVE_SOUND
 	jsr SLoadSound
 .SReturn:
 	rts
@@ -2728,7 +2727,7 @@ SUpdateSound: SUBROUTINE ;Handles the loading and playback of sound effects
 	clc
 	adc pitchShift
 	sta AUDF0
-	lda #3
+	lda #3 ;3
 	sta AUDV0
 	rts
 .SSoundFinished:

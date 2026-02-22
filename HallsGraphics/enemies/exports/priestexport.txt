@@ -9,11 +9,11 @@
 	.byte %00111000
 	.byte %00111000
 
-	.byte $2
-	.byte $2
-	.byte $2
-	.byte $2
-	.byte $2
-	.byte $e
+	.byte $94
+	.byte $96
+	.byte $96
+	.byte $96
+	.byte $98
+	.byte $1c
 	.byte $fa
 	.byte $fa

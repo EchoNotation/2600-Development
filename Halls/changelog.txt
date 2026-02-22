@@ -887,9 +887,14 @@
 	-Default names implemented!
 		-Two options for each party member, automatically cleared when manually entering a name, but can be restored with the SELECT switch when on the
 		startup screen
+2/20/26
+	-Prevented GAME OVER and GAME CLEAR noises from being heard repeatedly when continuing to "advance" the battle
+	-Imported all the current enemy art
+2/21/26
+	-First working HORROR AI
 
-KNOWN BUGS:
-	-Occasional audio glitches?
+OBSERVED BUGS:
+	-Occasional audio glitches? Haven't seen for a long time
 	-Cast FIRE on Volcio, NO EFFECT??
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
 
@@ -905,15 +910,11 @@ POSSIBLE OPTIMIZATIONS:
 
 TODO:
 	Shortlist:
-	-Implement all enemy special abilities
-		-HORROR (attack, attack + sleep, attack + blight?)
-		-Add messages to support these abilities...
 	-Check visual effect timings after sound compression
 	-Better parry message (instead of X GUARDS)
-	-Legendary actions for some bosses
-		-Thicket, Jester, Lich, Ooze, Horror
-		-AI code for making use of legendary actions
-	-Prevent GAME OVER and GAME CLEAR noises from being heard repeatedly when continuing to "advance" the battle
+	-AI code for making use of legendary actions
+	-Improved messages for certain enemies' spell casting
+	-Constuct more sounds out of already existing ones
 
 	-Check for brk instructions at $XXFE addresses! The R and L banks don't handle decrements fully
 
@@ -922,17 +923,11 @@ TODO:
 	-Healing exactly to max health doesn't say X HEALS FULLY
 	-Re-evaluate WISH spell
 
-	Dreamlist:
+	Post-completion:
+	-PAL50/PAL60 versions
 
-	Post-release:
-	-PAL version
-
-	Additional sounds to consider:
-
-	DOESN'T (generally) REQUIRE LOGIC:
-		-Improve word choice on some messages
+	DOESN'T REQUIRE LOGIC:
 		-Improve font
-		-Create all enemy graphics
 		-Tune all enemy AI tables
 		-Tune all enemy stats
 			-Attack, magic, speed, HP, experience
@@ -943,4 +938,3 @@ TODO:
 		-Tune maze exit tables
 		-Tune campfire locations
 		-Tune encounter rate
-		-Create all sound effects

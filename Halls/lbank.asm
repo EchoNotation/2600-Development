@@ -65,6 +65,8 @@ LProcessCharacterAdvancement:
 	beq .LGoToPartyLeveledUp
 	cmp #$F3
 	beq .LGoToCheckTypeOfConclusion
+	cmp #$FB
+	beq .LStopPlayingSound
 	cmp #$FC
 	beq .LGameOver
 	cmp #$FD
@@ -102,11 +104,18 @@ LProcessCharacterAdvancement:
 	lda #$FF
 	bne .LSaveInBattleAdvancement
 
+.LStopPlayingSound:
+	lda flags
+	ora #STOP_PLAYING_SOUND
+	sta flags
+	rts
 
 .LGameOver:
 	lda #$1F ;GAME OVER
 .LStoreEndMessage:
-	sta currentMessage 
+	sta currentMessage
+	lda #$FB
+	sta inBattle
 	rts
 .LGameCompleted:
 	ldx #6
@@ -387,6 +396,10 @@ LProcessCasting:
 	bne .LStoreCastsMessage
 .LVolleyMessage:
 	lda #$21 ;X SHOT A Y
+	ldx enemyID
+	cpx #HORROR_ID
+	bne .LStoreCastsMessage
+	lda #$0B ;X FLAILS WILDLY
 .LStoreCastsMessage:
 	sta currentMessage
 	lda cursorIndexAndMessageY
@@ -966,6 +979,8 @@ LLowSpellLogicLocations:
 	jmp .LCalculateFightDamage
 .LGoToDamageWasAKill:
 	jmp .LDamageWasAKill
+.LGoToHorrorAttackPhase2:
+	jmp .LHorrorAttackPhase2
 
 LProcessFighting:
 	lda inBattle
@@ -979,6 +994,8 @@ LProcessFighting:
 	beq .LRetortDescription
 	cmp #$94
 	beq .LRetortDamage
+	cmp #$9F
+	beq .LGoToHorrorAttackPhase2
 .LSetFightWindup:
 	;Check rangedness
 	jsr LGetBattlerResistances ;X should already contain currentBattler
@@ -1079,7 +1096,28 @@ LProcessFighting:
 	lda temp2
 	brk ;LBinaryToDecimal
 	sta cursorIndexAndMessageY
+
+	ldx currentBattler
+	lda enemyID-4,x
+	cmp #HORROR_ID
+	beq .LHorrorAttack
+.LReturnSinceNotHorror
 	rts
+.LHorrorAttack
+	lda inBattle
+	cmp #$91
+	beq .LReturnSinceNotHorror
+	lda #$9F
+	sta inBattle
+	rts
+
+.LHorrorAttackPhase2
+	lda rand8
+	bpl .LAdditionalBlight
+.LAdditionalSleep
+	jmp .LSleep
+.LAdditionalBlight
+	jmp .LBlight
 
 LProcessRunning:
 	;Only party members are allowed to run away
@@ -1123,10 +1161,10 @@ LProcessRunning:
 	bmi .LCannotRunAway ;Can only run away if this battler's speed is equal or greater to the speed of the fastest living enemy
 .LRunAway:
 	lda #$E1
-	bne .LSaveInBattle
+	bne .LGoToSaveInBattle
 .LCannotRunAway:
 	lda #$E0
-	bne .LSaveInBattle
+	bne .LGoToSaveInBattle
 .LFailedToRun:
 	lda #$16 ;X CANNOT ESCAPE
 	sta currentMessage
@@ -2641,64 +2679,69 @@ LSetStatPointers:
 	rts
 
 LPlaySoundFromMessage:
+	lda flags
+	and #STOP_PLAYING_SOUND
+	beq .LNotAtEndOfGame
+	rts
+.LNotAtEndOfGame:
 	ldx currentMessage
 	cpx #$5 ;X CASTS Y
 	beq .LDetermineSpellSound
 	lda LMessageSounds,x
 	tax
-	bne LLoadSoundInS
+	jmp LLoadSoundInS
 .LDetermineSpellSound
 	ldx cursorIndexAndMessageY
 	bne LLoadSoundInS
 
 LMessageSounds:
-	.byte $25 ;X (attack flavor) Y -- swing
-	.byte $2A ;X (attack flavor) Y -- shoot
-	.byte $25 ;X MISSES -- swing
-	.byte $2A ;X MISSES -- shoot
+	.byte SWING_SOUND ;X (attack flavor) Y
+	.byte SHOOT_SOUND ;X (attack flavor) Y
+	.byte SWING_SOUND ;X MISSES
+	.byte SHOOT_SOUND ;X MISSES
 	.byte $0 ;X CAME BACK -- ***
 	.byte $0 ;X CASTS Y -- handled separately
-	.byte $27 ;X HEALS Y HP -- heal
-	.byte $24 ;X LOSES Y HP -- hit
+	.byte HEAL_SOUND ;X HEALS Y HP
+	.byte HIT_SOUND ;X LOSES Y HP
 	.byte $0 ;unallocated
-	.byte $28 ;X DOWN -- dead
-	.byte $16 ;PARTY LEVELS UP -- level up
+	.byte DEAD_SOUND ;X DOWN
+	.byte LEVEL_UP_SOUND ;PARTY LEVELS UP
+	.byte $0B ;X FLAILS WILDLY -- volley
 	.byte $0 ;no longer used
 	.byte $0 ;no longer used
-	.byte $0 ;no longer used
-	.byte $1F ;X WASTES AWAY -- blight
-	.byte $27 ;X WAS CURED -- heal
-	.byte $13 ;X HAS A SHIELD -- shield up
-	.byte $19 ;X HAS A SHIELD -- shield absorbs hit
-	.byte $1B ;PARTY FLEES -- run away
-	.byte $1D ;PARTY WINS -- battle victory
+	.byte BLIGHT_SOUND ;X WASTES AWAY
+	.byte HEAL_SOUND ;X WAS CURED
+	.byte SHIELD_UP_SOUND ;X HAS A SHIELD
+	.byte SHIELD_ABSORBS_HIT_SOUND ;X HAS A SHIELD
+	.byte RUN_AWAY_SOUND ;PARTY FLEES
+	.byte BATTLE_VICTORY_SOUND ;PARTY WINS
 	.byte $0 ;X TRIES TO RUN -- ***
-	.byte $22 ;NO EFFECT -- uh-uh
-	.byte $22 ;X CANNOT ESCAPE -- uh-uh
+	.byte UH_UH_SOUND ;NO EFFECT
+	.byte UH_UH_SOUND ;X CANNOT ESCAPE
 	.byte $0 ;no longer used
 	.byte $0 ;X WAKES UP -- ***
-	.byte $17 ;X GUARDS Y -- guard
-	.byte $26 ;X ATTACK UP -- tink
+	.byte GUARD_SOUND ;X GUARDS Y
+	.byte TINK_SOUND ;X ATTACK UP
 	.byte $0 ;X FELL ASLEEP -- ***
 	.byte $0 ;X IS ASLEEP -- ***
-	.byte $26 ;X GUARDS -- tink
-	.byte $18 ;X SHIELD FADES -- shield down
-	.byte $1E ;GAME OVER -- game over
-	.byte $1C ;GAME CLEAR -- game clear
+	.byte TINK_SOUND ;X GUARDS
+	.byte SHIELD_DOWN_SOUND ;X SHIELD FADES
+	.byte GAME_OVER_SOUND ;GAME OVER
+	.byte GAME_CLEAR_SOUND ;GAME CLEAR
 	.byte $0B ;X SHOT A VOLLEY -- volley (not handled by casts message)
-	.byte $25 ;X (attack flavor) Y (riposte) -- swing
-	.byte $26 ;X BLOCKS -- tink
+	.byte SWING_SOUND ;X (attack flavor) Y (riposte)
+	.byte TINK_SOUND ;X BLOCKS
 	.byte $0 ;PARTY HP UP -- ***
 	.byte $0 ;PARTY MP UP -- ***
-	.byte $27 ;X HEALS FULLY -- heal
-	.byte $27 ;PARTY HEALS FULLY (campfire) -- heal
+	.byte HEAL_SOUND ;X HEALS FULLY
+	.byte HEAL_SOUND ;PARTY HEALS FULLY (campfire)
 	.byte $0 ;PARTY STATUS CLEAR -- ***
 	.byte $0 ;no longer used
 	.byte $0 ;X MP UP -- ***
 	.byte $0A ;X SMITES Y -- smite (not handled by casts message)
-	.byte $1A ;INTO THE CASTLE -- descent
-	.byte $1A ;INTO THE CRYPT -- descent
-	.byte $1A ;INTO THE ABYSS -- descent
+	.byte DESCENT_SOUND ;INTO THE CASTLE
+	.byte DESCENT_SOUND ;INTO THE CRYPT
+	.byte DESCENT_SOUND ;INTO THE ABYSS
 	.byte $0 ;unallocated
 	.byte $0 ;unallocated
 	.byte $0 ;unallocated
@@ -2706,7 +2749,7 @@ LMessageSounds:
 	.byte $0 ;OOZE SPLITS APART -- ***
 	.byte $0 ;X RAISES Y -- ***
 	.byte $0 ;X LEAVES Y -- ***
-	.byte $01 ;X BLOWS UP -- fire
+	.byte $01 ;X BLOWS UP
 	.byte $0 ;unallocated
 
 	ORG $DF80

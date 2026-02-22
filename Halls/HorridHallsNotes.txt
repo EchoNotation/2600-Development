@@ -15,6 +15,7 @@ $91 Basic attack was a kill
 $92 Basic attack was parried
 $93 Retort
 $94 Need to calculate and deal retort's damage
+$9F Horror attack phase 2
 
 $A0 Need to check if single tgt spell hit, and process its effect if it did
 $A1 Single tgt spell killed enemy
@@ -295,7 +296,7 @@ MESSAGE COMPONENTS (& strings):
 0D: MISSES
 0E: LEVELS
 0F: UP
-10: LEARNS
+10: FLAILS
 11: MOVES
 12: BACK
 13: DOWN
@@ -334,7 +335,7 @@ MESSAGE COMPONENTS (& strings):
 34: HP UP
 35: MP UP
 36: FULLY
-37: MIXED
+37: WILDLY
 38: STATUS
 39: Literally empty
 3A: NO
@@ -373,7 +374,7 @@ MESSAGES:
 08: Unallocated
 09: X DOWN
 0A: PARTY LEVELS UP
-0B: X LEARNS Y (no longer used)
+0B: X FLAILS WILDLY
 0C: X MOVES UP (no longer used)
 0D: X BACKS AWAY (no longer used)
 0E: X WASTES AWAY

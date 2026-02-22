@@ -4,7 +4,7 @@
 	.byte %00000000
 	.byte %10000000
 	.byte %10000000
-	.byte %10000000
+	.byte %00001000
 	.byte %10000000
 	.byte %00100000
 	.byte %00100000
@@ -16,28 +16,28 @@
 	.byte %10000000
 	.byte %10000000
 	.byte %10000000
-	.byte %10110110
-	.byte %01100011
+	.byte %10110011
+	.byte %01100101
 	.byte %01111111
-	.byte %11111111
-	.byte %11111111
-	.byte %11111111
-	.byte %11111111
-	.byte %11111111
-	.byte %11111111
-	.byte %11111111
-	.byte %11111111
+	.byte %11100110
+	.byte %11011111
+	.byte %11110110
+	.byte %11111011
+	.byte %11011011
+	.byte %11010111
+	.byte %10111110
+	.byte %11111001
 	.byte %01111111
 	.byte %01010101
 	.byte %01000000
 	.byte %01101010
 	.byte %00011111
 
-	.byte $c
+	.byte $a
 	.byte $46
 	.byte $62
 	.byte $62
-	.byte $62
+	.byte $46
 	.byte $64
 	.byte $46
 	.byte $c
@@ -50,7 +50,7 @@
 	.byte $66
 	.byte $66
 	.byte $c
-	.byte $c
+	.byte $a
 	.byte $62
 	.byte $62
 	.byte $64

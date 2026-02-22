@@ -913,10 +913,10 @@ RPartyLevelsUp:
 	.byte $1B
 	.byte $E
 	.byte $F
-RXLearnsY:
+RXFlailsWildly:
 	.byte $0
 	.byte $10
-	.byte $2
+	.byte $37
 RXMovesUp:
 	.byte $0
 	.byte $11
