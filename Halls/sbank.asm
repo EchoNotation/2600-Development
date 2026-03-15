@@ -54,49 +54,49 @@ SLogoColorsLoop:
 	;Debug only code, do not include in final version!
 	ldy #24
 	sty cursorIndexAndMessageY
-	lda #$09 ;Maze level 0, party level 9
-	sta mazeAndPartyLevel
+	;lda #$09 ;Maze level 0, party level 9
+	;sta mazeAndPartyLevel
 	;lda #24
 	;sta cursorIndexAndMessageY
-	;lda #0
-	;sta currentMenu
-	;lda #$33
-	;sta char1
-	;sta mp1
-	;lda #$20
-	;sta campfireLocation
-	;lda #$01
-	;sta exitLocation
-	;sta hp2
-	;sta hp3
-	;sta hp4
-	;lda #$80
-	;sta inBattle
-	;sta hp1
-	;lda #$80
-	;sta currentMenu
-	;lda #2
-	;sta menuSize
-	;lda #$1D
-	;sta enemyID
-	;lda #$11
-	;sta enemyID+2
-	;lda #15
-	;sta enemyHP
-	;sta battlerStatus
-	;sta battlerStatus+4
-	;lda #$88
-	;sta hasAction
-	;sta enemyHP+1
-	;sta enemyHP+2
-	;sta enemyHP+3
-	;lda #$13
-	;sta mazeAndEffectColor
-	;ldy #6 ;Function ID
-	;ldx #$07 ;Effect ID
-	;jsr SRunFunctionInLBank
-	;ldx #$1B
-	;jsr SLoadSound
+	; lda #$80
+	; sta currentMenu
+	; ;lda #$33
+	; ;sta char1
+	; ;sta mp1
+	; ;lda #$20
+	; ;sta campfireLocation
+	; lda #$01
+	; ;sta exitLocation
+	; sta hp2
+	; sta hp3
+	; sta hp4
+	; lda #$80
+	; sta inBattle
+	; sta hp1
+	; ;lda #$80
+	; ;sta currentMenu
+	; lda #2
+	; sta menuSize
+	; lda #$00
+	; sta enemyID
+	; ;lda #$11
+	; ;sta enemyID+2
+	; lda #15
+	; sta enemyHP
+	; ;sta battlerStatus
+	; ;sta battlerStatus+4
+	; lda #$F8
+	; sta hasAction
+	; ;sta enemyHP+1
+	; ;sta enemyHP+2
+	; ;sta enemyHP+3
+	; lda #$13
+	; sta mazeAndEffectColor
+	; ldy #6 ;Function ID
+	; ldx #$07 ;Effect ID
+	; jsr SRunFunctionInLBank
+	; ldx #$13
+	; jsr SLoadSound
 #endif
 
 SStartOfFrame:
@@ -193,6 +193,7 @@ SJustExitedBattle:
 
 SUpdateMenuRenderingVBlank:
 	jsr SUpdateMenuRendering
+	jmp SWaitForVblankTimer
 
 SAfterEffectUpdate:
 	jsr SUpdateMazeColor
@@ -429,7 +430,7 @@ STryStartGame:
 	ldx #MENU_CONFIRM_SOUND
 	jsr SLoadSound
 	lda #$01 ;Maze level 1, party level 1
-	lda #$39
+	;lda #$39
 	sta mazeAndPartyLevel
 	lda #15
 	sta experienceToNextLevel
@@ -1420,6 +1421,7 @@ SUpdateMenuAdvancement: SUBROUTINE ;Checks if the button is pressed, and advance
 .SSaveAllyTargeting:
 	tya
 	jsr S5Asl
+	ldx currentBattler
 	ora battleActions,x
 	sta battleActions,x
 	jmp .SCheckNextBattler

@@ -892,6 +892,12 @@
 	-Imported all the current enemy art
 2/21/26
 	-First working HORROR AI
+2/22/26
+	-Special DRAIN message added for THICKT, MIMIC, and HORROR which doesn't show visual effect
+	-Fixed bug with the SelectOtherAlly menu type
+	-DRAIN spell now heals for the actual amount of damage dealt, accounting for random modifiers & guard
+	-Should now say X HEALS FULLY when the total is equal to their max HP
+	-Visual effects synchronized after sound effect shortening
 
 OBSERVED BUGS:
 	-Occasional audio glitches? Haven't seen for a long time
@@ -910,18 +916,17 @@ POSSIBLE OPTIMIZATIONS:
 
 TODO:
 	Shortlist:
-	-Check visual effect timings after sound compression
 	-Better parry message (instead of X GUARDS)
 	-AI code for making use of legendary actions
-	-Improved messages for certain enemies' spell casting
+	-Improve messages for certain enemies' spell casting
 	-Constuct more sounds out of already existing ones
 
 	-Check for brk instructions at $XXFE addresses! The R and L banks don't handle decrements fully
 
 	Longlist:
 	-Being guarded reduces blight damage, fix?
-	-Healing exactly to max health doesn't say X HEALS FULLY
 	-Re-evaluate WISH spell
+	-Status effects persist when OOZE/SLIMEs split
 
 	Post-completion:
 	-PAL50/PAL60 versions

@@ -360,13 +360,25 @@ LAdvanceBattlerStatus:
 	jmp .LDrainKilled
 .LGoToWishMPRestoration:
 	jmp .LWishMPRestoration
+.LGoToSingleTgtSpellKill:
+	jmp .LSingleTgtSpellKill
+
+.LAoESpellKill:
+	lda #$B0
+	sta inBattle
+	lda #$09 ;X DOWN
+	sta currentMessage
+	ldx startingCursorIndexAndTargetID
+	;Target ID should already be set from previous message
+	jsr LDeathCleanup
+	jmp .LTryNextTgt
 
 LProcessCasting:
 	lda inBattle
 	cmp #$A0
 	beq .LGoToHandleSingleTgtEffect
 	cmp #$A1
-	beq .LSingleTgtSpellKill
+	beq .LGoToSingleTgtSpellKill
 	cmp #$A2
 	beq .LGoToSingleTgtPhase2
 	cmp #$A3
@@ -386,15 +398,35 @@ LProcessCasting:
 	beq .LSmiteMessage
 	cmp #$0B ;VOLLEY
 	beq .LVolleyMessage
+	cmp #$04 ;DRAIN
+	beq .LDrainMessage
+.LBailOutToRegularMessage:
 	lda #$05 ;X CASTS Y
 	bne .LStoreCastsMessage
 
+.LDrainMessage:
+	;THICKT, HORROR, MIMIC have special message
+	ldx currentBattler
+	lda enemyID-4,x
+	cmp #THICKT_ID
+	beq	.LSpecialDrainMessage
+	cmp #HORROR_ID
+	beq .LSpecialDrainMessage
+	cmp #MIMIC_ID
+	bne .LBailOutToRegularMessage
+.LSpecialDrainMessage:
+	jsr LGetTargetFromActionOffensive
+	stx startingCursorIndexAndTargetID
+	lda #$37 ;X LASHES Y
+	ldy #1 ;No visual effect
+	bne .LStoreCastsMessage
 .LSmiteMessage:
 	jsr LGetTargetFromActionOffensive
 	stx startingCursorIndexAndTargetID
 	lda #$2B ;X SMITES Y
 	bne .LStoreCastsMessage
 .LVolleyMessage:
+	ldy #1 ;No visual effect
 	lda #$21 ;X SHOT A Y
 	ldx enemyID
 	cpx #HORROR_ID
@@ -404,7 +436,7 @@ LProcessCasting:
 	sta currentMessage
 	lda cursorIndexAndMessageY
 	sta mazeAndEffectColor
-	cmp #$0B ;Volley
+	cpy #1
 	beq .LSkipSpellEffect
 	ldx #7 ;Pre-spell delay
 	jsr LLoadEffect
@@ -451,16 +483,6 @@ LProcessCasting:
 	;Target ID should already be set from previous message
 	jsr LDeathCleanup
 	rts
-
-.LAoESpellKill:
-	lda #$B0
-	sta inBattle
-	lda #$09 ;X DOWN
-	sta currentMessage
-	ldx startingCursorIndexAndTargetID
-	;Target ID should already be set from previous message
-	jsr LDeathCleanup
-	jmp .LTryNextTgt
 
 .LDrainKilled:
 	lda #$A2
@@ -642,6 +664,7 @@ LProcessCasting:
 	lda #07 ;X LOSES Y HP
 	sta currentMessage
 	lda temp2
+	sta aoeValueAndCampfireControl ;Make sure the amount healed includes the random modifier
 	brk ;LBinaryToDecimal
 	sta cursorIndexAndMessageY
 	rts
@@ -1828,6 +1851,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	ldx temp5 ;targetID
 	cmp temp3
 	bcc .LMaxedOutHP
+	beq .LMaxedOutHP
 	lda temp3
 	sta battlerHP,x
 	lda temp2
@@ -1855,6 +1879,7 @@ LApplyHealing: SUBROUTINE ;Applies binary healing A to target X. Returns $FF if 
 	ldx temp5 ;target id
 	cmp temp3 ; maxHP - predicted health after healing 				TODO carry clear iff maxHP < predicted health
 	bcc .LMaxedOutHP
+	beq .LMaxedOutHP
 .LNoEnemyMaxOut:
 	lda temp3
 	sta battlerHP,x
@@ -2286,7 +2311,7 @@ LEnemyMagic:
 	.byte 6 ;Volcio
 	.byte 6 ;Glacia
 	.byte 0 ;Grgoyl
-	.byte 0 ;Mimic
+	.byte 6 ;Mimic
 	.byte 0 ;Jester
 	.byte 0 ;Armor
 	.byte 0 ;Spider
@@ -2295,8 +2320,8 @@ LEnemyMagic:
 	.byte 0 ;Shfflr
 	.byte 0 ;Shmblr
 	.byte 0 ;Trophy
-	.byte 0 ;Thickt
-	.byte 0 ;Horror
+	.byte 9 ;Thickt
+	.byte 30 ;Horror
 	.byte 0 ;Ooze
 	.byte 0 ;Campfire
 
@@ -2351,31 +2376,31 @@ LEnemyResistances:
 	.byte #%00000001 ;Archer
 	.byte #%00000000 ;Priest
 	.byte #%00000000 ;Gift
-	.byte #%00000000 ;Sword
-	.byte #%00000000 ;Shield
-	.byte #%00000000 ;Zombie
-	.byte #%00000001 ;Sklton
+	.byte #%00010110 ;Sword
+	.byte #%00010110 ;Shield
+	.byte #%01010010 ;Zombie
+	.byte #%00010011 ;Sklton
 	.byte #%00000000 ;Mage
-	.byte #%00000000 ;Goop
+	.byte #%00000010 ;Goop
 	;       LPFIHEPR
 	.byte #%00000000 ;Warlok
-	.byte #%00000000 ;Imp
+	.byte #%00100000 ;Imp
 	.byte #%00000000 ;Wisp
 	.byte #%10000000 ;RedOrb
 	.byte #%10000000 ;BluOrb
 	.byte #%10000000 ;GrnOrb
 	.byte #%10000000 ;GldOrb
 	.byte #%00000000 ;Bear
-	.byte #%00000000 ;Unicrn
-	.byte #%10000000 ;Volcio
-	.byte #%10000000 ;Glacia
+	.byte #%00001000 ;Unicrn
+	.byte #%10100000 ;Volcio
+	.byte #%10010000 ;Glacia
 	;       LPFIHEPR
-	.byte #%00000000 ;Grgoyl
+	.byte #%00110010 ;Grgoyl
 	.byte #%00000000 ;Mimic
 	.byte #%10000000 ;Jester
-	.byte #%10000000 ;Armor
+	.byte #%10010110 ;Armor
 	.byte #%00000000 ;Spider
-	.byte #%00000000 ;Slime
+	.byte #%00000010 ;Slime
 	.byte #%10000000 ;Lich
 	;       LPFIHEPR
 	.byte #%00000001 ;Shfflr
@@ -2383,7 +2408,7 @@ LEnemyResistances:
 	.byte #%00000000 ;Trophy
 	.byte #%10000000 ;Thickt
 	.byte #%10000000 ;Horror
-	.byte #%10000000 ;Ooze
+	.byte #%10000010 ;Ooze
 	.byte #%00000000 ;Campfire
 
 	ORG $DE00 ;Used to hold miscellaneous data/lookup tables
@@ -2749,8 +2774,8 @@ LMessageSounds:
 	.byte $0 ;OOZE SPLITS APART -- ***
 	.byte $0 ;X RAISES Y -- ***
 	.byte $0 ;X LEAVES Y -- ***
-	.byte $01 ;X BLOWS UP
-	.byte $0 ;unallocated
+	.byte $01 ;X BLOWS UP -- Fire sound
+	.byte $04 ;X LASHES Y -- Drain sound
 
 	ORG $DF80
 	RORG $FF80

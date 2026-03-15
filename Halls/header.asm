@@ -1,7 +1,7 @@
 	processor 6502
 	include "vcs.h"
 
-BUILD_DEBUG = 1
+BUILD_DEBUG = 0
 
 ; --- Constants ---
 ;Kernel related
@@ -87,8 +87,8 @@ EAST = $02
 WEST = $01
 MAZE_WIDTH = 8
 MAX_MAZE_LEVEL = 3
-STEP_GRACE_PERIOD = 1
-ENCOUNTER_RATE_MASK = $FF ;00 is 256/256, FF is 1/256
+STEP_GRACE_PERIOD = 2
+ENCOUNTER_RATE_MASK = $03 ;00 is 256/256, FF is 1/256
 
 ;Battle related
 TIMER_MASK = $80
@@ -119,6 +119,7 @@ JESTER_ID = $1A
 OOZE_ID = $24
 LICH_ID = $1E
 HORROR_ID = $23
+MIMIC_ID = $19
 
 ;Summoning related
 GIFT_HP = 12

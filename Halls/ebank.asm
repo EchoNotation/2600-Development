@@ -32,7 +32,7 @@ BanditAI:
 DruidAI:
 	.byte %10000011 ;Cast BLIZRD
 	.byte %10101111 ;Cast WITHER party
-	.byte %10101111 ;Cast WITHER party
+	.byte %10101111 ;
 	.byte %11101001 ;Cast HEAL self
 ShroomAI:
 	.byte %10101101 ;Cast BLIGHT party
@@ -100,9 +100,9 @@ ImpAI:
 	.byte %10001000 ;Cast CHAOS
 	.byte %10001000 ;
 WispAI:
+	.byte %10100001 ;Cast FIRE party
+	.byte %10100001 ;
 	.byte %11001001 ;Cast HEAL enemies
-	.byte %11001001 ;
-	.byte %11001001 ;
 	.byte %10001110 ;Cast TRIAGE
 RedOrbAI:
 	.byte %10100001 ;Cast FIRE party
@@ -150,11 +150,8 @@ GrgoylAI:
 	.byte %00100000 ;
 	.byte %00100000 ;
 MimicAI:
-	;.byte %00100000 ;Attack party
-	;.byte %00100000 ;
-	;.byte %00100000 ;
-	.byte %10100100 ;Cast DRAIN party
-	.byte %10100100 ;Cast DRAIN party
+	.byte %00100000 ;Attack party
+	.byte %00100000 ;
 	.byte %10100100 ;Cast DRAIN party
 	.byte %10100100 ;Cast DRAIN party
 
@@ -164,9 +161,11 @@ JesterAI:
 	.byte %00100101 ;
 	.byte %00100101 ;
 ArmorAI:
-	.byte %11101001 ;Cast HEAL self
-	.byte %10001100 ;Cast SHARP
+	;.byte %11101001 ;Cast HEAL self
+	;.byte %10001100 ;Cast SHARP
 	.byte %00000101 ;Special
+	.byte %00000101 ;
+	.byte %00000101 ;
 	.byte %00000101 ;
 SpiderAI:
 	.byte %00100000 ;Attack party
@@ -1426,13 +1425,13 @@ EBlowsText:
 	.byte #W
 	.byte #S
 	.byte #EMPTY
-ESummonText:
+ELashesText:
+	.byte #L
+	.byte #A
 	.byte #S
-	.byte #U
-	.byte #M
-	.byte #M
-	.byte #O
-	.byte #N
+	.byte #H
+	.byte #E
+	.byte #S
 ECameText:
 	.byte #C
 	.byte #A
@@ -3684,14 +3683,10 @@ EBossEncounters:
 	.byte $FF
 	.byte $FF
 	;ABYSS BOSS 2
-	; .byte $10 ;RedOrb
-	; .byte $11 ;BluOrb
-	; .byte $12 ;GrnOrb
-	; .byte $13 ;GldOrb
-	.byte $23 ;Horror
-	.byte $FF
-	.byte $FF
-	.byte $FF
+	.byte $10 ;RedOrb
+	.byte $11 ;BluOrb
+	.byte $12 ;GrnOrb
+	.byte $13 ;GldOrb
 
 EEffectLength:
 	.byte 0 ;No effect
@@ -3727,31 +3722,31 @@ ESpellDelays:
 	.byte 28 ;SMITE
 	.byte 1 ;VOLLEY
 	.byte 1 ;SHARP
-	.byte 16 ;BLIGHT
+	.byte 1 ;BLIGHT
 	.byte 1 ;TRIAGE
 	.byte 1 ;WITHER
 	.byte 1 ;BANISH
 	.byte 12 ;TRANCE
 	.byte 8 ;WISH
-	.byte 8
+	.byte 8 ;What is this?
 
 ESpellEffectLengths:
-	.byte 20 ;FIRE
+	.byte 15 ;FIRE
 	.byte 12 ;SLEEP
 	.byte 16 ;BLIZRD
 	.byte 6 ;DRAIN
 	.byte 8 ;THUNDR
-	.byte 8 ;SHIELD
+	.byte 6 ;SHIELD
 	.byte 12 ;METEOR
 	.byte 12 ;CHAOS
 	.byte 6 ;HEAL
 	.byte 6 ;SMITE
 	.byte 10 ;VOLLEY
-	.byte 6 ;SHARP
+	.byte 8 ;SHARP
 	.byte 6 ;BLIGHT
-	.byte 12 ;TRIAGE
+	.byte 8 ;TRIAGE
 	.byte 8 ;WITHER
-	.byte 16 ;BANISH
+	.byte 12 ;BANISH
 	.byte 10 ;TRANCE
 	.byte 12 ;WISH
 	.byte 16

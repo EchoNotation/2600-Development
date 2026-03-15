@@ -357,7 +357,7 @@ MESSAGE COMPONENTS (& strings):
 4A: RAISES
 4B: LEAVES
 4C: BLOWS
-4D: SUMMON
+4D: LASHES
 4E: CAME
 
 Only 10 more strings can be allocated!
@@ -418,7 +418,7 @@ MESSAGES:
 34: X RAISES Y*
 35: X LEAVES Y*
 36: X BLOWS UP
-37: X CANNOT SUMMON (no longer used)
+37: X LASHES Y
 
 Status Effects:
 Pos:

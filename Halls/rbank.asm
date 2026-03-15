@@ -1089,10 +1089,10 @@ RXBlowsUp:
 	.byte $0
 	.byte $4C
 	.byte $F
-RXCannotSummon:
+RXLashesY:
 	.byte $0
-	.byte $22
 	.byte $4D
+	.byte $1
 
 RSetBattleMessage: SUBROUTINE ;Uses the currentMessage to set the temp1-temp6 values correctly. Interprets A as the line of the message to set.
 	ldy #TEXT_HIGHLIGHTED_COLOR
