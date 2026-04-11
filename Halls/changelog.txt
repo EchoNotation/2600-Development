@@ -905,7 +905,7 @@ OBSERVED BUGS:
 	-Casting TRANCE spell at level 6 caused Cleric's mana to overflow
 
 PLAYTEST NOTES:
-	-Start LICH with one or both enemies spawned already
+	-Start LICH with one or both enemies spawned,. already
 
 POSSIBLE OPTIMIZATIONS:
 	Potentially movable:
